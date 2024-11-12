@@ -1,0 +1,31 @@
+name: Style Guide Check
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  style-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install Pylint
+          pip install black
+
+      - name: Run Pylint for Style Guide check
+        run: Pylint .
+
+      - name: Run Black for code format check
+        run: black --check .

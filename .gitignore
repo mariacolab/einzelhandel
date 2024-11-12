@@ -1,0 +1,63 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Flask environment variables
+instance/
+*.env
+.env.*
+.env
+
+# Flask cache and session data
+*.log
+*.pot
+*.pyc
+*.pyd
+*.db
+*.sqlite3
+
+# Virtual environments
+venv/
+.venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.eggs/
+pip-wheel-metadata/
+wheelhouse/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Testing logs and files
+.pytest_cache/
+.tox/
+.stestr/
+
+# Jupyter Notebook checkpoints (if using Jupyter Notebooks within the project)
+.ipynb_checkpoints
+
+# macOS-specific files
+.DS_Store
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.sublime-workspace
+*.sublime-project
+
+# Optional: Ignore compiled HTML documentation if using Sphinx or similar
+docs/_build/
