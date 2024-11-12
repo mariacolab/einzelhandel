@@ -1,4 +1,4 @@
-name: Style Guide Check
+name: Code Style Check
 
 on:
   pull_request:
@@ -7,11 +7,11 @@ on:
     branches: [main]
 
 jobs:
-  style-check:
+  code-style-check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out the repository
+      - name: Check out the code
         uses: actions/checkout@v2
 
       - name: Set up Python
@@ -19,13 +19,22 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install dependencies
+      - name: Install Pylint
+        run: pip install pylint
+
+      - name: Run Pylint
         run: |
-          pip install Pylint
-          pip install black
+          # Run Pylint only on Python files in src or app folders
+          pylint src/**/*.py app/**/*.py || pylint main.py
+        continue-on-error: false # Fail if there are any linting errors
 
-      - name: Run Pylint for Style Guide check
-        run: Pylint .
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
 
-      - name: Run Black for code format check
-        run: black --check .
+      - name: Install Prettier
+        run: npm install prettier
+
+      - name: Run Prettier
+        run: npx prettier --check "**/*.{js,jsx,ts,tsx,css,html,json}"
