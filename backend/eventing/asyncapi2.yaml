@@ -1,0 +1,159 @@
+asyncapi: 2.6.0
+info:
+  title: Object Recognition Events
+  version: 1.0.0
+  description: AsyncAPI-Spezifikation für die Events im Zusammenhang mit dem Bild upload, der Objekterkennung und QR-Code-Generierung.
+
+servers:
+  rabbitmq:
+    url: amqp://broker.example.com
+    protocol: amqp
+    description: RabbitMQ-Server für Event nachrichten
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: Sicherung für die Kommunikation.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.example.com/authorize
+          tokenUrl: https://auth.example.com/token
+          scopes:
+            publish: Berechtigung, Events zu senden.
+            subscribe: Berechtigung, Events zu empfangen.
+
+  messages:
+    ImageUploaded:
+      name: ImageUploaded
+      title: Bild hochgeladen
+      description: Enthält das hochgeladenes Bild und Daten zum Bild.
+      contentType: multipart/form-data
+      payload:
+        type: object
+        properties:
+          metadata:
+            type: object
+            description: Metadaten des Bildes.
+            properties:
+              imageId:
+                type: string
+                description: Die eindeutige ID des Bildes.
+              timestamp:
+                type: string
+                format: date-time
+                description: Der Zeitpunkt des Hochladens.
+          image:
+            type: string
+            format: binary
+            description: Das hochgeladene Bild.
+
+    ImageValidated:
+      name: ImageValidated
+      title: Bild validiert
+      description: Validierung des Bilds abgeschlossen.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          imageId:
+            type: string
+            description: ID des Bildes
+          isValid:
+            type: boolean
+            description: Gibt an, ob das Bild gültig ist.
+          timestamp:
+            type: string
+            format: date-time
+            description: Der Zeitpunkt der Validierung.
+
+    ClassificationCompleted:
+      name: ClassificationCompleted
+      title: Klassifikation abgeschlossen
+      description: Ergebnisse der Bildklassifikation.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          imageId:
+            type: string
+            description: ID des Bildes
+          classifications:
+            type: array
+            items:
+              type: object
+              properties:
+                label:
+                  type: string
+                  description: Der Klassifikationslabel.
+                confidence:
+                  type: number
+                  format: float
+                  description: Die Konfidenz der Klassifikation.
+          timestamp:
+            type: string
+            format: date-time
+            description: Der Zeitpunkt der Klassifikation.
+
+    QRCodeGenerated:
+      name: QRCodeGenerated
+      title: QR-Code generiert
+      description: Details zum generierten QR-Code.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          qrCodeId:
+            type: string
+            description: Die eindeutige ID des QR-Codes.
+          imageId:
+            type: string
+            description: Die ID Bildes
+          qrCodeData:
+            type: string
+            description: Die Daten, die im QR-Code enthalten sind.
+          timestamp:
+            type: string
+            format: date-time
+            description: Der Zeitpunkt der QR-Code-Generierung.
+
+channels:
+  image_uploaded:
+    description: Event, das gesendet wird, wenn ein Bild vom Frontend hochgeladen wurde und vom Backend empfangen werden soll.
+    subscribe:
+      summary: Backend empfängt das Bild vom Event.
+      operationId: onImageUploaded
+      security:
+        - OAuth2: [subscribe]
+      message:
+        $ref: '#/components/messages/ImageUploaded'
+
+  image_validated:
+    description: Event, das gesendet wird, nachdem das Backend ein Bild validiert hat und die KI benachrichtigt werden soll.
+    publish:
+      summary: Backend sendet das Bild vom Event an die KI.
+      operationId: onImageValidated
+      security:
+        - OAuth2: [publish]
+      message:
+        $ref: '#/components/messages/ImageValidated'
+
+  classification_completed:
+    description: Event, das von der KI gesendet wird, wenn die Klassifikation abgeschlossen ist, und vom Backend empfangen werden soll.
+    subscribe:
+      summary: Backend empfängt das Ergbnis der Klassifikation.
+      operationId: onClassificationCompleted
+      security:
+        - OAuth2: [subscribe]
+      message:
+        $ref: '#/components/messages/ClassificationCompleted'
+
+  qrcode_generated:
+    description: Event, das vom Backend gesendet wird, wenn ein QR-Code generiert wurde, und vom Frontend empfangen werden soll.
+    publish:
+      summary: Backend sendet den QR-Code an das Frontend.
+      operationId: onQRCodeGenerated
+      security:
+        - OAuth2: [publish]
+      message:
+        $ref: '#/components/messages/QRCodeGenerated'

@@ -1,0 +1,254 @@
+openapi: 3.0.1
+info:
+  title: Object Recognition API
+  description: API für das User Management, QR-Code scan und KI lauf starten.
+  version: 1.0.0
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: /auth/token
+          scopes:
+            admin: Admin access
+            user: User access
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        role:
+          type: string
+          enum: [user, employee, admin]
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        qrCode:
+          type: string
+
+    AIImageCollection:
+      type: object
+      properties:
+        taskId:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+            format: binary
+
+    AIResult:
+      type: object
+      properties:
+        taskId:
+          type: string
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              imageId:
+                type: string
+              label:
+                type: string
+              confidence:
+                type: number
+                format: float
+
+    QRCodeScanResult:
+      type: object
+      properties:
+        qrCodeId:
+          type: string
+        scannedData:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    QRCodeInformation:
+      type: object
+      properties:
+        qrCodeId:
+          type: string
+        additionalInfo:
+          type: string
+
+paths:
+  /auth/register:
+    post:
+      summary: Nutzer registriert sich
+      security:
+        - OAuth2: [user, employee, admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: Nutzer registriert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Fehler beim registriren
+
+  /auth/login:
+    post:
+      summary: Nutzer meldet sich an
+      security:
+        - OAuth2: [user, employee, admin]
+      responses:
+        '200':
+          description: Erfolgreich angemeldet mit OAuth token
+        '401':
+          description: Unauthorized
+        '404':
+          description: Fehler beim anmelden
+
+  /auth/logout:
+    post:
+      summary: Nutzer meldet sich ab, der Zugriffstoken und die Session werden invalide
+      security:
+        - OAuth2: [user, employee, admin]
+      responses:
+        '200':
+          description: Erfolgreich abgemeldet
+        '404':
+          description: Fehler beim abmelden
+
+  /qrcode:
+    get:
+      summary: Alle QR codes auflisten
+      security:
+        - OAuth2: [user, employee, admin]
+      responses:
+        '200':
+          description: Liste der QR-Codes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '404':
+          description: QR-Codes nicht gefunden
+      x-rate-limit:
+        limit: 10
+        window: 60
+              
+  /qrcode/scan:
+    get:
+      summary: Scan eines QR-Codes
+      security:
+        - OAuth2: [user, employee, admin]
+      responses:
+        '200':
+          description: QR-Code erfolgreich gescannt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRCodeScanResult'
+        '404':
+          description: QR-Code nicht gefunden
+      x-rate-limit:
+        limit: 10
+        window: 60
+
+  /qrcode/information:
+    post:
+      summary: Informationen vom QR-Code zurückgeben
+      security:
+        - OAuth2: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QRCodeInformation'
+      responses:
+        '201':
+          description: Informationen erfolgreich hinzugefügt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+        '404':
+          description: Informationen nicht gefunden
+                    
+
+  /ai/start-task:
+    post:
+      summary: Starten eines KI laufes mit den fehlgeschlagenen Bildern
+      security:
+        - OAuth2: [admin]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AIImageCollection'
+      responses:
+        '202':
+          description: KI lauf ist gestartet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskId:
+                    type: string
+        '404':
+          description: Fehler beim starten des KI laufs
+      x-rate-limit:
+        limit: 10
+        window: 60
+
+  /ai/send-results:
+    post:
+      summary: Ergebnisse des KI lauf zurückgeben
+      security:
+        - OAuth2: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AIResult'
+      responses:
+        '200':
+          description: Ergebnisse erfolgreich erhalten
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+        '404':
+          description: Fehler beim zurückgeben der Ergebnisse des KI lauf
+      

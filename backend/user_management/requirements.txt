@@ -1,0 +1,10 @@
+Flask
+Flask_Security
+Flask-OAuthlib
+flask_jwt_extended
+bcrypt
+psycopg2
+requests
+python-dotenv
+pytest
+pytest-flask

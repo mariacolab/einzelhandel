@@ -1,25 +1,35 @@
-# Use the official Python image as the base
-FROM python:3.9-slim
+# Basis-Image auswählen
+FROM python:3.10-slim AS base
 
-# Set the working directory in the container
+# Arbeitsverzeichnis setzen
 WORKDIR /app
 
-# Copy requirements file to the container
-COPY requirements.txt .
+# Allgemeine Abhängigkeiten installieren
+RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
+# Anforderungen installieren
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the Flask application code into the container
+# ---- Build für Tests ----
+FROM base AS test
+
+# Zusätzliche Abhängigkeiten für Tests installieren
+RUN pip install pytest pytest-flask
+
+# Anwendung und Testdateien kopieren
 COPY . .
+COPY tests /app/tests
 
-# Set environment variables for Flask
-ENV FLASK_APP=app.py
-ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_RUN_PORT=5000
+# Standardbefehl für Tests
+CMD ["pytest", "tests/"]
 
-# Expose the Flask port
-EXPOSE 5000
+# ---- Build für normale Ausführung ----
+FROM base AS production
 
-# Command to run the Flask application
-CMD ["flask", "run"]
+# Anwendung kopieren
+COPY . .
+COPY . /app
+
+# Standardbefehl für Produktion
+CMD ["python", "app.py"]

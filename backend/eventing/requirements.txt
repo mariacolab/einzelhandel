@@ -1,1 +1,3 @@
-
+flask
+fastapi
+aio_pika
