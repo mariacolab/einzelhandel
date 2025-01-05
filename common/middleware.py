@@ -7,11 +7,11 @@ from flask import request
 SECRET_KEY = 'your_secret_key'
 
 def generate_token(username, role):
-    return jwt.encode({{
+    return jwt.encode({
         'username': username,
         'role': role,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-    }}, SECRET_KEY, algorithm='HS256')
+    }, SECRET_KEY, algorithm='HS256')
 
 def decode_token(token):
     try:

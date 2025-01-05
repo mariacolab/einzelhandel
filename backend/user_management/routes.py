@@ -43,10 +43,17 @@ def register_routes(app):
             return jsonify({"message": "User not found"}), 404
 
         user = response.json()
+        print(user)
         if not verify_password(user['password'], data['password']):
             return jsonify({"message": "Invalid credentials"}), 401
 
-        token = generate_token(identity=user['id'], roles=user['role_id'])
+        role_response = requests.get(f"http://database-management:5001/roles/{user['role_id']}")
+        role_response.raise_for_status()
+        role_data = role_response.json()
+        role_name = role_data.get("role_name")
+        print(role_name)
+
+        token = generate_token(username=user['username'], role=role_name)
         return jsonify({'token': token}), 200
         # access_token = create_access_token(identity=user['id'])
         # return jsonify({"token": access_token}), 200
