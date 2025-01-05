@@ -46,7 +46,7 @@ def register_routes(app):
         if not verify_password(user['password'], data['password']):
             return jsonify({"message": "Invalid credentials"}), 401
 
-        token = generate_token(identity=user['id'], roles=user['roles'])
+        token = generate_token(identity=user['id'], roles=user['role_id'])
         return jsonify({'token': token}), 200
         # access_token = create_access_token(identity=user['id'])
         # return jsonify({"token": access_token}), 200
