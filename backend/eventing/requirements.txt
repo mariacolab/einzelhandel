@@ -1,3 +1,4 @@
+aio-pika
 flask
-fastapi
-aio_pika
+requests
+PyJWT

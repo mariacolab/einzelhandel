@@ -1,22 +1,27 @@
+from flask import Flask, jsonify
+
+from common.middleware import token_required, role_required
+from producer import send_message
 import asyncio
-from aio_pika import connect_robust, IncomingMessage
-import json
 
-RABBITMQ_URL = "amqp://rabbitmq:5672"
-QUEUES = ["image_uploaded", "image_validated", "classification_completed", "qrcode_generated"]
+app = Flask(__name__)
 
-async def process_event(queue_name: str, message: IncomingMessage):
-    async with message.process():
-        event_data = json.loads(message.body.decode())
-        print(f"Received event from {queue_name}: {json.dumps(event_data, indent=2)}")
+@token_required
+@role_required('admin')
+@app.route('/publish/<event>', methods=['POST'])
+def publish_event(event):
+    # Map event types to messages
+    events = {
+        "ImageUploaded": {"type": "ImageUploaded", "data": {"filename": "example.jpg"}},
+        "ImageValidated": {"type": "ImageValidated", "data": {"status": "valid"}},
+        "ClassificationCompleted": {"type": "ClassificationCompleted", "data": {"result": "cat"}},
+        "QRCodeGenerated": {"type": "QRCodeGenerated", "data": {"code": "123456"}},
+    }
+    if event not in events:
+        return jsonify({"error": "Event not recognized"}), 400
 
-async def main():
-    connection = await connect_robust(RABBITMQ_URL)
-    async with connection:
-        channel = await connection.channel()
-        for queue in QUEUES:
-            queue_obj = await channel.declare_queue(queue, durable=True)
-            await queue_obj.consume(lambda msg: process_event(queue, msg))
+    asyncio.run(send_message(events[event]))
+    return jsonify({"status": f"Event {event} published successfully."}), 200
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

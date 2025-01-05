@@ -1,5 +1,5 @@
 import unittest
-from ..auth import hash_password, verify_password
+from backend.user_management.auth import hash_password, verify_password
 
 class TestAuth(unittest.TestCase):
 

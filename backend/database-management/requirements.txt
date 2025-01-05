@@ -4,3 +4,4 @@ sqlalchemy
 pytest
 pytest-flask
 psycopg2
+PyJWT

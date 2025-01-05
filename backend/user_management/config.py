@@ -1,5 +1,4 @@
-import os
-from umutils import load_secrets
+from common.utils import load_secrets
 
 class Config:
     secrets = load_secrets()
@@ -15,3 +14,4 @@ class TestConfig(Config):
     DEBUG = True
     TESTING = True
     SECRET_KEY = secrets.get("SECRET_KEY")
+

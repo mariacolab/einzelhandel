@@ -3,7 +3,7 @@ from ..app import app
 from ..models import db
 from ..crud import (
     create_role, read_role, update_role, delete_role,
-    create_user, read_user, update_user, delete_user,
+    create_user, read_user_by_id, update_user, delete_user,
     create_product, read_product, update_product, delete_product
 )
 
@@ -43,7 +43,7 @@ def test_user_crud():
         user = create_user(db.session, username='testuser', password='password', salt='12345', role_id=None)
         assert user.username == 'testuser'
 
-        read_user_data = read_user(db.session, user.id)
+        read_user_data = read_user_by_id(db.session, user.id)
         assert read_user_data.username == 'testuser'
 
         updated_user = update_user(db.session, user.id, username='updateduser', password='newpassword', salt='67890', role_id=None)

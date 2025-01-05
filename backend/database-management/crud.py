@@ -28,6 +28,10 @@ def read_role(session: Session, role_id: int):
     return session.query(Roles).filter_by(id=role_id).first()
 
 
+def read_role_by_name(session: Session, role_name: str):
+    return session.query(Roles).filter_by(role_name=role_name).first()
+
+
 def update_role(session: Session, role_id: int, new_role_name: str):
     roles = session.query(Roles).filter_by(id=role_id).first()
     if roles:
@@ -56,8 +60,12 @@ def create_user(session: Session, username: str, password: str, salt: str, role_
         return None
 
 
-def read_user(session: Session, user_id: int):
+def read_user_by_id(session: Session, user_id: int):
     return session.query(Users).filter_by(id=user_id).first()
+
+
+def read_user_by_name(session: Session, username: str):
+    return session.query(Users).filter_by(username=username).first()
 
 
 def update_user(session: Session, user_id: int, updates: dict):
@@ -136,7 +144,7 @@ def delete_qrcode(session: Session, qr_code_id: int):
 
 # FailedClassification CRUD
 def create_failed_classification(session: Session, image_id: str, reason: str):
-    failedclassifications = FailedClassifications(image_id=image_id, reason=reason)
+    failedclassifications = FailedClassifications(imageid=imageid, reason=reason)
     session.add(failedclassifications)
     session.commit()
     return failedclassifications

@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from flask_jwt_extended import create_access_token
 from ..app import app
-from ..auth import hash_password
+from backend.user_management.auth import hash_password
 
 
 class TestRoutes(unittest.TestCase):

@@ -4,8 +4,9 @@ FROM python:3.10-slim AS base
 # Arbeitsverzeichnis setzen
 WORKDIR /app
 
-# Allgemeine Abhängigkeiten installieren
-RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+#COPY ../common /app/common
+#COPY ../secrets /app/common/secrets
+#RUN pip install ./common
 
 # Anforderungen installieren
 COPY requirements.txt .

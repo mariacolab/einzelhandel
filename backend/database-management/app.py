@@ -2,17 +2,16 @@ from flask import Flask, jsonify, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-from dmutils import load_secrets
+from common.utils import load_secrets
 from models import db
 from crud import (
     create_role, read_role, update_role, delete_role,
-    create_user, read_user, update_user, delete_user,
+    create_user, read_user_by_id, update_user, delete_user,
     create_product, read_product, update_product, delete_product,
     create_qrcode, read_qrcode, delete_qrcode,
     create_failed_classification, read_failed_classifications, delete_failed_classification,
-    create_metadata, read_metadata, update_metadata, delete_metadata
+    create_metadata, read_metadata, update_metadata, delete_metadata, read_user_by_name, read_role_by_name
 )
-
 
 # Flask application initialization
 app = Flask(__name__)
@@ -44,7 +43,7 @@ def initialize_database():
     return jsonify({"status": "Database initialized successfully"}), 201
 
 
-# --- Rollen (Roles) Routen ---
+# --- Rollen (Roles) Routen ---#
 @app.route('/roles', methods=['POST'])
 def add_role():
     data = request.json
@@ -61,6 +60,12 @@ def get_role(role_id):
         return jsonify({"id": roles.id, "role_name": roles.role_name}), 200
     return jsonify({"error": "Role not found"}), 404
 
+@app.route('/roles/<string:role>', methods=['GET'])
+def get_role_by_name(role):
+    roles = read_role_by_name(db.session, role_name=role)
+    if roles:
+        return jsonify({"id": roles.id, "role_name": roles.role_name}), 200
+    return jsonify({"error": "Role not found"}), 404
 
 @app.route('/roles/<int:role_id>', methods=['PUT'])
 def update_role_info(role_id):
@@ -91,9 +96,18 @@ def add_user():
 
 @app.route('/users/<int:user_id>', methods=['GET'])
 def get_user(user_id):
-    users = read_user(db.session, user_id=user_id)
+    users = read_user_by_id(db.session, user_id=user_id)
     if users:
         return jsonify({"id": users.id, "username": users.username}), 200
+    return jsonify({"error": "User not found"}), 404
+
+
+@app.route('/users/<string:username>', methods=['GET'])
+def get_user_by_name(username):
+    users = read_user_by_name(db.session, username=username)
+    if users:
+        return jsonify({"id": users.id, "username": users.username,
+                        "password": users.password, "role_id": users.role_id}), 200
     return jsonify({"error": "User not found"}), 404
 
 
@@ -238,9 +252,11 @@ def delete_metadata_info(metadata_id):
 def index():
     return "Hello, World!"
 
+
 @app.route('/admin/health', methods=['GET'])
 def health_check():
     return jsonify({"status": "ok"}), 200
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)

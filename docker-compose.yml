@@ -17,8 +17,8 @@ services:
       - ./update_pg_hba.sh:/docker-entrypoint-initdb.d/update_pg_hba.sh
     secrets:
       - github_credentials
-    #env_file:
-    #  - ./secrets/github_credentials.txt
+    networks:
+      - app_network
 
   database-management:
     build:
@@ -39,8 +39,10 @@ services:
     volumes:
       - ./backend/database-management:/app
       - ./secrets:/app/secrets
-    #env_file:
-    #  - ./secrets/github_credentials.txt
+      - ./common:/app/common
+    networks:
+      - app_network
+
 
   admin-service:
     build:
@@ -57,6 +59,8 @@ services:
       - "5002:5000"
     secrets:
       - github_credentials
+    networks:
+      - app_network
 
   user-management:
     build:
@@ -75,6 +79,9 @@ services:
     volumes:
       - ./backend/user_management:/app
       - ./secrets:/app/secrets
+      - ./common:/app/common
+    networks:
+      - app_network
 
   qr-service:
     build:
@@ -87,18 +94,32 @@ services:
       - "5004:5000"
     depends_on:
       - postgres
+    networks:
+      - app_network
 
   eventing-service:
     build:
       context: ./backend/eventing
+      dockerfile: Dockerfile
     container_name: eventing_service
     environment:
       FLASK_APP: backend/eventing/producer.py
       PYTHONPATH: /app
+      RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
     ports:
       - "5005:5000"
     depends_on:
-      - postgres
+      - database-management
+      - rabbitmq
+      - user-management
+    secrets:
+      - github_credentials
+    volumes:
+      - ./secrets:/app/secrets
+      - ./common:/app/common
+    networks:
+      - app_network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -109,31 +130,12 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
-
-    producer:
-      build:
-        context: .
-        dockerfile: Dockerfile
-      container_name: producer
-      environment:
-        - RABBITMQ_URL=amqp://rabbitmq:5672
-      depends_on:
-        - rabbitmq
-      ports:
-        - "8000:8000"
-      command: python producer.py
-
-    consumer:
-      build:
-        context: .
-        dockerfile: Dockerfile
-      container_name: consumer
-      environment:
-        - RABBITMQ_URL=amqp://rabbitmq:5672
-      depends_on:
-        - rabbitmq
-      command: python consumer.py
-
+    secrets:
+      - github_credentials
+    volumes:
+      - ./secrets:/app/secrets
+    networks:
+      - app_network
 
   nginx:
     image: nginx:latest
@@ -147,6 +149,8 @@ services:
       - admin-service
       - qr-service
       - user-management
+    networks:
+      - app_network
 
 volumes:
   nginx_conf:
@@ -154,4 +158,8 @@ volumes:
 
 secrets:
   github_credentials:
-    file: ./secrets/github_credentials.txt
+    file: secrets/github_credentials.txt
+
+networks:
+  app_network:
+    driver: bridge
