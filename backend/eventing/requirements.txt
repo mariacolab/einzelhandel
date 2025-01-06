@@ -2,3 +2,4 @@ aio-pika
 flask
 requests
 PyJWT
+redis

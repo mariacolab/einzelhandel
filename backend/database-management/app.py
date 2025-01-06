@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
