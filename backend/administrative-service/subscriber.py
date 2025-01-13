@@ -29,11 +29,11 @@ async def on_message(message: aio_pika.IncomingMessage):
                 process_files()
 
                 exchange = message.channel.default_exchange
-                await publish_event(
-                    exchange=exchange,
-                    event_type="ImageValidated",
-                    data={"status": "success", "message": "Files processed successfully."},
-                )
+                #await publish_event(
+                #    exchange=exchange,
+                #    event_type="ImageValidated",
+                #    data={"status": "success", "message": "Files processed successfully."},
+                #)
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")

@@ -24,7 +24,7 @@ async def on_message(message: aio_pika.IncomingMessage):
             logging.debug(f"Received event: {event}")
 
             if "ClassFiles" in event:
-                logging.info("Processing files after ImageUploaded event.")
+                logging.info("Processing files after ClassificationCompleted event.")
 
                 exchange = message.channel.default_exchange
 

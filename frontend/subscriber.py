@@ -24,7 +24,7 @@ async def on_message(message: aio_pika.IncomingMessage):
             logging.debug(f"Received event: {event}")
 
             if "ProcessQrcode" in event:
-                logging.info("Processing files after ImageUploaded event.")
+                logging.info("Processing files after QRCodeGenerated event.")
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")

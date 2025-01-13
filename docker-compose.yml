@@ -17,8 +17,6 @@ services:
       - ./update_pg_hba.sh:/docker-entrypoint-initdb.d/update_pg_hba.sh
     secrets:
       - github_credentials
-    networks:
-      - app_network
 
   database-management:
     build:
@@ -40,8 +38,6 @@ services:
       - ./backend/database-management:/app
       - ./secrets:/app/secrets
       - ./common:/app/common
-    networks:
-      - app_network
 
   admin-service:
     build:
@@ -63,8 +59,6 @@ services:
       - ./secrets:/app/secrets
       - ./common:/app/common
       - shared_uploads:/shared/uploads
-    networks:
-      - app_network
     command: ["python3", "subscriber.py"]
 
   user-management:
@@ -85,8 +79,6 @@ services:
       - ./backend/user_management:/app
       - ./secrets:/app/secrets
       - ./common:/app/common
-    networks:
-      - app_network
 
   qr-service:
     build:
@@ -108,8 +100,6 @@ services:
       - ./backend/qr-code-generator:/app
       - ./secrets:/app/secrets
       - ./common:/app/common
-    networks:
-      - app_network
     command: ["python3", "subscriber.py"]
 
   eventing-service:
@@ -135,8 +125,6 @@ services:
       - ./secrets:/app/secrets
       - ./common:/app/common
       - shared_uploads:/shared/uploads
-    networks:
-      - app_network
 
   ki:
     build:
@@ -158,8 +146,6 @@ services:
       - ./secrets:/app/secrets
       - ./common:/app/common
       - shared_uploads:/shared/uploads
-    networks:
-      - app_network
     command: ["python3", "subscriber.py"]
 
   frontend:
@@ -182,8 +168,6 @@ services:
       - ./secrets:/app/secrets
       - ./common:/app/common
       - shared_uploads:/shared/uploads
-    networks:
-      - app_network
     command: ["python3", "subscriber.py"]
 
   rabbitmq:
@@ -201,8 +185,6 @@ services:
     volumes:
       - ./secrets:/app/secrets
       - ./rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
-    networks:
-      - app_network
 
   nginx:
     image: nginx:latest
@@ -219,8 +201,6 @@ services:
       - ki
       - frontend
       - eventing-service
-    networks:
-      - app_network
 
   redis:
     image: redis:latest
@@ -231,8 +211,6 @@ services:
       - redis_data:/data
     environment:
       REDIS_PASSWORD: your_redis_password
-    networks:
-      - app_network
 
 volumes:
   nginx_conf:
@@ -243,7 +221,3 @@ volumes:
 secrets:
   github_credentials:
     file: secrets/github_credentials.txt
-
-networks:
-  app_network:
-    driver: bridge

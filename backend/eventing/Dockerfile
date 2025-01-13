@@ -33,4 +33,4 @@ FROM base AS production
 COPY . .
 COPY . /app
 # Standardbefehl für Produktion
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5005", "app:app"]

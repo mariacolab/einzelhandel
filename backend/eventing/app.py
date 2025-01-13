@@ -18,10 +18,6 @@ def home():
     return "Welcome to the Eventing"
 
 
-def start_rabbitmq_consumer():
-    # RabbitMQ-Consumer-Logik hier
-    pass
-
 def role_based_key():
     try:
         user_role = request.user.get("role", "default")
@@ -36,6 +32,7 @@ def role_based_key():
 limiter = Limiter(
     key_func=role_based_key,
     app=app,
+    #storage_uri="redis://redis:6379",
     default_limits=["200 per day", "50 per hour"]
 )
 
@@ -111,11 +108,11 @@ def publish_event(event):
             logging.debug(f"Files: {request.files}")
 
             # Datei aus `form-data` abrufen
-            if 'filename' not in request.files:
+            if 'file' not in request.files:
                 logging.debug("No file part in the request.")
                 return jsonify({"error": "No file part in the request"}), 400
 
-            file = request.files['filename']
+            file = request.files['file']
 
             # Überprüfen, ob eine Datei ausgewählt wurde
             if file.filename == '':
@@ -138,7 +135,7 @@ def publish_event(event):
             message = {
                 "type": "ImageValidated",
                 "data": {
-                    "filename": file.filename,
+                    "file": file.filename,
                     "path": save_path
                 }
             }
@@ -149,7 +146,7 @@ def publish_event(event):
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
 
-        if event == "ClassificationCompleted" or event == "QRCodeGenerated":
+        if event == "ClassificationCompleted":
             logging.debug(f"Headers: {request.headers}")
             body = request.get_data(as_text=True)  # Retrieve raw body data as text
             logging.debug(f"Body: {body}")
@@ -162,7 +159,24 @@ def publish_event(event):
             asyncio.run(send_message(message))
 
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            asyncio.run(send_message({"type": f"{event}", "data": {}}))
+            asyncio.run(send_message({"type": "ClassFiles", "data": {}}))
+            logging.debug(f"Event {event} published successfully")
+            return jsonify({"status": f"Body {body} uploaded successfully."}), 200
+
+        if event == "QRCodeGenerated":
+            logging.debug(f"Headers: {request.headers}")
+            body = request.get_data(as_text=True)  # Retrieve raw body data as text
+            logging.debug(f"Body: {body}")
+
+            # Nachricht senden
+            message = {
+                "type": f"{event}",
+                "body": f"{body}"
+            }
+            asyncio.run(send_message(message))
+
+            # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
+            asyncio.run(send_message({"type": "ProcessQrcode", "data": {}}))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Body {body} uploaded successfully."}), 200
 
@@ -172,6 +186,4 @@ def publish_event(event):
 
 
 if __name__ == '__main__':
-    consumer_thread = Thread(target=start_rabbitmq_consumer, daemon=True)
-    consumer_thread.start()
     app.run(host='0.0.0.0', port=5005)
