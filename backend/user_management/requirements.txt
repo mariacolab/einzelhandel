@@ -10,3 +10,4 @@ pytest
 pytest-flask
 PyJWT
 redis
+gunicorn

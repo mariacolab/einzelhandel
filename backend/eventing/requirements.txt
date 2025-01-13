@@ -3,3 +3,5 @@ flask
 requests
 PyJWT
 redis
+flask-limiter
+gunicorn

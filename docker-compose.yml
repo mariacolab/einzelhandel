@@ -43,7 +43,6 @@ services:
     networks:
       - app_network
 
-
   admin-service:
     build:
       context: ./backend/administrative-service
@@ -53,14 +52,20 @@ services:
       FLASK_APP: app
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /app
+      RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
     depends_on:
-      - database-management
+      - rabbitmq
     ports:
       - "5002:5000"
     secrets:
       - github_credentials
+    volumes:
+      - ./secrets:/app/secrets
+      - ./common:/app/common
+      - shared_uploads:/shared/uploads
     networks:
       - app_network
+    command: ["python3", "subscriber.py"]
 
   user-management:
     build:
@@ -85,20 +90,31 @@ services:
 
   qr-service:
     build:
+      target: production
       context: ./backend/qr-code-generator
     container_name: qr_service
     environment:
-      FLASK_APP: backend/qr-code-generator/generate_qr.py
+      FLASK_APP: app
+      GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /app
+      RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
     ports:
       - "5004:5000"
     depends_on:
-      - postgres
+      - rabbitmq
+    secrets:
+      - github_credentials
+    volumes:
+      - ./backend/qr-code-generator:/app
+      - ./secrets:/app/secrets
+      - ./common:/app/common
     networks:
       - app_network
+    command: ["python3", "subscriber.py"]
 
   eventing-service:
     build:
+      target: production
       context: ./backend/eventing
       dockerfile: Dockerfile
     container_name: eventing_service
@@ -118,8 +134,57 @@ services:
     volumes:
       - ./secrets:/app/secrets
       - ./common:/app/common
+      - shared_uploads:/shared/uploads
     networks:
       - app_network
+
+  ki:
+    build:
+      context: ./ki
+      target: production
+    container_name: ki
+    environment:
+      FLASK_APP: app
+      GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
+      PYTHONPATH: /app
+      RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+    depends_on:
+      - rabbitmq
+    ports:
+      - "5006:5000"
+    secrets:
+      - github_credentials
+    volumes:
+      - ./secrets:/app/secrets
+      - ./common:/app/common
+      - shared_uploads:/shared/uploads
+    networks:
+      - app_network
+    command: ["python3", "subscriber.py"]
+
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+    container_name: frontend
+    environment:
+      FLASK_APP: app
+      GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
+      PYTHONPATH: /app
+      RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+    depends_on:
+      - rabbitmq
+    ports:
+      - "5007:5000"
+    secrets:
+      - github_credentials
+    volumes:
+      - ./secrets:/app/secrets
+      - ./common:/app/common
+      - shared_uploads:/shared/uploads
+    networks:
+      - app_network
+    command: ["python3", "subscriber.py"]
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -130,10 +195,12 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFINITIONS_FILE: /etc/rabbitmq/definitions.json
     secrets:
       - github_credentials
     volumes:
       - ./secrets:/app/secrets
+      - ./rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
     networks:
       - app_network
 
@@ -149,6 +216,9 @@ services:
       - admin-service
       - qr-service
       - user-management
+      - ki
+      - frontend
+      - eventing-service
     networks:
       - app_network
 
@@ -157,17 +227,18 @@ services:
     container_name: redis_container
     ports:
       - "6379:6379"
-    networks:
-      - app_network
     volumes:
       - redis_data:/data
     environment:
-      REDIS_PASSWORD: your_redis_password  # Optional, für Sicherheitszwecke
+      REDIS_PASSWORD: your_redis_password
+    networks:
+      - app_network
 
 volumes:
   nginx_conf:
   db_data:
   redis_data:
+  shared_uploads:
 
 secrets:
   github_credentials:

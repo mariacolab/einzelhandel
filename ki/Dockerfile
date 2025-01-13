@@ -4,13 +4,9 @@ FROM python:3.10-slim AS base
 # Arbeitsverzeichnis setzen
 WORKDIR /app
 
-#COPY ../common /app/common
-#COPY ../secrets /app/common/secrets
-#RUN pip install ./common
-
 # Allgemeine Abhängigkeiten installieren
 RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
-
+RUN apt-get update && apt-get install -y libmagic1 file
 # Anforderungen installieren
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -37,4 +33,4 @@ COPY . .
 COPY . /app
 
 # Standardbefehl für Produktion
-CMD ["gunicorn", "--bind", "0.0.0.0:5003", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5006", "app:app"]
