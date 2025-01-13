@@ -1,5 +1,11 @@
+import json
+import os
+
 import aio_pika
 import asyncio
+
+import requests
+
 from common.utils import load_secrets
 import logging
 from process_uploads import process_files
@@ -18,22 +24,56 @@ except Exception as e:
     logging.error(f"Error loading secrets: {e}")
     raise
 
-async def on_message(message: aio_pika.IncomingMessage):
+async def on_message(message: aio_pika.IncomingMessage,):
     async with message.process():
         try:
             event = message.body.decode()
             logging.debug(f"Received event: {event}")
 
-            if "ProcessFiles" in event:
-                logging.info("Processing files after ImageUploaded event.")
-                process_files()
+            event_raw = message.body.decode()
+            logging.debug(f"Raw event received: {event_raw}")
 
-                exchange = message.channel.default_exchange
-                #await publish_event(
-                #    exchange=exchange,
-                #    event_type="ImageValidated",
-                #    data={"status": "success", "message": "Files processed successfully."},
-                #)
+            event_corrected = event_raw.replace("'", '"')
+            logging.debug(f"Corrected event JSON: {event_corrected}")
+
+            event = json.loads(event_corrected)
+            logging.debug(f"Parsed event: {event}")
+
+            event_type = event.get("type", "")
+            event_payload = event.get("data", {})
+
+            logging.info(f"Event type: {event_type}")
+            logging.info(f"Event payload: {event_payload}")
+
+            token = event_payload.get("token")
+            if not token:
+                logging.warning("Token not found in event payload")
+                return
+
+            logging.info(f"Extracted token: {token}")
+
+            #
+            if "ProcessFiles" in event_type:
+                logging.info("Processing files after ImageUploaded event.")
+                file = process_files()
+                logging.info(f"{file}")
+
+                directory, file_name = os.path.split(file)
+
+                logging.info(f"Verzeichnispfad: {directory}")
+                logging.info(f"Dateiname: {file_name}")
+
+                url = " http://nginx-proxy/eventing-service/publish/ImageValidated"
+                headers = {
+                    "Authorization": f"{token}"
+                }
+                files = {
+                    "type": (None, "ImageValidated"),
+                    "file": (f"{file_name}", open(f"{file}", "rb")),
+                }
+
+                response = requests.post(url, headers=headers, files=files)
+                logging.error(f"Response: {response}")
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")

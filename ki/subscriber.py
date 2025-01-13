@@ -25,6 +25,7 @@ async def on_message(message: aio_pika.IncomingMessage):
 
             if "ValidatedFiles" in event:
                 logging.info("Processing files after ImageUploaded event.")
+                # aufruf von Methoden um weiteren Code auszuführen
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")

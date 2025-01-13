@@ -13,6 +13,7 @@ app = Flask(__name__)
 app.config['DEBUG'] = True
 logging.basicConfig(level=logging.DEBUG)
 
+
 @app.route("/")
 def home():
     return "Welcome to the Eventing"
@@ -32,7 +33,7 @@ def role_based_key():
 limiter = Limiter(
     key_func=role_based_key,
     app=app,
-    #storage_uri="redis://redis:6379",
+    # storage_uri="redis://redis:6379",
     default_limits=["200 per day", "50 per hour"]
 )
 
@@ -87,18 +88,20 @@ def publish_event(event):
             file.save(save_path)
             logging.debug(f"File {file.filename} saved to {save_path}")
 
+            token = request.headers.get('Authorization', '')
             # Nachricht senden
             message = {
-                "type": "ImageUploaded",
+                "type": "ProcessFiles",
                 "data": {
                     "filename": file.filename,
-                    "path": save_path
+                    "path": save_path,
+                    "token": token
                 }
             }
             asyncio.run(send_message(message))
 
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            asyncio.run(send_message({"type": "ProcessFiles", "data": {}}))
+            #asyncio.run(send_message({"type": "ProcessFiles", "data": {}}))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
 

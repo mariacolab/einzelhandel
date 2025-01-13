@@ -2,7 +2,6 @@ import os
 import uuid
 import filetype
 import logging
-import magic
 
 # Pfad zu shared_uploads
 UPLOADS_DIR = "/shared/uploads"
@@ -65,7 +64,9 @@ def process_files():
             continue
 
         # Benenne die Datei in einen generischen Namen um
-        rename_file(file_path, UPLOADS_DIR)
+        file = rename_file(file_path, UPLOADS_DIR)
+        logging.info(f"Datei umbenannt: {file}")
+        return file
 
 
 if __name__ == "__main__":

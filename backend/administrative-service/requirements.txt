@@ -3,3 +3,4 @@ filetype
 aio-pika
 python-magic
 gunicorn
+requests
