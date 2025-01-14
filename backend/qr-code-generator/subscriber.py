@@ -1,5 +1,10 @@
+import json
+
 import aio_pika
 import asyncio
+
+import requests
+
 from common.utils import load_secrets
 import logging
 
@@ -23,10 +28,50 @@ async def on_message(message: aio_pika.IncomingMessage):
             event = message.body.decode()
             logging.debug(f"Received event: {event}")
 
-            if "ClassFiles" in event:
-                logging.info("Processing files after ClassificationCompleted event.")
+            event_raw = message.body.decode()
+            logging.debug(f"Raw event received: {event_raw}")
 
-                exchange = message.channel.default_exchange
+            event_corrected = event_raw.replace("'", '"')
+            logging.debug(f"Corrected event JSON: {event_corrected}")
+
+            event = json.loads(event_corrected)
+            logging.debug(f"Parsed event: {event}")
+
+            event_type = event.get("type", "")
+            event_filename = event.get("filename", "")
+            event_path = event.get("path", "")
+
+            logging.info(f"Event type: {event_type}")
+            logging.info(f"Event filename: {event_filename}")
+            logging.info(f"Event path: {event_path}")
+
+            token = event.get("token", "")
+
+            if not token:
+                logging.warning("Token not found in event payload")
+                return
+
+            logging.info(f"Extracted token: {token}")
+
+            if "ClassFiles" in event_type:
+                logging.info("Processing files after ClassificationCompleted event.")
+                # TODO aufruf von Methoden um weiteren Code auszuführen
+
+                url = " http://nginx-proxy/eventing-service/publish/QRCodeGenerated"
+                headers = {
+                    'Content-Type': 'application/json',
+                    "Authorization": f"{token}"
+                }
+                data = {
+                    "type": "ProcessQrcode",
+                    "data": {
+                        "code": "cat"
+                    }
+                }
+
+                # POST-Anfrage senden
+                response = requests.post(url, headers=headers, json=data)
+                logging.info(f"Response: {response}")
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")
@@ -41,7 +86,7 @@ async def main():
             channel = await connection.channel()
             exchange = await channel.declare_exchange("events", aio_pika.ExchangeType.TOPIC, durable=True)
             queue = await channel.declare_queue("process_classified_queue", durable=True)
-            await queue.bind(exchange, routing_key="ClassFiles")  # Beispiel: Lauschen auf "ProcessFiles"
+            await queue.bind(exchange, routing_key="ClassFiles")
 
             await queue.consume(on_message)
             logging.info("Waiting for messages. To exit press CTRL+C.")

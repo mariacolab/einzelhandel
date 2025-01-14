@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from threading import Thread
@@ -89,14 +90,15 @@ def publish_event(event):
             logging.debug(f"File {file.filename} saved to {save_path}")
 
             token = request.headers.get('Authorization', '')
+            logging.debug(f"Authorization {token}")
+            message_type = request.form.get('type', '')
+            logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
-                "type": "ProcessFiles",
-                "data": {
-                    "filename": file.filename,
-                    "path": save_path,
-                    "token": token
-                }
+                "type": message_type,
+                "filename": file.filename,
+                "path": save_path,
+                "token": token
             }
             asyncio.run(send_message(message))
 
@@ -134,18 +136,21 @@ def publish_event(event):
             file.save(save_path)
             logging.debug(f"File {file.filename} saved to {save_path}")
 
+            token = request.headers.get('Authorization', '')
+            logging.debug(f"Authorization {token}")
+            message_type = request.form.get('type', '')
+            logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
-                "type": "ImageValidated",
-                "data": {
-                    "file": file.filename,
-                    "path": save_path
-                }
+                "type": message_type,
+                "file": file.filename,
+                "path": save_path,
+                "token": token
             }
             asyncio.run(send_message(message))
 
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            asyncio.run(send_message({"type": "ValidatedFiles", "data": {}}))
+            #asyncio.run(send_message({"type": "ValidatedFiles", "data": {}}))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
 
@@ -154,15 +159,24 @@ def publish_event(event):
             body = request.get_data(as_text=True)  # Retrieve raw body data as text
             logging.debug(f"Body: {body}")
 
+            parsed_body = json.loads(body)
+            token = request.headers.get('Authorization', '')
+            logging.debug(f"Authorization {token}")
+            message_type = parsed_body.get("type")
+            event_data = parsed_body.get("data", {})
+            data = event_data.get("result")
+            logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
-                "type": f"{event}",
-                "body": f"{body}"
+                "type": message_type,
+                "data": data,
+                "token": token
             }
+            logging.debug(f"message {message}")
             asyncio.run(send_message(message))
 
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            asyncio.run(send_message({"type": "ClassFiles", "data": {}}))
+            #asyncio.run(send_message({"type": "ClassFiles", "data": {}}))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Body {body} uploaded successfully."}), 200
 
@@ -170,16 +184,26 @@ def publish_event(event):
             logging.debug(f"Headers: {request.headers}")
             body = request.get_data(as_text=True)  # Retrieve raw body data as text
             logging.debug(f"Body: {body}")
+            logging.debug(f"request.get_data: {request.get_data()}")
 
+            parsed_body = json.loads(body)
+            token = request.headers.get('Authorization', '')
+            logging.debug(f"Authorization {token}")
+            message_type = parsed_body.get("type")
+            event_data = parsed_body.get("data", {})
+            data = event_data.get("result")
+            logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
-                "type": f"{event}",
-                "body": f"{body}"
+                "type": message_type,
+                "data": data,
+                "token": token
             }
+
             asyncio.run(send_message(message))
 
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            asyncio.run(send_message({"type": "ProcessQrcode", "data": {}}))
+            #asyncio.run(send_message({"type": "ProcessQrcode", "data": {}}))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Body {body} uploaded successfully."}), 200
 

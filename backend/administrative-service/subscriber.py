@@ -24,28 +24,28 @@ except Exception as e:
     logging.error(f"Error loading secrets: {e}")
     raise
 
-async def on_message(message: aio_pika.IncomingMessage,):
+
+async def on_message(message: aio_pika.IncomingMessage, ):
     async with message.process():
         try:
             event = message.body.decode()
             logging.debug(f"Received event: {event}")
 
-            event_raw = message.body.decode()
-            logging.debug(f"Raw event received: {event_raw}")
-
-            event_corrected = event_raw.replace("'", '"')
+            event_corrected = event.replace("'", '"')
             logging.debug(f"Corrected event JSON: {event_corrected}")
 
             event = json.loads(event_corrected)
             logging.debug(f"Parsed event: {event}")
 
             event_type = event.get("type", "")
-            event_payload = event.get("data", {})
+            event_filename = event.get("filename", "")
+            event_path = event.get("path", "")
 
             logging.info(f"Event type: {event_type}")
-            logging.info(f"Event payload: {event_payload}")
+            logging.info(f"Event filename: {event_filename}")
+            logging.info(f"Event path: {event_path}")
 
-            token = event_payload.get("token")
+            token = event.get("token", "")
             if not token:
                 logging.warning("Token not found in event payload")
                 return
@@ -68,12 +68,12 @@ async def on_message(message: aio_pika.IncomingMessage,):
                     "Authorization": f"{token}"
                 }
                 files = {
-                    "type": (None, "ImageValidated"),
+                    "type": (None, "ValidatedFiles"),
                     "file": (f"{file_name}", open(f"{file}", "rb")),
                 }
 
                 response = requests.post(url, headers=headers, files=files)
-                logging.error(f"Response: {response}")
+                logging.info(f"Response: {response}")
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")
@@ -98,9 +98,9 @@ async def main():
         await asyncio.sleep(5)  # Delay before retrying
         await main()
 
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
         logging.error(f"Unhandled exception: {e}")
-

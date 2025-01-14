@@ -23,6 +23,31 @@ async def on_message(message: aio_pika.IncomingMessage):
             event = message.body.decode()
             logging.debug(f"Received event: {event}")
 
+            event_raw = message.body.decode()
+            logging.debug(f"Raw event received: {event_raw}")
+
+            event_corrected = event_raw.replace("'", '"')
+            logging.debug(f"Corrected event JSON: {event_corrected}")
+
+            event = json.loads(event_corrected)
+            logging.debug(f"Parsed event: {event}")
+
+            event_type = event.get("type", "")
+            event_filename = event.get("filename", "")
+            event_path = event.get("path", "")
+
+            logging.info(f"Event type: {event_type}")
+            logging.info(f"Event filename: {event_filename}")
+            logging.info(f"Event path: {event_path}")
+
+            token = event.get("token", "")
+
+            if not token:
+                logging.warning("Token not found in event payload")
+                return
+
+            logging.info(f"Extracted token: {token}")
+
             if "ProcessQrcode" in event:
                 logging.info("Processing files after QRCodeGenerated event.")
 

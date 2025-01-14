@@ -2,3 +2,4 @@ Flask
 filetype
 aio-pika
 gunicorn
+requests
