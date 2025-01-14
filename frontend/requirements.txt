@@ -1,0 +1,4 @@
+Flask
+filetype
+aio-pika
+gunicorn

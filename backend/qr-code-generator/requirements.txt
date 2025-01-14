@@ -1,0 +1,4 @@
+flask
+aio-pika
+gunicorn
+requests

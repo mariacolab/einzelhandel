@@ -1,0 +1,7 @@
+aio-pika
+flask
+requests
+PyJWT
+redis
+flask-limiter
+gunicorn

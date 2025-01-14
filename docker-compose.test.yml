@@ -1,0 +1,50 @@
+services:
+  user-management-test:
+    build:
+      context: backend/user_management
+      target: test
+    environment:
+      SECRET_KEY: "testsecret"
+      DATABASE_URI: "sqlite:///test.db"
+      PYTHONPATH: "/app:/app/backend"
+    ports:
+      - "5011:5000"
+    working_dir: /app
+    command: pytest /app/backend/user_management/tests/
+    volumes:
+      - ./backend/user_management:/app
+      - ./secrets:/app/secrets
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres_test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: microservices_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data_test:/var/lib/postgresql/data
+      - ./backend/database-management/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  database-management-test:
+    build:
+      context: backend/database-management
+      target: test
+    environment:
+      DATABASE_URI: "postgres://postgres:password@postgres:5432/microservices_db"
+      PYTHONPATH: "/app:/app/backend"
+    ports:
+      - "5012:5000"
+    working_dir: /app
+    command: pytest /app/backend/database-management/tests/
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend/database-management:/app
+      - ./secrets:/app/secrets
+
+
+volumes:
+  db_data_test:

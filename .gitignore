@@ -61,3 +61,5 @@ coverage.xml
 
 # Optional: Ignore compiled HTML documentation if using Sphinx or similar
 docs/_build/
+
+secrets/github_credentials.txt
