@@ -38,12 +38,10 @@ async def on_message(message: aio_pika.IncomingMessage):
             logging.debug(f"Parsed event: {event}")
 
             event_type = event.get("type", "")
-            event_filename = event.get("filename", "")
-            event_path = event.get("path", "")
+            event_data = event.get("data", "")
 
             logging.info(f"Event type: {event_type}")
-            logging.info(f"Event filename: {event_filename}")
-            logging.info(f"Event path: {event_path}")
+            logging.info(f"Event filename: {event_data}")
 
             token = event.get("token", "")
 
@@ -62,16 +60,19 @@ async def on_message(message: aio_pika.IncomingMessage):
                     'Content-Type': 'application/json',
                     "Authorization": f"{token}"
                 }
+                logging.info(f"Data: {headers}")
                 data = {
                     "type": "ProcessQrcode",
                     "data": {
                         "code": "cat"
                     }
                 }
+                logging.info(f"Data: {data}")
 
                 # POST-Anfrage senden
                 response = requests.post(url, headers=headers, json=data)
-                logging.info(f"Response: {response}")
+                logging.info(f"Response: {response.request}")
+                logging.info(f"Response: {response.status_code}")
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")

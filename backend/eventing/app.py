@@ -165,6 +165,8 @@ def publish_event(event):
             message_type = parsed_body.get("type")
             event_data = parsed_body.get("data", {})
             data = event_data.get("result")
+            logging.debug(f"event_data {event_data}")
+            logging.debug(f"data {data}")
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
@@ -184,14 +186,15 @@ def publish_event(event):
             logging.debug(f"Headers: {request.headers}")
             body = request.get_data(as_text=True)  # Retrieve raw body data as text
             logging.debug(f"Body: {body}")
-            logging.debug(f"request.get_data: {request.get_data()}")
 
             parsed_body = json.loads(body)
             token = request.headers.get('Authorization', '')
             logging.debug(f"Authorization {token}")
             message_type = parsed_body.get("type")
             event_data = parsed_body.get("data", {})
-            data = event_data.get("result")
+            data = event_data.get("code")
+            logging.debug(f"event_data {event_data}")
+            logging.debug(f"data {data}")
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
@@ -199,6 +202,7 @@ def publish_event(event):
                 "data": data,
                 "token": token
             }
+            logging.debug(f"message {message}")
 
             asyncio.run(send_message(message))
 

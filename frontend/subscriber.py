@@ -1,3 +1,5 @@
+import json
+
 import aio_pika
 import asyncio
 from common.utils import load_secrets
@@ -33,12 +35,10 @@ async def on_message(message: aio_pika.IncomingMessage):
             logging.debug(f"Parsed event: {event}")
 
             event_type = event.get("type", "")
-            event_filename = event.get("filename", "")
-            event_path = event.get("path", "")
+            event_data = event.get("data", "")
 
             logging.info(f"Event type: {event_type}")
-            logging.info(f"Event filename: {event_filename}")
-            logging.info(f"Event path: {event_path}")
+            logging.info(f"Event filename: {event_data}")
 
             token = event.get("token", "")
 
@@ -50,6 +50,11 @@ async def on_message(message: aio_pika.IncomingMessage):
 
             if "ProcessQrcode" in event:
                 logging.info("Processing files after QRCodeGenerated event.")
+                # TODO aufruf von Methoden um weiteren Code auszuführen
+                """prüfen ob QR Code oder verschlüsselte Daten gesendet werden
+                im ersten Fall muss der QR-Code angezeigt werden
+                im zweiten Fall muss aus den Daten ein QR-Code erzeugt werden
+                und in die Datenbank geschrieben werden!"""
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")
