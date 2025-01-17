@@ -76,9 +76,9 @@ oder per Terminal (ehr für Linux Nutzer, unter Windows recht umständlich umzus
     ````
 4. der Postgres Container muss manchmal noch mal gestartet werden, in dem Fall in Docker Desktop den Startbutton klicken
 oder in der Konsole
-````bash
-docker-compose up postgres_container
-````
+    ````bash
+    docker-compose up postgres_container
+    ````
 
 # Starten der Anwendung ohne Frontend
 
@@ -97,24 +97,24 @@ einfügen und senden
 
 Per Curl:
 - Endpunkt registrieren:
- ````bash
-curl --location "http://localhost/user-management/auth/register" ^
---header "Content-Type: application/json" ^
---data "{\"username\": \"testuser5\", \"password\": \"securepassword\", \"role\": \"Mitarbeiter\"}"
- ````
+    ````bash
+    curl --location "http://localhost/user-management/auth/register" ^
+    --header "Content-Type: application/json" ^
+    --data "{\"username\": \"testuser5\", \"password\": \"securepassword\", \"role\": \"Mitarbeiter\"}"
+    ````
 - Endpunkt login:
- ````bash
-curl --location "http://localhost/user-management/auth/login" ^
---header "Content-Type: application/json" ^
---data "{\"username\": \"testuser5\", \"password\": \"securepassword\"}"
- ````
+    ````bash
+    curl --location "http://localhost/user-management/auth/login" ^
+    --header "Content-Type: application/json" ^
+    --data "{\"username\": \"testuser5\", \"password\": \"securepassword\"}"
+    ````
 - Event ImageUploaded:
- ````bash
-curl --location "http://localhost/eventing-service/publish/ImageUploaded" ^
---header "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3R1c2VyMiIsInJvbGUiOiJNaXRhcmJlaXRlciIsImV4cCI6MTczNjc3MDczMX0.emw6GdIF2hZSIA_QT6o9_8a_NsNWk4fomQcATTCTb8E" ^
---form "type=ImageUploaded" ^
---form "filename=@Pfad/desBildes.jpg"
- ````
+     ````bash
+    curl --location "http://localhost/eventing-service/publish/ImageUploaded" ^
+    --header "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3R1c2VyMiIsInJvbGUiOiJNaXRhcmJlaXRlciIsImV4cCI6MTczNjc3MDczMX0.emw6GdIF2hZSIA_QT6o9_8a_NsNWk4fomQcATTCTb8E" ^
+    --form "type=ImageUploaded" ^
+    --form "filename=@Pfad/desBildes.jpg"
+     ````
 
 # Docker aufräumen
 
