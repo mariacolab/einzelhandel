@@ -1,5 +1,8 @@
 import json
 
+import requests
+from PIL import Image
+import io
 import aio_pika
 import asyncio
 from common.utils import load_secrets
@@ -18,6 +21,7 @@ try:
 except Exception as e:
     logging.error(f"Error loading secrets: {e}")
     raise
+
 
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process():
@@ -50,11 +54,56 @@ async def on_message(message: aio_pika.IncomingMessage):
 
             if "ProcessQrcode" in event:
                 logging.info("Processing files after QRCodeGenerated event.")
-                # TODO aufruf von Methoden um weiteren Code auszuführen
+
                 """prüfen ob QR Code oder verschlüsselte Daten gesendet werden
                 im ersten Fall muss der QR-Code angezeigt werden
                 im zweiten Fall muss aus den Daten ein QR-Code erzeugt werden
-                und in die Datenbank geschrieben werden!"""
+                und in die Datenbank geschrieben werden!
+
+                if isinstance(message, bytes):
+                    # Rückgabe des Image QR-Codes aus Frontend als Blob ans Backend
+                    # TODO hier die Funktion die aus event_data ein QR-Code erzeugt als Bild erzeugt einfügen
+                    image = Image.open("example_image.png")
+
+                    # Bild in Blob konvertieren
+                    blob_stream = io.BytesIO()
+                    image.save(blob_stream, format="PNG")
+                    image_blob = blob_stream.getvalue()
+
+                    logging.debug(f"Bild-Blob erzeugt: {len(image_blob)} Bytes")
+
+                    #TODO ins Backend verlagern und ein weiteres Event zum senden an Backend
+                    url = " http://nginx-proxy/database-management/qrcodes"
+                    headers = {
+                        'Content-Type': 'application/json',
+                        "Authorization": f"{token}"
+                    }
+                    logging.info(f"Data: {headers}")
+                    data = {
+                        "type": "ProcessQrcode",
+                        "data": {
+                            "code": image_blob
+                        }
+                    }
+                    logging.info(f"Data: {data}")
+
+                    # POST-Anfrage senden
+                    response = requests.post(url, headers=headers, json=data)
+                    logging.info(f"Response: {response.request}")
+                    logging.info(f"Response: {response.status_code}")
+
+                    #TODO zurücksenden an QR-Code-Generierung und dort Update der Productdatenbank
+
+                elif isinstance(message, str):
+                    # Rückgabe des Blob QR-Codes aus Backend als Image an Frontend geben
+                    # Blob in ein Bild laden
+                    image_stream = io.BytesIO(event_data)
+                    image = Image.open(image_stream)
+
+                    # Bild anzeigen
+                    image.show()
+                else:
+                    return "Unbekannter Typ"  """
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")
@@ -79,9 +128,9 @@ async def main():
         await asyncio.sleep(5)  # Delay before retrying
         await main()
 
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
         logging.error(f"Unhandled exception: {e}")
-

@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
+from common.middleware import token_required, role_required
 from common.utils import load_secrets
 from models import db
 from crud import (
@@ -10,7 +11,8 @@ from crud import (
     create_product, read_product, update_product, delete_product,
     create_qrcode, read_qrcode, delete_qrcode,
     create_failed_classification, read_failed_classifications, delete_failed_classification,
-    create_metadata, read_metadata, update_metadata, delete_metadata, read_user_by_name, read_role_by_name
+    create_metadata, read_metadata, update_metadata, delete_metadata, read_user_by_name, read_role_by_name,
+    read_products_by_name
 )
 
 # Flask application initialization
@@ -77,6 +79,8 @@ def update_role_info(role_id):
 
 
 @app.route('/roles/<int:role_id>', methods=['DELETE'])
+@token_required
+@role_required('Admin')
 def delete_role_info(role_id):
     roles = delete_role(db.session, role_id=role_id)
     if roles:
@@ -121,6 +125,8 @@ def update_user_info(user_id):
 
 
 @app.route('/users/<int:user_id>', methods=['DELETE'])
+@token_required
+@role_required('Admin')
 def delete_user_info(user_id):
     users = delete_user(db.session, user_id=user_id)
     if users:
@@ -130,13 +136,24 @@ def delete_user_info(user_id):
 
 # --- Product Routen ---
 @app.route('/products', methods=['POST'])
+@token_required
 def add_product():
     data = request.json
     products = create_product(db.session, **data)
     if products:
-        return jsonify({"id": products.id, "name": products.name}), 201
+        return jsonify({"id": products.id, "name": products.name,
+                        "description": products.description, "price": products.price}), 201
     return jsonify({"error": "Product could not be created"}), 400
 
+@app.route('/products/<string:name>', methods=['GET'])
+@token_required
+def get_product_by_name(name):
+    products = read_products_by_name(db.session, name=name)
+    if products:
+        return jsonify({"id": products.id, "name": products.name,
+                        "description": products.description, "price": products.price,
+                        "qr_code_id": products.qr_code_id}), 200
+    return jsonify({"error": "User not found"}), 404
 
 @app.route('/products/<int:product_id>', methods=['GET'])
 def get_product(product_id):
@@ -156,6 +173,8 @@ def update_product_info(product_id):
 
 
 @app.route('/products/<int:product_id>', methods=['DELETE'])
+@token_required
+@role_required('Admin')
 def delete_product_info(product_id):
     products = delete_product(db.session, product_id=product_id)
     if products:
@@ -165,6 +184,7 @@ def delete_product_info(product_id):
 
 # --- QRCode Routen ---
 @app.route('/qrcodes', methods=['POST'])
+@token_required
 def add_qrcode():
     data = request.json
     qrcodes = create_qrcode(db.session, **data)
@@ -182,6 +202,8 @@ def get_qrcode(qrcode_id):
 
 
 @app.route('/qrcodes/<int:qrcode_id>', methods=['DELETE'])
+@token_required
+@role_required('Admin')
 def delete_qrcode_info(qrcode_id):
     qrcodes = delete_qrcode(db.session, qrcode_id=qrcode_id)
     if qrcodes:
@@ -206,6 +228,8 @@ def get_failed_classifications():
 
 
 @app.route('/failed-classifications/<int:failed_classification_id>', methods=['DELETE'])
+@token_required
+@role_required('Admin')
 def delete_failed_classification_info(failed_classification_id):
     failed_classifications = delete_failed_classification(db.session, failed_classification_id=failed_classification_id)
     if failed_classifications:
@@ -241,6 +265,8 @@ def update_metadata_info(metadata_id):
 
 
 @app.route('/metadata/<int:metadata_id>', methods=['DELETE'])
+@token_required
+@role_required('Admin')
 def delete_metadata_info(metadata_id):
     metadata = delete_metadata(db.session, metadata_id=metadata_id)
     if metadata:

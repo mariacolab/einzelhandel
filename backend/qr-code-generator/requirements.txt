@@ -2,3 +2,4 @@ flask
 aio-pika
 gunicorn
 requests
+cryptography

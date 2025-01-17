@@ -1,8 +1,7 @@
 import json
-
 import aio_pika
 import asyncio
-
+from cryptography.fernet import Fernet
 import requests
 
 from common.utils import load_secrets
@@ -15,6 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 try:
     secrets = load_secrets()
     password = secrets.get('RABBITMQ_PASSWORD')
+    key = secrets.get('ENCRYPTION_KEY')
     logging.debug(f"Loaded password: {password}")
     RABBITMQ_URL = "amqp://guest:{}@rabbitmq:5672".format(password)
     logging.debug(f"Loaded RABBITMQ_URL: {RABBITMQ_URL}")
@@ -54,6 +54,61 @@ async def on_message(message: aio_pika.IncomingMessage):
             if "ClassFiles" in event_type:
                 logging.info("Processing files after ClassificationCompleted event.")
                 # TODO aufruf von Methoden um weiteren Code auszuführen
+                """Fälle:
+                1. Datensatz ist nicht in der Datenbank vorhanden
+                    dann werden die Daten verschlüsselt 
+                2. Datensatz ist bereits in der Datenbank vorhanden
+                    dann wird der Datensatz
+                    
+
+                url = f"http://nginx-proxy/database-management/products/{event_data}"
+                headers = {
+                    'Content-Type': 'application/json',
+                    "Authorization": f"{token}"
+                }
+                logging.info(f"Data: {headers}")
+
+                # POST-Anfrage senden
+                response = requests.get(url, headers=headers)
+
+                if not response.json():
+                    url = " http://nginx-proxy/database-management/"
+                    headers = {
+                        'Content-Type': 'application/json',
+                        "Authorization": f"{token}"
+                    }
+                    logging.info(f"Data: {headers}")
+                    #TODO Daten ersetzen mit Rückgabe der KI
+                    data = {
+                        "name": "Apfel",
+                        "description": "rot",
+                        "price": "0,99"
+                    }
+                    logging.info(f"Data: {data}")
+                    response = requests.post(url, headers=headers, json=data)
+                    # Initialisiere den Fernet-Verschlüsselungsalgorithmus
+                    cipher = Fernet(key)
+
+                    # Daten zum Verschlüsseln
+                    data_to_encrypt = response.json().encode()
+
+                    # Verschlüsseln der Daten
+                    data = cipher.encrypt(data_to_encrypt)
+                    logging.debug("Verschlüsselte Daten:", data)
+                else:
+                    body = response.json()
+                    qr_code_id = body.get("qr_code_id")
+                    url = f"http://nginx-proxy/database-management/products/{qr_code_id}"
+                    headers = {
+                        'Content-Type': 'application/json',
+                        "Authorization": f"{token}"
+                    }
+                    logging.info(f"Header: {headers}")
+    
+                    # POST-Anfrage senden
+                    response = requests.get(url, headers=headers)
+                    body = response.json()
+                    data = body.get("code")"""
 
                 url = " http://nginx-proxy/eventing-service/publish/QRCodeGenerated"
                 headers = {
@@ -61,6 +116,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     "Authorization": f"{token}"
                 }
                 logging.info(f"Data: {headers}")
+                #TODO change data with return values
                 data = {
                     "type": "ProcessQrcode",
                     "data": {
