@@ -95,7 +95,7 @@ importiert werden
 5. den kopierten Token in das Event ImageUploaded im Header Authorization hinter Bearer mit einem Leerzeichen getrennt 
 einfügen und senden
 
-Per Curl:
+#### Per Curl:
 - Endpunkt registrieren:
     ````bash
     curl --location "http://localhost/user-management/auth/register" ^
