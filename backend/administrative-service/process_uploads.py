@@ -29,13 +29,14 @@ def validate_file_magic(file_path):
     except Exception as e:
         return f"Error: {e}"
 
-
 def rename_file(file_path, uploads_dir):
     """
     Benennt eine Datei in einen generischen Namen um.
     """
-    kind = filetype.guess(file_path)
-    new_name = f"{uuid.uuid4()}.{kind.extension}"  # Generiere UUID als neuen Namen
+    file, extension = file_path.split(".", 1)
+    new_name = f"{uuid.uuid4()}.{extension}"
+    logging.info(f"Dateiendung: {extension}")
+    logging.info(f"Datei: {new_name}")
     new_path = os.path.join(uploads_dir, new_name)
     os.rename(file_path, new_path)
     logging.info(f"Datei umbenannt: {file_path} -> {new_path}")

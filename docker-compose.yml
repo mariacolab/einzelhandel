@@ -3,7 +3,7 @@ services:
     image: postgres:latest
     container_name: postgres_container
     build:
-      context: ../../Neuer Ordner/einzelhandel
+      context: .
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -20,7 +20,7 @@ services:
 
   database-management:
     build:
-      context: backend/database-management
+      context: ./backend/database-management
       target: production
     container_name: database-management-service
     environment:
@@ -41,7 +41,7 @@ services:
 
   admin-service:
     build:
-      context: backend/administrative-service
+      context: ./backend/administrative-service
       target: production
     container_name: admin-service
     environment:
@@ -63,7 +63,7 @@ services:
 
   user-management:
     build:
-      context: backend/user_management
+      context: ./backend/user_management
     container_name: user_service
     environment:
       FLASK_APP: app
@@ -83,7 +83,7 @@ services:
   qr-service:
     build:
       target: production
-      context: backend/qr-code-generator
+      context: ./backend/qr-code-generator
     container_name: qr_service
     environment:
       FLASK_APP: app
@@ -105,8 +105,8 @@ services:
   eventing-service:
     build:
       target: production
-      context: backend/eventing
-      dockerfile: backend/eventing/Dockerfile
+      context: ./backend/eventing
+      dockerfile: Dockerfile
     container_name: eventing_service
     environment:
       FLASK_APP: backend/eventing/producer.py
@@ -128,7 +128,7 @@ services:
 
   ki:
     build:
-      context: ki
+      context: ./ki
       target: production
     container_name: ki
     environment:
@@ -150,7 +150,7 @@ services:
 
   frontend:
     build:
-      context: frontend
+      context: ./frontend
       target: production
     container_name: frontend
     environment:

@@ -97,6 +97,10 @@ def create_product(session: Session, name: str, description: str, price: float, 
         return None
 
 
+def read_products_by_name(session: Session, name: str):
+    return session.query(Products).filter_by(name=name).first()
+
+
 def read_product(session: Session, product_id: int):
     return session.query(Products).filter_by(id=product_id).first()
 
@@ -121,7 +125,8 @@ def delete_product(session: Session, product_id: int):
 # QRCode CRUD
 def create_qrcode(session: Session, data: str):
     try:
-        qrcodes = QRCodes(data=data)
+        binary_data = data.encode('utf-8')
+        qrcodes = QRCodes(data=binary_data)
         session.add(qrcodes)
         session.commit()
         return qrcodes
@@ -144,7 +149,7 @@ def delete_qrcode(session: Session, qr_code_id: int):
 
 # FailedClassification CRUD
 def create_failed_classification(session: Session, image_id: str, reason: str):
-    failedclassifications = FailedClassifications(imageid=imageid, reason=reason)
+    failedclassifications = FailedClassifications(imageid=image_id, reason=reason)
     session.add(failedclassifications)
     session.commit()
     return failedclassifications
@@ -192,272 +197,3 @@ def delete_metadata(session: Session, key: str):
         session.delete(metadata)
         session.commit()
     return metadata
-
-# General Utility for Prepared Queries
-# def execute_query(session: Session, query, params=None):
-#     if params is None:
-#         params = {}
-#     result = session.execute(query, params)
-#     session.commit()
-#     return result
-#
-#
-# # Role CRUD
-# def create_role(session: Session, role_name: str):
-#     query = """
-#     INSERT INTO roles (role_name)
-#     VALUES (:role_name)
-#     RETURNING *;
-#     """
-#     params = {"role_name": role_name}
-#     try:
-#         result = execute_query(session, query, params)
-#         return result.fetchone()
-#     except IntegrityError:
-#         session.rollback()
-#         return None
-#
-#
-# def read_role(session: Session, role_id: int):
-#     query = """
-#     SELECT * FROM roles WHERE id = :role_id;
-#     """
-#     params = {"role_id": role_id}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# def update_role(session: Session, role_id: int, new_role_name: str):
-#     query = """
-#     UPDATE roles
-#     SET role_name = :new_role_name
-#     WHERE id = :role_id
-#     RETURNING *;
-#     """
-#     params = {"role_id": role_id, "new_role_name": new_role_name}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# def delete_role(session: Session, role_id: int):
-#     query = """
-#     DELETE FROM roles
-#     WHERE id = :role_id
-#     RETURNING *;
-#     """
-#     params = {"role_id": role_id}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# # User CRUD
-# def create_user(session: Session, username: str, password: str, salt: str, role_id: int):
-#     query = """
-#     INSERT INTO users (username, password, salt, role_id)
-#     VALUES (:username, :password, :salt, :role_id)
-#     RETURNING *;
-#     """
-#     params = {"username": username, "password": password, "salt": salt, "role_id": role_id}
-#     try:
-#         result = execute_query(session, query, params)
-#         return result.fetchone()
-#     except IntegrityError:
-#         session.rollback()
-#         return None
-#
-#
-# def read_user(session: Session, user_id: int):
-#     query = """
-#     SELECT * FROM users WHERE id = :user_id;
-#     """
-#     params = {"user_id": user_id}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# def update_user(session: Session, user_id: int, updates: dict):
-#     set_clause = ", ".join([f"{key} =: {key}" for key in updates.keys()])
-#     query = f"""
-#     UPDATE users
-#     SET {set_clause}
-#     WHERE id = :user_id
-#     RETURNING *;
-#     """
-#     params = {"user_id": user_id, **updates}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# def delete_user(session: Session, user_id: int):
-#     query = """
-#     DELETE FROM users
-#     WHERE id = :user_id
-#     RETURNING *;
-#     """
-#     params = {"user_id": user_id}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# # Product CRUD
-# def create_product(session: Session, name: str, description: str, price: float, qr_code_id: int):
-#     query = """
-#     INSERT INTO products (name, description, price, qr_code_id)
-#     VALUES (:name, :description, :price, :qr_code_id)
-#     RETURNING *;
-#     """
-#     params = {"name": name, "description": description, "price": price, "qr_code_id": qr_code_id}
-#     try:
-#         result = execute_query(session, query, params)
-#         return result.fetchone()
-#     except IntegrityError:
-#         session.rollback()
-#         return None
-#
-#
-# def read_product(session: Session, product_id: int):
-#     query = """
-#     SELECT * FROM products WHERE id = :product_id;
-#     """
-#     params = {"product_id": product_id}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# def update_product(session: Session, product_id: int, updates: dict):
-#     set_clause = ", ".join([f"{key} =: {key}" for key in updates.keys()])
-#     query = f"""
-#     UPDATE products
-#     SET {set_clause}
-#     WHERE id = :product_id
-#     RETURNING *;
-#     """
-#     params = {"product_id": product_id, **updates}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# def delete_product(session: Session, product_id: int):
-#     query = """
-#     DELETE FROM products
-#     WHERE id = :product_id
-#     RETURNING *;
-#     """
-#     params = {"product_id": product_id}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# # QRCode CRUD
-# def create_qrcode(session: Session, data: str):
-#     query = """
-#     INSERT INTO qr_codes (data)
-#     VALUES (:data)
-#     RETURNING *;
-#     """
-#     params = {"data": data}
-#     try:
-#         result = execute_query(session, query, params)
-#         return result.fetchone()
-#     except IntegrityError:
-#         session.rollback()
-#         return None
-#
-#
-# def read_qrcode(session: Session, qr_code_id: int):
-#     query = """
-#     SELECT * FROM qr_codes WHERE id = :qr_code_id;
-#     """
-#     params = {"qr_code_id": qr_code_id}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# def delete_qrcode(session: Session, qr_code_id: int):
-#     query = """
-#     DELETE FROM qr_codes
-#     WHERE id = :qr_code_id
-#     RETURNING *;
-#     """
-#     params = {"qr_code_id": qr_code_id}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# # FailedClassification CRUD
-# def create_failed_classification(session: Session, image_id: str, reason: str):
-#     query = """
-#     INSERT INTO failed_classifications (image_id, reason)
-#     VALUES (:image_id, :reason)
-#     RETURNING *;
-#     """
-#     params = {"image_id": image_id, "reason": reason}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# def read_failed_classifications(session: Session):
-#     query = """
-#     SELECT * FROM failed_classifications;
-#     """
-#     result = execute_query(session, query)
-#     return result.fetchall()
-#
-#
-# def delete_failed_classification(session: Session, classification_id: int):
-#     query = """
-#     DELETE FROM failed_classifications
-#     WHERE id = :classification_id
-#     RETURNING *;
-#     """
-#     params = {"classification_id": classification_id}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# # Metadata CRUD
-# def create_metadata(session: Session, key: str, value: str):
-#     query = """
-#     INSERT INTO metadata (key, value)
-#     VALUES (:key, :value)
-#     RETURNING *;
-#     """
-#     params = {"key": key, "value": value}
-#     try:
-#         result = execute_query(session, query, params)
-#         return result.fetchone()
-#     except IntegrityError:
-#         session.rollback()
-#         return None
-#
-#
-# def read_metadata(session: Session, key: str):
-#     query = """
-#     SELECT * FROM metadata WHERE key = :key;
-#     """
-#     params = {"key": key}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# def update_metadata(session: Session, key: str, value: str):
-#     query = """
-#     UPDATE metadata
-#     SET value = :value
-#     WHERE key = :key
-#     RETURNING *;
-#     """
-#     params = {"key": key, "value": value}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()
-#
-#
-# def delete_metadata(session: Session, key: str):
-#     query = """
-#     DELETE FROM metadata
-#     WHERE key = :key
-#     RETURNING *;
-#     """
-#     params = {"key": key}
-#     result = execute_query(session, query, params)
-#     return result.fetchone()

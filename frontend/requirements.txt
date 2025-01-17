@@ -2,3 +2,5 @@ Flask
 filetype
 aio-pika
 gunicorn
+Pillow
+requests
