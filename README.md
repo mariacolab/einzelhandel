@@ -62,7 +62,7 @@
 
 # Docker starten und bauen der Container
 
-Vorrausetzung: Docker muss installiert sein, entweder [Docker Desktop](https://www.docker.com/products/docker-desktop/) 
+Voraussetzung: Docker muss installiert sein, entweder [Docker Desktop](https://www.docker.com/products/docker-desktop/) 
 oder per Terminal (ehr für Linux Nutzer, unter Windows recht umständlich umzusätzen) 
 
 1. Docker Daemon starten, in dem Docker Desktop gestartet wird oder per Terminal. 
@@ -82,15 +82,15 @@ oder in der Konsole
 
 # Starten der Anwendung ohne Frontend
 
-Vorrausetzung: wenn Requests nicht per CURL sondern über eine Collection genutzt werden sollen, dann muss ein API Client   
+Vorausetzung: wenn Requests nicht per CURL sondern über eine Collection genutzt werden sollen, dann muss ein API Client   
 heruntergeladen werden wie [Postman](https://www.postman.com/downloads/) oder 
 [Bruno](https://docs.usebruno.com/get-started/bruno-basics/download) 
 
-1. nachdem der Client Installiert wurde kann die Collection 
+1. nachdem der Client installiert wurde kann die Collection 
 [Einzelhandel.postman_collection.json](https://drive.google.com/file/d/1r-va-SVz5_67Owtehy-zt-iI5mkOvfPa/view?usp=sharing) 
 importiert werden
 2. existiert noch kein User muss zuerst der Endpunkt registrieren ausgeführt werden
-3. wurden der Body im Endpunkt registrieren angepasst, dann müssen die Daten im Body von login ebenfalls angepasst werden
+3. wurde der Body im Endpunkt registrieren angepasst, dann müssen die Daten im Body vom login ebenfalls angepasst werden
 4. jetzt login ausführen und den Inhalt des Response Body vom token ohne " " kopieren
 5. den kopierten Token in das Event ImageUploaded im Header Authorization hinter Bearer mit einem Leerzeichen getrennt 
 einfügen und senden
