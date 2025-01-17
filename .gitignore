@@ -29,6 +29,7 @@ dist/
 pip-wheel-metadata/
 wheelhouse/
 
+
 # Coverage reports
 htmlcov/
 .coverage
@@ -63,3 +64,6 @@ coverage.xml
 docs/_build/
 
 secrets/github_credentials.txt
+backend/user_management/flask_session
+backend/user_management/secrets
+backend/user_management/common
