@@ -100,10 +100,12 @@ def publish_event(event):
                 "path": save_path,
                 "token": token
             }
+            logging.debug(f"Message ImageUploaded: {message}")
+
             asyncio.run(send_message(message))
 
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            #asyncio.run(send_message({"type": "ProcessFiles", "data": {}}))
+            # asyncio.run(send_message({"type": "ProcessFiles", "data": {}}))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
 
@@ -131,10 +133,10 @@ def publish_event(event):
                 return jsonify({"error": "Only JPG and PNG files are allowed"}), 400
 
             # Speichern der Datei
-            save_path = f"/downloads/{file.filename}"
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)  # Sicherstellen, dass das Verzeichnis existiert
-            file.save(save_path)
-            logging.debug(f"File {file.filename} saved to {save_path}")
+            # save_path = f"/downloads/{file.filename}"
+            # os.makedirs(os.path.dirname(save_path), exist_ok=True)  # Sicherstellen, dass das Verzeichnis existiert
+            # file.save(save_path)
+            # logging.debug(f"File {file.filename} saved to {save_path}")
 
             token = request.headers.get('Authorization', '')
             logging.debug(f"Authorization {token}")
@@ -144,13 +146,15 @@ def publish_event(event):
             message = {
                 "type": message_type,
                 "file": file.filename,
-                "path": save_path,
+                "path": "/shared/uploads/",
                 "token": token
             }
+            logging.debug(f"Message ImageValidated: {message}")
+
             asyncio.run(send_message(message))
 
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            #asyncio.run(send_message({"type": "ValidatedFiles", "data": {}}))
+            # asyncio.run(send_message({"type": "ValidatedFiles", "data": {}}))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
 
@@ -174,11 +178,12 @@ def publish_event(event):
                 "data": data,
                 "token": token
             }
-            logging.debug(f"message {message}")
+            logging.debug(f"Message ClassificationCompleted: {message}")
+
             asyncio.run(send_message(message))
 
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            #asyncio.run(send_message({"type": "ClassFiles", "data": {}}))
+            # asyncio.run(send_message({"type": "ClassFiles", "data": {}}))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Body {body} uploaded successfully."}), 200
 
@@ -193,6 +198,7 @@ def publish_event(event):
             message_type = parsed_body.get("type")
             event_data = parsed_body.get("data", {})
             data = event_data.get("code")
+            kind = event_data.get("kind")
             logging.debug(f"event_data {event_data}")
             logging.debug(f"data {data}")
             logging.debug(f"Type {message_type}")
@@ -200,14 +206,15 @@ def publish_event(event):
             message = {
                 "type": message_type,
                 "data": data,
+                "kind": kind,
                 "token": token
             }
-            logging.debug(f"message {message}")
+            logging.debug(f"Message QRCodeGenerated: {message}")
 
             asyncio.run(send_message(message))
 
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            #asyncio.run(send_message({"type": "ProcessQrcode", "data": {}}))
+            # asyncio.run(send_message({"type": "ProcessQrcode", "data": {}}))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Body {body} uploaded successfully."}), 200
 

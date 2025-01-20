@@ -1,5 +1,6 @@
 import json
-
+import os
+import random
 import aio_pika
 import asyncio
 
@@ -22,6 +23,7 @@ except Exception as e:
     logging.error(f"Error loading secrets: {e}")
     raise
 
+
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process():
         try:
@@ -38,11 +40,11 @@ async def on_message(message: aio_pika.IncomingMessage):
             logging.debug(f"Parsed event: {event}")
 
             event_type = event.get("type", "")
-            event_filename = event.get("filename", "")
+            event_filename = event.get("file", "")
             event_path = event.get("path", "")
 
             logging.info(f"Event type: {event_type}")
-            logging.info(f"Event filename: {event_filename}")
+            logging.info(f"Event file: {event_filename}")
             logging.info(f"Event path: {event_path}")
 
             token = event.get("token", "")
@@ -58,6 +60,27 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info("Processing files after ImageUploaded event.")
                 # TODO aufruf von Methoden um weiteren Code auszuführen
 
+                # löschen der Datei im shared Verzeichnis
+                try:
+                    # Überprüfen, ob die Datei existiert
+                    if os.path.exists(f"{event_path}{event_filename}"):
+                        os.remove(f"{event_path}{event_filename}")
+                        logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
+                    else:
+                        logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
+                except Exception as e:
+                    logging.error(f"Fehler beim Löschen der Datei: {e}")
+
+                # TODO entferne Test liste
+                obst_und_gemuese = [
+                    "Apfel", "Banane", "Kirsche", "Mango", "Orange",
+                    "Traube", "Karotte", "Gurke", "Tomate", "Brokkoli",
+                    "Zucchini", "Paprika", "Spinat", "Zwiebel", "Knoblauch"
+                ]
+
+                zufaelliger_wert = random.choice(obst_und_gemuese)
+                logging.info(f"Exampleresult: {zufaelliger_wert}")
+
                 url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                 headers = {
                     'Content-Type': 'application/json',
@@ -69,7 +92,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 data = {
                     "type": "ClassFiles",
                     "data": {
-                        "result": "Rückgabe aus der KI"
+                        "result": f"{zufaelliger_wert}"
                     }
                 }
 
@@ -103,9 +126,9 @@ async def main():
         await asyncio.sleep(5)  # Delay before retrying
         await main()
 
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
         logging.error(f"Unhandled exception: {e}")
-

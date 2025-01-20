@@ -1,3 +1,4 @@
+import base64
 import json
 import aio_pika
 import asyncio
@@ -41,7 +42,7 @@ async def on_message(message: aio_pika.IncomingMessage):
             event_data = event.get("data", "")
 
             logging.info(f"Event type: {event_type}")
-            logging.info(f"Event filename: {event_data}")
+            logging.info(f"Event Data: {event_data}")
 
             token = event.get("token", "")
 
@@ -58,21 +59,26 @@ async def on_message(message: aio_pika.IncomingMessage):
                 1. Datensatz ist nicht in der Datenbank vorhanden
                     dann werden die Daten verschlüsselt 
                 2. Datensatz ist bereits in der Datenbank vorhanden
-                    dann wird der Datensatz
+                    dann wird der Datensatz """
                     
-
+                #prüft ob der Datensatz in der Datenbank vorhanden ist
                 url = f"http://nginx-proxy/database-management/products/{event_data}"
                 headers = {
                     'Content-Type': 'application/json',
                     "Authorization": f"{token}"
                 }
-                logging.info(f"Data: {headers}")
+                logging.info(f"Header get Product: {headers}")
 
                 # POST-Anfrage senden
                 response = requests.get(url, headers=headers)
+                body = response.json()
+                logging.info(f"Product response: {body}")
+                expected_json = {"error": "Product not found"}
 
-                if not response.json():
-                    url = " http://nginx-proxy/database-management/"
+                #Fall 1 er ist nicht vorhanden
+                if body == expected_json:
+                    #DatenSatz wird angelegt
+                    url = " http://nginx-proxy/database-management/products/no-qr"
                     headers = {
                         'Content-Type': 'application/json',
                         "Authorization": f"{token}"
@@ -80,36 +86,46 @@ async def on_message(message: aio_pika.IncomingMessage):
                     logging.info(f"Data: {headers}")
                     #TODO Daten ersetzen mit Rückgabe der KI
                     data = {
-                        "name": "Apfel",
+                        "name": f"{event_data}",
                         "description": "rot",
-                        "price": "0,99"
+                        "price": "0.99"
                     }
-                    logging.info(f"Data: {data}")
+                    logging.info(f"Data Post Product: {data}")
                     response = requests.post(url, headers=headers, json=data)
                     # Initialisiere den Fernet-Verschlüsselungsalgorithmus
+
+                    #Datensatz wird verschlüsselt
                     cipher = Fernet(key)
 
                     # Daten zum Verschlüsseln
-                    data_to_encrypt = response.json().encode()
+                    data_to_encrypt = response.text.encode()
 
                     # Verschlüsseln der Daten
-                    data = cipher.encrypt(data_to_encrypt)
-                    logging.debug("Verschlüsselte Daten:", data)
+                    encrypt_data = cipher.encrypt(data_to_encrypt)
+                    logging.debug("Verschlüsselte Daten:", encrypt_data)
+                    message_data = base64.b64encode(encrypt_data).decode("utf-8")
+                    logging.debug("Verschlüsselte Daten:", message_data)
                 else:
+                    #Fall 2 er ist vorhanden
                     body = response.json()
+                    #id des QR-Codes aus dem Body gelesen
                     qr_code_id = body.get("qr_code_id")
+                    #QR-Code wird aus der Datenbank geholt
                     url = f"http://nginx-proxy/database-management/products/{qr_code_id}"
                     headers = {
                         'Content-Type': 'application/json',
                         "Authorization": f"{token}"
                     }
-                    logging.info(f"Header: {headers}")
+                    logging.info(f"Header get Product: {headers}")
     
                     # POST-Anfrage senden
                     response = requests.get(url, headers=headers)
                     body = response.json()
-                    data = body.get("code")"""
+                    message_data = body.get("code")
+                    logging.info(f"body GET Product: {body}")
+                    logging.info(f"code from body GET Product: {message_data}")
 
+                #Event QR-Code generated wird mit den entsprechenden Daten abgesetzt
                 url = " http://nginx-proxy/eventing-service/publish/QRCodeGenerated"
                 headers = {
                     'Content-Type': 'application/json',
@@ -120,7 +136,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                 data = {
                     "type": "ProcessQrcode",
                     "data": {
-                        "code": "cat"
+                        "code": f"{message_data}",
+                        "kind": "data"
                     }
                 }
                 logging.info(f"Data: {data}")

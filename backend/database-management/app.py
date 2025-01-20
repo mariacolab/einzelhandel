@@ -12,7 +12,7 @@ from crud import (
     create_qrcode, read_qrcode, delete_qrcode,
     create_failed_classification, read_failed_classifications, delete_failed_classification,
     create_metadata, read_metadata, update_metadata, delete_metadata, read_user_by_name, read_role_by_name,
-    read_products_by_name
+    read_products_by_name, create_product_without_qr
 )
 
 # Flask application initialization
@@ -62,12 +62,14 @@ def get_role(role_id):
         return jsonify({"id": roles.id, "role_name": roles.role_name}), 200
     return jsonify({"error": "Role not found"}), 404
 
+
 @app.route('/roles/<string:role>', methods=['GET'])
 def get_role_by_name(role):
     roles = read_role_by_name(db.session, role_name=role)
     if roles:
         return jsonify({"id": roles.id, "role_name": roles.role_name}), 200
     return jsonify({"error": "Role not found"}), 404
+
 
 @app.route('/roles/<int:role_id>', methods=['PUT'])
 def update_role_info(role_id):
@@ -145,6 +147,18 @@ def add_product():
                         "description": products.description, "price": products.price}), 201
     return jsonify({"error": "Product could not be created"}), 400
 
+
+@app.route('/products/no-qr', methods=['POST'])
+@token_required
+def add_product_without_qr():
+    data = request.json
+    products = create_product_without_qr(db.session, **data)
+    if products:
+        return jsonify({"id": products.id, "name": products.name,
+                        "description": products.description, "price": products.price}), 201
+    return jsonify({"error": "Product could not be created"}), 400
+
+
 @app.route('/products/<string:name>', methods=['GET'])
 @token_required
 def get_product_by_name(name):
@@ -153,9 +167,11 @@ def get_product_by_name(name):
         return jsonify({"id": products.id, "name": products.name,
                         "description": products.description, "price": products.price,
                         "qr_code_id": products.qr_code_id}), 200
-    return jsonify({"error": "User not found"}), 404
+    return jsonify({"error": "Product not found"}), 404
+
 
 @app.route('/products/<int:product_id>', methods=['GET'])
+@token_required
 def get_product(product_id):
     products = read_product(db.session, product_id=product_id)
     if products:
@@ -164,6 +180,7 @@ def get_product(product_id):
 
 
 @app.route('/products/<int:product_id>', methods=['PUT'])
+@token_required
 def update_product_info(product_id):
     data = request.json
     products = update_product(db.session, product_id=product_id, **data)
@@ -194,6 +211,7 @@ def add_qrcode():
 
 
 @app.route('/qrcodes/<int:qrcode_id>', methods=['GET'])
+@token_required
 def get_qrcode(qrcode_id):
     qrcodes = read_qrcode(db.session, qrcode_id=qrcode_id)
     if qrcodes:
@@ -213,6 +231,7 @@ def delete_qrcode_info(qrcode_id):
 
 # --- FailedClassification Routen ---
 @app.route('/failed-classifications', methods=['POST'])
+@token_required
 def add_failed_classification():
     data = request.json
     failed_classifications = create_failed_classification(db.session, **data)
@@ -222,6 +241,7 @@ def add_failed_classification():
 
 
 @app.route('/failed-classifications', methods=['GET'])
+@token_required
 def get_failed_classifications():
     failed_classifications = read_failed_classifications(db.session)
     return jsonify([{"id": fc.id, "reason": fc.reason} for fc in failed_classifications]), 200
@@ -239,6 +259,8 @@ def delete_failed_classification_info(failed_classification_id):
 
 # --- Metadata Routen ---
 @app.route('/metadata', methods=['POST'])
+@token_required
+@role_required('Admin')
 def add_metadata():
     data = request.json
     metadata = create_metadata(db.session, **data)
@@ -248,6 +270,8 @@ def add_metadata():
 
 
 @app.route('/metadata/<int:metadata_id>', methods=['GET'])
+@token_required
+@role_required('Admin')
 def get_metadata(metadata_id):
     metadata = read_metadata(db.session, metadata_id=metadata_id)
     if metadata:
@@ -256,6 +280,8 @@ def get_metadata(metadata_id):
 
 
 @app.route('/metadata/<int:metadata_id>', methods=['PUT'])
+@token_required
+@role_required('Admin')
 def update_metadata_info(metadata_id):
     data = request.json
     metadata = update_metadata(db.session, metadata_id=metadata_id, **data)
