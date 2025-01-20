@@ -97,6 +97,17 @@ def create_product(session: Session, name: str, description: str, price: float, 
         return None
 
 
+def create_product_without_qr(session: Session, name: str, description: str, price: float):
+    try:
+        products = Products(name=name, description=description, price=price)
+        session.add(products)
+        session.commit()
+        return products
+    except IntegrityError:
+        session.rollback()
+        return None
+
+
 def read_products_by_name(session: Session, name: str):
     return session.query(Products).filter_by(name=name).first()
 

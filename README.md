@@ -67,6 +67,27 @@
 Voraussetzung: Docker muss installiert sein, entweder [Docker Desktop](https://www.docker.com/products/docker-desktop/) 
 oder per Terminal (ehr für Linux Nutzer, unter Windows recht umständlich umzusätzen) 
 
+   1. im Projektverzeichnis einen Ordner secrets anlegen und in diesem eine Datei github_credentials.txt
+   2. in die Datei die folgenden Werte kopieren
+       ````bash
+       PEPPER=pepper123secure
+       POSTGRES_PASSWORD=a2GtDwGcCYpPMfzb9T
+       API_KEY=myapikeyvalue
+       SECRET_KEY=supersecretkey
+       JWT_SECRET_KEY=jwtsecretkey
+       RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
+       ENCRYPTION_KEY=-mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=
+        ````
+   3. ebenfalls in dem Projektverzeichnis muss eine .env angelegt werden
+         ````bash
+        PEPPER_KEY=my-secret-pepper
+        POSTGRES_PASSWORD=a2GtDwGcCYpPMfzb9T
+        RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
+        ENCRYPTION_KEY=-mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=
+        ````
+    
+
+
 1. Docker Daemon starten, in dem Docker Desktop gestartet wird oder per Terminal. 
 2. Bauen der Docker Images mit dem Befehl:
     ````bash

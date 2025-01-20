@@ -67,4 +67,7 @@ secrets/github_credentials.txt
 backend/user_management/flask_session
 backend/user_management/secrets
 backend/user_management/common
-
+backend/qr-code-generator/common
+backend/qr-code-generator/secrets
+backend/database-management/common
+backend/database-management/secrets
