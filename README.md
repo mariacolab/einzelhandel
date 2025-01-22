@@ -135,8 +135,8 @@ einfügen und senden
      ````bash
     curl --location "http://localhost/eventing-service/publish/ImageUploaded" ^
     --header "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3R1c2VyMiIsInJvbGUiOiJNaXRhcmJlaXRlciIsImV4cCI6MTczNjc3MDczMX0.emw6GdIF2hZSIA_QT6o9_8a_NsNWk4fomQcATTCTb8E" ^
-    --form "type=ImageUploaded" ^
-    --form "filename=@Pfad/desBildes.jpg"
+    --form "type=ProcessFiles" ^
+    --form "filename=@Pfad\desBildes.jpg"
      ````
 
 # Docker aufräumen
