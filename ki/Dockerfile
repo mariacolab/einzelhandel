@@ -8,6 +8,7 @@ WORKDIR /workspace
 RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -y libmagic1 file
 RUN apt-get update && apt-get install -y libgl1 libglib2.0-0
+RUN apt-get update && apt-get install -y libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libtiff5-dev libwebp-dev libopenjp2-7-dev && rm -rf /var/lib/apt/lists/*
 # Anforderungen installieren
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

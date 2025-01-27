@@ -5,6 +5,7 @@ import aio_pika
 import asyncio
 
 import tensorflow as tf
+from PIL import Image
 from my_function_TF import predict_object_TF
 
 import requests
@@ -64,8 +65,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info("Processing files after ImageUploaded event.")
 
                 # TODO aufruf von Methoden um weiteren Code auszuführen
-                img_file = "../DATA/ObstGemuese_128/3_VALIDATE/Apfel/20241223_195302.jpg"
-                img = tf.keras.preprocessing.image.load_img(img_file, target_size=128)
+                img_file = '../DATA/20241223_195302.jpg'
+                img = Image.Image.load(img_file)
                 class_id = predict_object_TF(img)
                 #class_id = predict_object_YOLO(img_file)
                 logging.info(f"Exampleresult: {class_id}")
