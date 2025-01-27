@@ -4,10 +4,14 @@ import random
 import aio_pika
 import asyncio
 
+import tensorflow as tf
+from my_function_TF import predict_object_TF
+
 import requests
 
-from common.utils import load_secrets
 import logging
+
+from common.utils import load_secrets
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -58,29 +62,13 @@ async def on_message(message: aio_pika.IncomingMessage):
             #
             if "ValidatedFiles" in event_type:
                 logging.info("Processing files after ImageUploaded event.")
+
                 # TODO aufruf von Methoden um weiteren Code auszuführen
-
-                # löschen der Datei im shared Verzeichnis
-                try:
-                    # Überprüfen, ob die Datei existiert
-                    if os.path.exists(f"{event_path}{event_filename}"):
-                        os.remove(f"{event_path}{event_filename}")
-                        logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
-                    else:
-                        logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
-                except Exception as e:
-                    logging.error(f"Fehler beim Löschen der Datei: {e}")
-
-                # TODO entferne Test liste
-                obst_und_gemuese = [
-                    "Apfel", "Banane", "Kirsche", "Mango", "Orange",
-                    "Traube", "Karotte", "Gurke", "Tomate", "Brokkoli",
-                    "Zucchini", "Paprika", "Spinat", "Zwiebel", "Knoblauch"
-                ]
-
-                zufaelliger_wert = random.choice(obst_und_gemuese)
-                logging.info(f"Exampleresult: {zufaelliger_wert}")
-
+                img_file = "../DATA/ObstGemuese_128/3_VALIDATE/Apfel/20241223_195302.jpg"
+                img = tf.keras.preprocessing.image.load_img(img_file, target_size=128)
+                class_id = predict_object_TF(img)
+                #class_id = predict_object_YOLO(img_file)
+                logging.info(f"Exampleresult: {class_id}")
                 url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                 headers = {
                     'Content-Type': 'application/json',
@@ -92,7 +80,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                 data = {
                     "type": "ClassFiles",
                     "data": {
-                        "result": f"{zufaelliger_wert}"
+                      #  "result": f"{zufaelliger_wert}"
+                        "result": f"{class_id}"
                     }
                 }
 
@@ -125,7 +114,6 @@ async def main():
         logging.error(f"Error in RabbitMQ connection or setup: {e}")
         await asyncio.sleep(5)  # Delay before retrying
         await main()
-
 
 if __name__ == "__main__":
     try:
