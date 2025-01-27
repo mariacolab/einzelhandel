@@ -2,11 +2,13 @@
 FROM python:3.10-slim AS base
 
 # Arbeitsverzeichnis setzen
-WORKDIR /app
+WORKDIR /workspace
 
 # Allgemeine Abhängigkeiten installieren
 RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -y libmagic1 file
+RUN apt-get update && apt-get install -y libgl1 libglib2.0-0
+
 # Anforderungen installieren
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -20,7 +22,7 @@ RUN pip install pytest pytest-flask
 # Anwendung und Testdateien kopieren
 COPY . .
 
-COPY tests /app/tests
+COPY tests /workspace/tests
 
 # Standardbefehl für Tests
 CMD ["pytest", "tests/"]
@@ -30,7 +32,7 @@ FROM base AS production
 
 # Anwendung kopieren
 COPY . .
-COPY . /app
+COPY . /workspace
 
 # Standardbefehl für Produktion
 CMD ["gunicorn", "--bind", "0.0.0.0:5006", "app:app"]
