@@ -30,6 +30,7 @@ def validate_file_magic(file_path):
         return f"Error: {e}"
 
 def rename_file(file_path, uploads_dir):
+    logging.info(f"f{file_path}")
     """
     Benennt eine Datei in einen generischen Namen um.
     """
@@ -43,7 +44,7 @@ def rename_file(file_path, uploads_dir):
     return new_path
 
 
-def process_files():
+def process_files(file_path, uploads_dir):
     """
     Sucht Dateien im Uploads-Ordner, überprüft den Typ und benennt sie um.
     """
