@@ -1,3 +1,4 @@
+import base64
 import json
 
 import requests
@@ -7,6 +8,7 @@ import aio_pika
 import asyncio
 from common.utils import load_secrets
 import logging
+import qrcode
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -52,9 +54,9 @@ async def on_message(message: aio_pika.IncomingMessage):
                 return
 
             logging.info(f"Extracted token: {token}")
-            #logging.info(f"if: {ProcessQrcode in event}")
-            if "ProcessQrcode" in event:
-                logging.info("Processing files after QRCodeGenerated event.")
+            logging.info(f"if: {event}")
+            if "EncodedFiles" == event_type:
+                logging.info("Processing files after EncodedFiles event.")
 
                 """prüfen ob QR Code oder verschlüsselte Daten gesendet werden
                 im ersten Fall muss der QR-Code angezeigt werden
@@ -73,27 +75,47 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                 elif kind == "data":
                     logging.info("message str")
+                    # TODO lösche QR-Code
+                    qr = qrcode.QRCode(
+                        version=1,  # Größe des QR-Codes (1 ist die kleinste Größe)
+                        error_correction=qrcode.constants.ERROR_CORRECT_L,  # Fehlertoleranzstufe
+                        box_size=10,  # Größe der Boxen im QR-Code
+                        border=4,  # Breite des Rands (Minimum ist 4)
+                    )
+
+                    # Inhalt zum QR-Code hinzufügen
+                    qr.add_data(event_data)
+                    qr.make(fit=True)
+
+                    # QR-Code als Bild erstellen
+                    image = qr.make_image(fill="black", back_color="white")
+                    logging.debug(f"qr_code: {image}")
                     # Rückgabe des Image QR-Codes aus Frontend als Blob ans Backend
                     # TODO hier die Funktion die aus event_data ein QR-Code erzeugt als Bild erzeugt einfügen
-                    image = Image.open("example_image.png")
+                    # image = Image.open("example_image.png")
 
                     # Bild in Blob konvertieren
                     blob_stream = io.BytesIO()
                     image.save(blob_stream, format="PNG")
                     image_blob = blob_stream.getvalue()
 
-                    logging.debug(f"Bild-Blob erzeugt: {len(image_blob)} Bytes")
-
-                    #TODO ins Backend verlagern und ein weiteres Event zum senden an Backend
-                    url = " http://nginx-proxy/qr-service/qrcode"
+                    logging.debug(f"Bild-Blob erzeugt: {image_blob} Bytes")
+                    image_blob_base64 = base64.b64encode(image_blob).decode('utf-8')
+                    # TODO ins Backend verlagern und ein weiteres Event zum senden an Backend
+                    url = "http://nginx-proxy/eventing-service/publish/QRCodeGenerated"
                     headers = {
                         'Content-Type': 'application/json',
                         "Authorization": f"{token}"
                     }
                     logging.info(f"Data: {headers}")
+                    # TODO change data with return values
                     data = {
-                        "image_blob": image_blob,
-                        "encrypted_data": event_data
+                        "type": "ProcessQrcode",
+                        "data": {
+                            "image_blob": image_blob_base64,
+                            "encrypted_data": event_data,
+                            "token": token
+                        }
                     }
                     logging.info(f"Data: {data}")
 
@@ -102,11 +124,12 @@ async def on_message(message: aio_pika.IncomingMessage):
                     logging.info(f"Response: {response.request}")
                     logging.info(f"Response: {response.status_code}")
 
-                    #TODO zurücksenden an QR-Code-Generierung und dort Update der Productdatenbank
+                    # TODO zurücksenden an QR-Code-Generierung und dort Update der Productdatenbank
 
                 else:
-                    return "Unbekannter Typ"
-
+                    logging.debug("Unbekannter Typ")
+            else:
+                logging.debug("if fehlgeschalgen")
         except Exception as e:
             logging.error(f"Error processing message: {e}")
 
@@ -119,8 +142,8 @@ async def main():
             logging.info("Connected to RabbitMQ.")
             channel = await connection.channel()
             exchange = await channel.declare_exchange("events", aio_pika.ExchangeType.TOPIC, durable=True)
-            queue = await channel.declare_queue("process_qrcode_queue", durable=True)
-            await queue.bind(exchange, routing_key="ProcessQrcode")  # Beispiel: Lauschen auf "ProcessFiles"
+            queue = await channel.declare_queue("process_encoded_queue", durable=True)
+            await queue.bind(exchange, routing_key="EncodedFiles")  # Beispiel: Lauschen auf "ProcessFiles"
 
             await queue.consume(on_message)
             logging.info("Waiting for messages. To exit press CTRL+C.")

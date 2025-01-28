@@ -34,7 +34,7 @@ class Products(db.Model):
 class QRCodes(db.Model):
     __tablename__ = 'qr_codes'
     id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.LargeBinary, nullable=False)
+    data = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     products = relationship('Products', back_populates='qr_codes', lazy=True)

@@ -38,7 +38,6 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"]
 )
 
-
 @app.route('/publish/<event>', methods=['POST'])
 @token_required
 @role_required('Admin', 'Mitarbeiter', 'Kunde')
@@ -56,7 +55,7 @@ def publish_event(event):
         logging.debug(f"Processing event: {event}")
 
         # Event-Typen
-        if event not in ["ImageUploaded", "ImageValidated", "ClassificationCompleted", "QRCodeGenerated"]:
+        if event not in ["ImageUploaded", "ImageValidated", "ClassificationCompleted", "QRCodeGenerated", "Encoded"]:
             logging.debug("Event not recognized")
             return jsonify({"error": "Event not recognized"}), 400
 
@@ -186,8 +185,7 @@ def publish_event(event):
             # asyncio.run(send_message({"type": "ClassFiles", "data": {}}))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Body {body} uploaded successfully."}), 200
-
-        if event == "QRCodeGenerated":
+        if event == "Encoded":
             logging.debug(f"Headers: {request.headers}")
             body = request.get_data(as_text=True)  # Retrieve raw body data as text
             logging.debug(f"Body: {body}")
@@ -207,6 +205,36 @@ def publish_event(event):
                 "type": message_type,
                 "data": data,
                 "kind": kind,
+                "token": token
+            }
+            logging.debug(f"Message Encoded: {message}")
+
+            asyncio.run(send_message(message))
+
+            # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
+            # asyncio.run(send_message({"type": "ProcessQrcode", "data": {}}))
+            logging.debug(f"Event {event} published successfully")
+            return jsonify({"status": f"Body {body} uploaded successfully."}), 200
+        if event == "QRCodeGenerated":
+            logging.debug(f"Headers: {request.headers}")
+            body = request.get_data(as_text=True)  # Retrieve raw body data as text
+            logging.debug(f"Body: {body}")
+
+            parsed_body = json.loads(body)
+            token = request.headers.get('Authorization', '')
+            logging.debug(f"Authorization {token}")
+            message_type = parsed_body.get("type")
+            event_data = parsed_body.get("data", {})
+            qr_data = event_data.get("image_blob")
+            encrypted_data = event_data.get("encrypted_data")
+            logging.debug(f"event_data {event_data}")
+            logging.debug(f"data {qr_data}")
+            logging.debug(f"Type {message_type}")
+            # Nachricht senden
+            message = {
+                "type": message_type,
+                "data": qr_data,
+                "encrypted_data": encrypted_data,
                 "token": token
             }
             logging.debug(f"Message QRCodeGenerated: {message}")

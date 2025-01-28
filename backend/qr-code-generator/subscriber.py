@@ -4,7 +4,7 @@ import aio_pika
 import asyncio
 from cryptography.fernet import Fernet
 import requests
-
+from qrcode import save_qr_code_in_database
 from common.utils import load_secrets
 import logging
 
@@ -23,6 +23,7 @@ except Exception as e:
     logging.error(f"Error loading secrets: {e}")
     raise
 
+
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process():
         try:
@@ -39,10 +40,8 @@ async def on_message(message: aio_pika.IncomingMessage):
             logging.debug(f"Parsed event: {event}")
 
             event_type = event.get("type", "")
-            event_data = event.get("data", "")
 
             logging.info(f"Event type: {event_type}")
-            logging.info(f"Event Data: {event_data}")
 
             token = event.get("token", "")
 
@@ -54,14 +53,16 @@ async def on_message(message: aio_pika.IncomingMessage):
 
             if "ClassFiles" in event_type:
                 logging.info("Processing files after ClassificationCompleted event.")
+                event_data = event.get("data", "")
+                logging.info(f"Event Data: {event_data}")
                 # TODO aufruf von Methoden um weiteren Code auszuführen
                 """Fälle:
                 1. Datensatz ist nicht in der Datenbank vorhanden
                     dann werden die Daten verschlüsselt 
                 2. Datensatz ist bereits in der Datenbank vorhanden
                     dann wird der Datensatz """
-                    
-                #prüft ob der Datensatz in der Datenbank vorhanden ist
+
+                # prüft ob der Datensatz in der Datenbank vorhanden ist
                 url = f"http://nginx-proxy/database-management/products/{event_data}"
                 headers = {
                     'Content-Type': 'application/json',
@@ -75,16 +76,16 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Product response: {body}")
                 expected_json = {"error": "Product not found"}
 
-                #Fall 1 er ist nicht vorhanden
+                # Fall 1 er ist nicht vorhanden
                 if body == expected_json:
-                    #DatenSatz wird angelegt
+                    # DatenSatz wird angelegt
                     url = " http://nginx-proxy/database-management/products/no-qr"
                     headers = {
                         'Content-Type': 'application/json',
                         "Authorization": f"{token}"
                     }
                     logging.info(f"Data: {headers}")
-                    #TODO Daten ersetzen mit Rückgabe der KI
+                    # TODO Daten ersetzen mit Rückgabe der KI
                     data = {
                         "name": f"{event_data}",
                         "description": "rot",
@@ -94,7 +95,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     response = requests.post(url, headers=headers, json=data)
                     # Initialisiere den Fernet-Verschlüsselungsalgorithmus
 
-                    #Datensatz wird verschlüsselt
+                    # Datensatz wird verschlüsselt
                     cipher = Fernet(key)
 
                     # Daten zum Verschlüsseln
@@ -106,18 +107,18 @@ async def on_message(message: aio_pika.IncomingMessage):
                     message_data = base64.b64encode(encrypt_data).decode("utf-8")
                     logging.debug("Verschlüsselte Daten:", message_data)
                 else:
-                    #Fall 2 er ist vorhanden
+                    # Fall 2 er ist vorhanden
                     body = response.json()
-                    #id des QR-Codes aus dem Body gelesen
+                    # id des QR-Codes aus dem Body gelesen
                     qr_code_id = body.get("qr_code_id")
-                    #QR-Code wird aus der Datenbank geholt
+                    # QR-Code wird aus der Datenbank geholt
                     url = f"http://nginx-proxy/database-management/products/{qr_code_id}"
                     headers = {
                         'Content-Type': 'application/json',
                         "Authorization": f"{token}"
                     }
                     logging.info(f"Header get Product: {headers}")
-    
+
                     # POST-Anfrage senden
                     response = requests.get(url, headers=headers)
                     body = response.json()
@@ -125,16 +126,16 @@ async def on_message(message: aio_pika.IncomingMessage):
                     logging.info(f"body GET Product: {body}")
                     logging.info(f"code from body GET Product: {message_data}")
 
-                #Event QR-Code generated wird mit den entsprechenden Daten abgesetzt
-                url = " http://nginx-proxy/eventing-service/publish/QRCodeGenerated"
+                # Event QR-Code generated wird mit den entsprechenden Daten abgesetzt
+                url = " http://nginx-proxy/eventing-service/publish/Encoded"
                 headers = {
                     'Content-Type': 'application/json',
                     "Authorization": f"{token}"
                 }
                 logging.info(f"Data: {headers}")
-                #TODO change data with return values
+                # TODO change data with return values
                 data = {
-                    "type": "ProcessQrcode",
+                    "type": "EncodedFiles",
                     "data": {
                         "code": f"{message_data}",
                         "kind": "data"
@@ -146,6 +147,17 @@ async def on_message(message: aio_pika.IncomingMessage):
                 response = requests.post(url, headers=headers, json=data)
                 logging.info(f"Response: {response.request}")
                 logging.info(f"Response: {response.status_code}")
+
+            if "ProcessQrcode" in event_type:
+                logging.info("Processing files after ProcessQrcode event.")
+                image_blob = event.get("data", "")
+                logging.info(f"Event Data: {image_blob}")
+                encrypted_data = event.get("encrypted_data", "")
+                logging.info(f"Event Data: {encrypted_data}")
+                token = event.get("token", "")
+                logging.info(f"Event Data: {token}")
+
+                save_qr_code_in_database(token, image_blob, encrypted_data)
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")
@@ -159,10 +171,14 @@ async def main():
             logging.info("Connected to RabbitMQ.")
             channel = await connection.channel()
             exchange = await channel.declare_exchange("events", aio_pika.ExchangeType.TOPIC, durable=True)
-            queue = await channel.declare_queue("process_classified_queue", durable=True)
-            await queue.bind(exchange, routing_key="ClassFiles")
+            queue_classified = await channel.declare_queue("process_classified_queue", durable=True)
+            await queue_classified.bind(exchange, routing_key="ClassFiles")
 
-            await queue.consume(on_message)
+            queue_qrcode = await channel.declare_queue("process_qrcode_queue", durable=True)
+            await queue_qrcode.bind(exchange, routing_key="ProcessQrcode")
+
+            await queue_classified.consume(on_message)
+            await queue_qrcode.consume(on_message)
             logging.info("Waiting for messages. To exit press CTRL+C.")
             await asyncio.Future()  # Blockiert, um Nachrichten zu empfangen
     except Exception as e:
@@ -170,9 +186,9 @@ async def main():
         await asyncio.sleep(5)  # Delay before retrying
         await main()
 
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
         logging.error(f"Unhandled exception: {e}")
-

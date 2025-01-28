@@ -1,3 +1,5 @@
+import base64
+
 from flask import Flask, jsonify, request, session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -198,7 +200,6 @@ def delete_product_info(product_id):
         return jsonify({"status": "Product deleted"}), 200
     return jsonify({"error": "Product not found"}), 404
 
-
 # --- QRCode Routen ---
 @app.route('/qrcodes', methods=['POST'])
 @token_required
@@ -206,7 +207,7 @@ def add_qrcode():
     data = request.json
     qrcodes = create_qrcode(db.session, **data)
     if qrcodes:
-        return jsonify({"id": qrcodes.id, "code": qrcodes.code}), 201
+        return jsonify({"id": qrcodes.id, "data": data}), 201
     return jsonify({"error": "QRCode could not be created"}), 400
 
 
@@ -215,7 +216,7 @@ def add_qrcode():
 def get_qrcode(qrcode_id):
     qrcodes = read_qrcode(db.session, qrcode_id=qrcode_id)
     if qrcodes:
-        return jsonify({"id": qrcodes.id, "code": qrcodes.code}), 200
+        return jsonify({"id": qrcodes.id, "data": qrcodes.data}), 200
     return jsonify({"error": "QRCode not found"}), 404
 
 

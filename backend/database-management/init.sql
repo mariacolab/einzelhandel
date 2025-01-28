@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Tabelle: qr_codes
 CREATE TABLE IF NOT EXISTS qr_codes (
     id SERIAL PRIMARY KEY,
-    data VARCHAR(255) NOT NULL,
+    data TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
