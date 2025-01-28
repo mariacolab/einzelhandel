@@ -1,5 +1,5 @@
 # Basis-Image auswählen
-FROM tensorflow/tensorflow:latest-py3 AS base base
+FROM python:3.10-slim AS base
 
 # Arbeitsverzeichnis setzen
 WORKDIR /workspace
@@ -28,8 +28,6 @@ CMD ["pytest", "tests/"]
 
 # ---- Build für normale Ausführung ----
 FROM base AS production
-
-RUN pip install tensorflow
 
 # Anwendung kopieren
 COPY . .

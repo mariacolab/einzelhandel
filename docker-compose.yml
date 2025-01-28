@@ -129,7 +129,6 @@ services:
   ki:
     build:
       context: ./ki
-      dockerfile: Dockerfile
       target: production
     container_name: ki
     environment:
@@ -137,7 +136,6 @@ services:
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /workspace
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
-      COMPOSE_HTTP_TIMEOUT: 300
     depends_on:
       - rabbitmq
     ports:
