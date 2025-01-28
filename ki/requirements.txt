@@ -3,4 +3,5 @@ filetype
 aio-pika
 Unicorn
 requests
-Pillow
+numpy
+matplotlib

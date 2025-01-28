@@ -20,5 +20,5 @@ def predict_object_TF(img):
     predictions = model.predict(prepared_image)
     predicted_class_index = np.argmax(predictions)
 
-    return predicted_class_index
+    return class_names[predicted_class_index]
 

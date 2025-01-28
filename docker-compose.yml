@@ -136,6 +136,7 @@ services:
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /app
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      COMPOSE_HTTP_TIMEOUT: 900
     depends_on:
       - rabbitmq
     ports:

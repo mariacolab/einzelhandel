@@ -3,9 +3,9 @@ import os
 import random
 import aio_pika
 import asyncio
-
+import numpy as np
+import matplotlib.pyplot as plt
 import tensorflow as tf
-from PIL import Image
 from my_function_TF import predict_object_TF
 
 import requests
@@ -65,11 +65,13 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info("Processing files after ImageUploaded event.")
 
                 # TODO aufruf von Methoden um weiteren Code auszuführen
-                img_file = '../DATA/20241223_195302.jpg'
-                img = Image.Image.load(img_file)
-                class_id = predict_object_TF(img)
-                #class_id = predict_object_YOLO(img_file)
-                logging.info(f"Exampleresult: {class_id}")
+                img_file = f"{event_path}{event_filename}"
+                img = plt.imread(img_file)  # Lädt das Bild als NumPy-Array
+                img = np.resize(img, (128, 128, 3))
+
+                class_name = predict_object_TF(img)
+                #class_name = predict_object_YOLO(img_file)
+                logging.info(f"Exampleresult: {class_name}")
                 url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                 headers = {
                     'Content-Type': 'application/json',
@@ -82,7 +84,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     "type": "ClassFiles",
                     "data": {
                       #  "result": f"{zufaelliger_wert}"
-                        "result": f"{class_id}"
+                        "result": f"{class_name}"
                     }
                 }
 
