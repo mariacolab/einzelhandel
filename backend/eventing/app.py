@@ -55,7 +55,8 @@ def publish_event(event):
         logging.debug(f"Processing event: {event}")
 
         # Event-Typen
-        if event not in ["ImageUploaded", "ImageValidated", "ClassificationCompleted", "QRCodeGenerated", "Encoded"]:
+        if event not in ["ImageUploaded", "ImageValidated", "ClassificationCompleted",
+                         "QRCodeGenerated", "CorrectedClassification", "MisclassificationReported"]:
             logging.debug("Event not recognized")
             return jsonify({"error": "Event not recognized"}), 400
 
@@ -91,20 +92,19 @@ def publish_event(event):
             token = request.headers.get('Authorization', '')
             logging.debug(f"Authorization {token}")
             message_type = request.form.get('type', '')
+            model = request.form.get('model', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
                 "filename": file.filename,
                 "path": save_path,
+                "model": model,
                 "token": token
             }
             logging.debug(f"Message ImageUploaded: {message}")
-
-            asyncio.run(send_message(message))
-
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            # asyncio.run(send_message({"type": "ProcessFiles", "data": {}}))
+            asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
 
@@ -125,126 +125,134 @@ def publish_event(event):
                 logging.debug("No file selected.")
                 return jsonify({"error": "No selected file"}), 400
 
-            # Validieren des Dateiformats
-            allowed_extensions = {'.jpg', '.jpeg', '.png'}
-            if not any(file.filename.lower().endswith(ext) for ext in allowed_extensions):
-                logging.debug(f"Invalid file format: {file.filename}")
-                return jsonify({"error": "Only JPG and PNG files are allowed"}), 400
-
-            # Speichern der Datei
-            # save_path = f"/downloads/{file.filename}"
-            # os.makedirs(os.path.dirname(save_path), exist_ok=True)  # Sicherstellen, dass das Verzeichnis existiert
-            # file.save(save_path)
-            # logging.debug(f"File {file.filename} saved to {save_path}")
-
             token = request.headers.get('Authorization', '')
             logging.debug(f"Authorization {token}")
             message_type = request.form.get('type', '')
+            model = request.form.get('model', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
                 "file": file.filename,
                 "path": "/shared/uploads/",
+                "model": model,
                 "token": token
             }
             logging.debug(f"Message ImageValidated: {message}")
-
-            asyncio.run(send_message(message))
-
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            # asyncio.run(send_message({"type": "ValidatedFiles", "data": {}}))
+            asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
 
         if event == "ClassificationCompleted":
             logging.debug(f"Headers: {request.headers}")
-            body = request.get_data(as_text=True)  # Retrieve raw body data as text
-            logging.debug(f"Body: {body}")
+            logging.debug(f"Form: {request.form}")
+            logging.debug(f"Files: {request.files}")
 
-            parsed_body = json.loads(body)
             token = request.headers.get('Authorization', '')
             logging.debug(f"Authorization {token}")
-            message_type = parsed_body.get("type")
-            event_data = parsed_body.get("data", {})
-            data = event_data.get("result")
-            logging.debug(f"event_data {event_data}")
-            logging.debug(f"data {data}")
+            message_type = request.form.get('type', '')
+            result = request.form.get('result', '')
+            logging.debug(f"data {result}")
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
-                "data": data,
+                "result": result,
                 "token": token
             }
             logging.debug(f"Message ClassificationCompleted: {message}")
-
-            asyncio.run(send_message(message))
-
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            # asyncio.run(send_message({"type": "ClassFiles", "data": {}}))
+            asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
-            return jsonify({"status": f"Body {body} uploaded successfully."}), 200
-        if event == "Encoded":
-            logging.debug(f"Headers: {request.headers}")
-            body = request.get_data(as_text=True)  # Retrieve raw body data as text
-            logging.debug(f"Body: {body}")
+            return jsonify({"status": f"Result {result} uploaded successfully."}), 200
 
-            parsed_body = json.loads(body)
+        if event == "QRCodeGenerated":
+            logging.debug(f"Headers: {request.headers}")
+            logging.debug(f"Form: {request.form}")
+            logging.debug(f"Files: {request.files}")
+
             token = request.headers.get('Authorization', '')
             logging.debug(f"Authorization {token}")
-            message_type = parsed_body.get("type")
-            event_data = parsed_body.get("data", {})
-            data = event_data.get("code")
-            kind = event_data.get("kind")
-            logging.debug(f"event_data {event_data}")
-            logging.debug(f"data {data}")
+            message_type = request.form.get('type', '')
+            image_blob = request.form.get('image_blob', '')
+            logging.debug(f"data {image_blob}")
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
-                "data": data,
-                "kind": kind,
+                "image_blob": image_blob,
                 "token": token
             }
             logging.debug(f"Message Encoded: {message}")
-
-            asyncio.run(send_message(message))
-
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            # asyncio.run(send_message({"type": "ProcessQrcode", "data": {}}))
+            asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
-            return jsonify({"status": f"Body {body} uploaded successfully."}), 200
-        if event == "QRCodeGenerated":
-            logging.debug(f"Headers: {request.headers}")
-            body = request.get_data(as_text=True)  # Retrieve raw body data as text
-            logging.debug(f"Body: {body}")
+            return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
 
-            parsed_body = json.loads(body)
+        if event == "MisclassificationReported":
+            logging.debug(f"Headers: {request.headers}")
+            logging.debug(f"Form: {request.form}")
+            logging.debug(f"Files: {request.files}")
+
+            # Datei aus `form-data` abrufen
+            if 'filename' not in request.files:
+                logging.debug("No file part in the request.")
+                return jsonify({"error": "No file part in the request"}), 400
+
+            file = request.files['filename']
+
+            # Überprüfen, ob eine Datei ausgewählt wurde
+            if file.filename == '':
+                logging.debug("No file selected.")
+                return jsonify({"error": "No selected file"}), 400
+
             token = request.headers.get('Authorization', '')
             logging.debug(f"Authorization {token}")
-            message_type = parsed_body.get("type")
-            event_data = parsed_body.get("data", {})
-            qr_data = event_data.get("image_blob")
-            encrypted_data = event_data.get("encrypted_data")
-            logging.debug(f"event_data {event_data}")
-            logging.debug(f"data {qr_data}")
+            message_type = request.form.get('type', '')
+            classification = request.form.get('classification', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
-                "data": qr_data,
-                "encrypted_data": encrypted_data,
+                "filename": file.filename,
+                "path": "",
+                "classification": classification,
                 "token": token
             }
             logging.debug(f"Message QRCodeGenerated: {message}")
+            # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
+            asyncio.run(send_message(message))
+            logging.debug(f"Event {event} published successfully")
+            return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
 
+        if event == "CorrectedClassification":
+            logging.debug(f"Headers: {request.headers}")
+            logging.debug(f"Form: {request.form}")
+
+            token = request.headers.get('Authorization', '')
+            logging.debug(f"Authorization {token}")
+            message_type = request.form.get('type', '')
+            classification = request.form.get('classification', '')
+            filename = request.form.get('filename', '')
+            path = request.form.get('path', '')
+            class_correct = request.form.get('is_classification_correct', '')
+            logging.debug(f"Type {message_type}")
+            # Nachricht senden
+            message = {
+                "type": message_type,
+                "is_classification_correct": class_correct,
+                "classification": classification,
+                "filename": filename,
+                "path": path,
+                "token": token
+            }
+            logging.debug(f"Message QRCodeGenerated: {message}")
+            # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
             asyncio.run(send_message(message))
 
-            # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            # asyncio.run(send_message({"type": "ProcessQrcode", "data": {}}))
             logging.debug(f"Event {event} published successfully")
-            return jsonify({"status": f"Body {body} uploaded successfully."}), 200
+            return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
 
     except Exception as e:
         logging.debug(f"Error in publish_event: {e}")

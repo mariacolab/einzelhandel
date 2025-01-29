@@ -30,10 +30,7 @@ async def on_message(message: aio_pika.IncomingMessage):
             event = message.body.decode()
             logging.debug(f"Received event: {event}")
 
-            event_raw = message.body.decode()
-            logging.debug(f"Raw event received: {event_raw}")
-
-            event_corrected = event_raw.replace("'", '"')
+            event_corrected = event.replace("'", '"')
             logging.debug(f"Corrected event JSON: {event_corrected}")
 
             event = json.loads(event_corrected)
@@ -227,11 +224,7 @@ async def main():
             queue_classified = await channel.declare_queue("process_classified_queue", durable=True)
             await queue_classified.bind(exchange, routing_key="ClassFiles")
 
-            queue_qrcode = await channel.declare_queue("process_qrcode_queue", durable=True)
-            await queue_qrcode.bind(exchange, routing_key="ProcessQrcode")
-
             await queue_classified.consume(on_message)
-            await queue_qrcode.consume(on_message)
             logging.info("Waiting for messages. To exit press CTRL+C.")
             await asyncio.Future()  # Blockiert, um Nachrichten zu empfangen
     except Exception as e:

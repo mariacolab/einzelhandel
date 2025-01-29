@@ -46,7 +46,12 @@
       "durable": true
     },
     {
-      "name": "process_encoded_queue",
+      "name": "process_misclassified_queue",
+      "vhost": "/",
+      "durable": true
+    },
+    {
+      "name": "process_corrected_classified_queue",
       "vhost": "/",
       "durable": true
     }
@@ -91,9 +96,16 @@
     {
       "source": "events",
       "vhost": "/",
-      "destination": "process_encoded_queue",
+      "destination": "process_misclassified_queue",
       "destination_type": "queue",
-      "routing_key": "EncodedFiles"
+      "routing_key": "MisclassifiedFiles"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "process_corrected_classified_queue",
+      "destination_type": "queue",
+      "routing_key": "CorrectedFiles"
     }
   ]
 }

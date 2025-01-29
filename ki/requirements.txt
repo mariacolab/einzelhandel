@@ -3,3 +3,8 @@ filetype
 aio-pika
 gunicorn
 requests
+pydrive
+oauth2client
+python-magic
+redis
+PyJWT

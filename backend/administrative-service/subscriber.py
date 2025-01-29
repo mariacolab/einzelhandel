@@ -40,7 +40,7 @@ async def on_message(message: aio_pika.IncomingMessage, ):
             event_type = event.get("type", "")
             event_filename = event.get("filename", "")
             event_path = event.get("path", "")
-
+            event_model= event.get("model", "")
             logging.info(f"Event type: {event_type}")
             logging.info(f"Event filename: {event_filename}")
             logging.info(f"Event path: {event_path}")
@@ -69,6 +69,7 @@ async def on_message(message: aio_pika.IncomingMessage, ):
                 }
                 files = {
                     "type": (None, "ValidatedFiles"),
+                    "model": event_model,
                     "file": (f"{file_name}", open(f"{file}", "rb")),
                 }
 

@@ -1,11 +1,14 @@
 import json
+import mimetypes
 import os
 import random
 import aio_pika
 import asyncio
-
 import requests
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 
+from common.middleware import get_user_role_from_token
 from common.utils import load_secrets
 import logging
 
@@ -30,22 +33,14 @@ async def on_message(message: aio_pika.IncomingMessage):
             event = message.body.decode()
             logging.debug(f"Received event: {event}")
 
-            event_raw = message.body.decode()
-            logging.debug(f"Raw event received: {event_raw}")
-
-            event_corrected = event_raw.replace("'", '"')
+            event_corrected = event.replace("'", '"')
             logging.debug(f"Corrected event JSON: {event_corrected}")
 
             event = json.loads(event_corrected)
             logging.debug(f"Parsed event: {event}")
 
             event_type = event.get("type", "")
-            event_filename = event.get("file", "")
-            event_path = event.get("path", "")
-
             logging.info(f"Event type: {event_type}")
-            logging.info(f"Event file: {event_filename}")
-            logging.info(f"Event path: {event_path}")
 
             token = event.get("token", "")
 
@@ -57,23 +52,22 @@ async def on_message(message: aio_pika.IncomingMessage):
 
             #
             if "ValidatedFiles" in event_type:
+
+                event_filename = event.get("file", "")
+                event_path = event.get("path", "")
+                event_model = event.get("model", "")
+                logging.info(f"Event type: {event_model}")
+                logging.info(f"Event file: {event_filename}")
+                logging.info(f"Event path: {event_path}")
+
                 logging.info("Processing files after ImageUploaded event.")
                 # TODO aufruf von Methoden um weiteren Code auszuführen
 
-                # löschen der Datei im shared Verzeichnis
-                try:
-                    # Überprüfen, ob die Datei existiert
-                    if os.path.exists(f"{event_path}{event_filename}"):
-                        os.remove(f"{event_path}{event_filename}")
-                        logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
-                    else:
-                        logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
-                except Exception as e:
-                    logging.error(f"Fehler beim Löschen der Datei: {e}")
+                is_classification_correct = False  # Rückgabe der KI, ob Klassifizierung möglicherweise Fehlerhaft
 
                 # TODO entferne Test liste
                 obst_und_gemuese = [
-                    "Apfel", "Aubergine", "Avocado","Banane", "Birne", "Bohnen", "Cerealien", "Chips", "Essig",
+                    "Apfel", "Aubergine", "Avocado", "Banane", "Birne", "Bohnen", "Cerealien", "Chips", "Essig",
                     "Fisch", "Gewuerze", "Granatapfel", "Honig", "Kaffee", "Kaki", "Karotte", "Kartoffel", "Kiwi",
                     "Knoblauch", "Kuchen", "Mais", "Mandarine", "Mango", "Marmelade", "Mehl", "Milch", "Nudeln",
                     "Nuss", "Oel", "Orange", "Pampelmuse", "Paprika", "Pflaume", "Reis", "Saft", "Schokolade", "Soda",
@@ -84,30 +78,113 @@ async def on_message(message: aio_pika.IncomingMessage):
                 zufaelliger_wert = random.choice(obst_und_gemuese)
                 logging.info(f"Exampleresult: {zufaelliger_wert}")
 
-                url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
-                headers = {
-                    'Content-Type': 'application/json',
-                    "Authorization": f"{token}"
-                }
+                # TODO Rolle filtern wenn Kunde dann erhält er bei FALse eine Fehlermeldung in classification
+                user_role = get_user_role_from_token(token)
 
-                logging.info(f"Headers: {headers}")
-
-                data = {
-                    "type": "ClassFiles",
-                    "data": {
-                        "result": f"{zufaelliger_wert}"
+                if is_classification_correct:
+                    # löschen der Datei im shared Verzeichnis
+                    try:
+                        # Überprüfen, ob die Datei existiert
+                        if os.path.exists(f"{event_path}{event_filename}"):
+                            os.remove(f"{event_path}{event_filename}")
+                            logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
+                        else:
+                            logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
+                    except Exception as e:
+                        logging.error(f"Fehler beim Löschen der Datei: {e}")
+                    url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
+                    headers = {
+                        "Authorization": f"{token}"
                     }
-                }
+                    files = {
+                        "type": (None, "ClassFiles"),
+                        "result": (None, zufaelliger_wert),
+                    }
+                    response = requests.post(url, headers=headers, files=files)
+                    logging.info(f"Response: {response}")
+                elif is_classification_correct == False and user_role != "Kunde":
+                    url = " http://nginx-proxy/eventing-service/publish/MisclassificationReported"
+                    headers = {
+                        "Authorization": f"{token}"
+                    }
+                    files = {
+                        "type": (None, "MisclassifiedFiles"),
+                        "classification": (None, zufaelliger_wert),
+                        "filename": (f"{event_filename}", open(f"{event_path}{event_filename}", "rb")),
+                    }
+                    response = requests.post(url, headers=headers, files=files)
+                    logging.info(f"Response: {response}")
+            if "CorrectedFiles" in event_type:
+                # löschen der Datei im shared Verzeichnis
+                try:
+                    # Überprüfen, ob die Datei existiert
+                    if os.path.exists(f"{event_path}{event_filename}"):
+                        os.remove(f"{event_path}{event_filename}")
+                        logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
+                    else:
+                        logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
+                except Exception as e:
+                    logging.error(f"Fehler beim Löschen der Datei: {e}")
+                event_classification = event.get("classification", "")
+                event_class_correct = event.get("is_classification_correct ", "")
+                event_filename = event.get("filename", "")
+                event_path = event.get("path ", "")
+                logging.info(f"Event file: {event_classification}")
+                logging.info(f"Event path: {event_class_correct}")
+                if event_class_correct:
+                    url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
+                    headers = {
+                        "Authorization": f"{token}"
+                    }
+                    files = {
+                        "type": (None, "ClassFiles"),
+                        "result": (None, event_classification),
+                    }
+                    response = requests.post(url, headers=headers, files=files)
+                    logging.info(f"Response: {response}")
+                else:
+                    # TODO Datei in Googledrive ablegen
+                    # Authentifizieren mit Service Account
+                    gauth = GoogleAuth()
+                    gauth.LoadCredentialsFile("fapra-ki-einzelhandel-6f215d4ad989.json")
 
-                logging.info(f"Data: {data}")
+                    if gauth.credentials is None:
+                        gauth.LocalWebserverAuth()
+                    elif gauth.access_token_expired:
+                        gauth.Refresh()
+                    else:
+                        gauth.Authorize()
 
-                # POST-Anfrage senden
-                response = requests.post(url, headers=headers, json=data)
-                logging.info(f"Response: {response.request}")
-                logging.info(f"Response: {response.status_code}")
+                    drive = GoogleDrive(gauth)
 
+                    mimetype = get_mime_type(event_filename)
+
+                    file = drive.CreateFile({
+                        'title': f"{event_filename}",
+                        'mimeType': mimetype
+                    })
+                    file.SetContentFile(f"{event_path}{event_filename}")  # Lokale Datei setzen
+                    file.Upload()
+                    logging.debug(f"Bild hochgeladen: {file['title']}, ID: {file['id']}")
+                    # löschen der Datei im shared Verzeichnis
+                    try:
+                        # Überprüfen, ob die Datei existiert
+                        if os.path.exists(f"{event_path}{event_filename}"):
+                            os.remove(f"{event_path}{event_filename}")
+                            logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
+                        else:
+                            logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
+                    except Exception as e:
+                        logging.error(f"Fehler beim Löschen der Datei: {e}")
+
+                    logging.info("Fehlerhafte Klassifizierung")
         except Exception as e:
             logging.error(f"Error processing message: {e}")
+
+
+def get_mime_type(filename):
+    mime_type, _ = mimetypes.guess_type(filename)
+    return mime_type if mime_type else "application/octet-stream"
 
 
 async def main():
@@ -118,10 +195,15 @@ async def main():
             logging.info("Connected to RabbitMQ.")
             channel = await connection.channel()
             exchange = await channel.declare_exchange("events", aio_pika.ExchangeType.TOPIC, durable=True)
-            queue = await channel.declare_queue("image_validated_queue", durable=True)
-            await queue.bind(exchange, routing_key="ValidatedFiles")  # Beispiel: Lauschen auf "ProcessFiles"
+            queue_validated = await channel.declare_queue("image_validated_queue", durable=True)
+            await queue_validated.bind(exchange, routing_key="ValidatedFiles")  # Beispiel: Lauschen auf "ProcessFiles"
 
-            await queue.consume(on_message)
+            queue_corrected = await channel.declare_queue("process_corrected_classified_queue", durable=True)
+            await queue_corrected.bind(exchange, routing_key="CorrectedFiles")
+
+            await queue_corrected.consume(on_message)
+
+            await queue_validated.consume(on_message)
             logging.info("Waiting for messages. To exit press CTRL+C.")
             await asyncio.Future()  # Blockiert, um Nachrichten zu empfangen
     except Exception as e:
