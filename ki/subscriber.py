@@ -73,9 +73,12 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                 # TODO entferne Test liste
                 obst_und_gemuese = [
-                    "Apfel", "Banane", "Kirsche", "Mango", "Orange",
-                    "Traube", "Karotte", "Gurke", "Tomate", "Brokkoli",
-                    "Zucchini", "Paprika", "Spinat", "Zwiebel", "Knoblauch"
+                    "Apfel", "Aubergine", "Avocado","Banane", "Birne", "Bohnen", "Cerealien", "Chips", "Essig",
+                    "Fisch", "Gewuerze", "Granatapfel", "Honig", "Kaffee", "Kaki", "Karotte", "Kartoffel", "Kiwi",
+                    "Knoblauch", "Kuchen", "Mais", "Mandarine", "Mango", "Marmelade", "Mehl", "Milch", "Nudeln",
+                    "Nuss", "Oel", "Orange", "Pampelmuse", "Paprika", "Pflaume", "Reis", "Saft", "Schokolade", "Soda",
+                    "Suessigkeit", "Tee", "Tomate", "Tomatensauce", "Wasser", "Zitrone", "Zucchini", "Zucker",
+                    "Zwiebel"
                 ]
 
                 zufaelliger_wert = random.choice(obst_und_gemuese)

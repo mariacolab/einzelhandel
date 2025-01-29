@@ -78,8 +78,54 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                 # Fall 1 er ist nicht vorhanden
                 if body == expected_json:
-                    # DatenSatz wird angelegt
-                    url = " http://nginx-proxy/database-management/products/no-qr"
+
+                    json_data = load_json("class.json")
+                    logging.info(f"json_data: {json_data}")
+                    item = get_item_by_class_name(json_data, event_data)
+                    logging.info(f"item: {item}")
+                    data = {
+                        "Produkt": item["class_name"],
+                        "Informationen": item.get("info"),
+                        "Regal": item.get("regal"),
+                        "Preis_pro_stueck": item["preis"].get("pro_stueck"),
+                        "Preis_pro_kg": item["preis"].get("pro_kg")
+                    }
+                    logging.info(f"item_data: {data}")
+
+                    data_to_encrypt = json.dumps(data)
+
+                    # Datensatz wird verschlüsselt
+                    cipher = Fernet(key)
+
+                    # Daten zum Verschlüsseln
+                    #data_to_encrypt = data.encode()
+
+                    # Verschlüsseln der Daten
+                    encrypted_data = cipher.encrypt(data_to_encrypt.encode())
+                    logging.debug("Verschlüsselte Daten:", encrypted_data)
+                    qr_data = base64.b64encode(encrypted_data).decode("utf-8")
+                    logging.debug("Verschlüsselte Daten:", qr_data)
+                    message_data = qr_data
+
+                    # qr-code generieren
+                    url = " http://nginx-proxy/database-management/qrcodes"
+                    headers = {
+                        'Content-Type': 'application/json',
+                        "Authorization": f"{token}"
+                    }
+                    logging.info(f"Data: {headers}")
+                    data = {
+                        "data": f"{qr_data}",
+                    }
+
+                    logging.info(f"Data Post Product: {data}")
+                    response = requests.post(url, headers=headers, json=data)
+                    # Initialisiere den Fernet-Verschlüsselungsalgorithmus
+
+                    qr_body = response.json()
+                    logging.info(f"qr_body: {qr_body}")
+
+                    url = " http://nginx-proxy/database-management/products"
                     headers = {
                         'Content-Type': 'application/json',
                         "Authorization": f"{token}"
@@ -88,24 +134,16 @@ async def on_message(message: aio_pika.IncomingMessage):
                     # TODO Daten ersetzen mit Rückgabe der KI
                     data = {
                         "name": f"{event_data}",
-                        "description": "rot",
-                        "price": "0.99"
+                        "description": item.get("info"),
+                        "shelf": item.get("regal"),
+                        "price_piece": item["preis"].get("pro_stueck"),
+                        "price_kg": item["preis"].get("pro_kg"),
+                        "qr_code_id": qr_body.get("id")
                     }
                     logging.info(f"Data Post Product: {data}")
                     response = requests.post(url, headers=headers, json=data)
                     # Initialisiere den Fernet-Verschlüsselungsalgorithmus
 
-                    # Datensatz wird verschlüsselt
-                    cipher = Fernet(key)
-
-                    # Daten zum Verschlüsseln
-                    data_to_encrypt = response.text.encode()
-
-                    # Verschlüsseln der Daten
-                    encrypt_data = cipher.encrypt(data_to_encrypt)
-                    logging.debug("Verschlüsselte Daten:", encrypt_data)
-                    message_data = base64.b64encode(encrypt_data).decode("utf-8")
-                    logging.debug("Verschlüsselte Daten:", message_data)
                 else:
                     # Fall 2 er ist vorhanden
                     body = response.json()
@@ -138,7 +176,6 @@ async def on_message(message: aio_pika.IncomingMessage):
                     "type": "EncodedFiles",
                     "data": {
                         "code": f"{message_data}",
-                        "kind": "data"
                     }
                 }
                 logging.info(f"Data: {data}")
@@ -161,6 +198,22 @@ async def on_message(message: aio_pika.IncomingMessage):
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")
+
+
+def load_json(filename):
+    with open(filename, "r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+# Werte anhand des class_name auslesen
+def get_item_by_class_name(json_data, class_name):
+    for item in json_data:
+        logging.info(f"curenet item: {item}")
+        logging.info(f'curenet item: {item["class_name"].lower()} compare to {class_name.lower()}')
+        if item["class_name"].lower() == class_name.lower():
+
+            return item
+    return None
 
 
 async def main():

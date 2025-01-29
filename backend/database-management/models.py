@@ -11,6 +11,7 @@ class Roles(db.Model):
 
     users = relationship('Users', back_populates='roles', lazy=True)
 
+
 class Users(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -21,15 +22,19 @@ class Users(db.Model):
 
     roles = relationship('Roles', back_populates='users')
 
+
 class Products(db.Model):
     __tablename__ = 'products'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(255))
-    price = db.Column(db.Float)
+    shelf = db.Column(db.Integer, nullable=False)
+    price_piece = db.Column(db.Float)
+    price_kg = db.Column(db.Float)
     qr_code_id = db.Column(db.Integer, db.ForeignKey('qr_codes.id'))
 
     qr_codes = relationship('QRCodes', back_populates='products')
+
 
 class QRCodes(db.Model):
     __tablename__ = 'qr_codes'
@@ -39,6 +44,7 @@ class QRCodes(db.Model):
 
     products = relationship('Products', back_populates='qr_codes', lazy=True)
 
+
 class FailedClassifications(db.Model):
     __tablename__ = 'failed_classifications'
     id = db.Column(db.Integer, primary_key=True)
@@ -46,9 +52,9 @@ class FailedClassifications(db.Model):
     reason = db.Column(db.String(255))
     timestamp = db.Column(db.DateTime, default=db.func.now())
 
+
 class Metadata(db.Model):
     __tablename__ = 'metadatas'
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), nullable=False, unique=True)
     value = db.Column(db.String(255), nullable=False)
-

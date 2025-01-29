@@ -25,7 +25,9 @@ CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(255),
-    price FLOAT,
+    shelf INTEGER,
+    price_piece FLOAT,
+    price_kg FLOAT,
     qr_code_id INTEGER REFERENCES qr_codes(id) ON DELETE SET NULL
 );
 

@@ -43,31 +43,29 @@ def rename_file(file_path, uploads_dir):
     return new_path
 
 
-def process_files():
+def process_files(filename):
     """
     Sucht Dateien im Uploads-Ordner, überprüft den Typ und benennt sie um.
     """
-    if not os.path.exists(UPLOADS_DIR):
-        logging.error(f"Uploads-Verzeichnis existiert nicht: {UPLOADS_DIR}")
-        return
 
-    for filename in os.listdir(UPLOADS_DIR):
-        file_path = os.path.join(UPLOADS_DIR, filename)
+    file_path = os.path.join(UPLOADS_DIR, filename)
 
-        if not os.path.isfile(file_path):
-            continue  # Überspringe, falls es kein regulärer Dateityp ist
+    if not os.path.exists(file_path):
+        logging.error(f"Datei existiert nicht: {file_path}")
+        return None
 
-        logging.info(f"Verarbeite Datei: {file_path}")
+    logging.info(f"Verarbeite Datei: {file_path}")
 
-        # Überprüfe Magic Bytes
-        if not validate_file_magic(file_path):
-            logging.warning(f"Ungültiger Dateityp: {file_path}. Datei wird übersprungen.")
-            continue
+    file_type = validate_file_magic(file_path)
+    # Überprüfe Magic Bytes
+    if not file_type:
+        logging.warning(f"Ungültiger Dateityp: {file_path}. Datei wird übersprungen.")
+        return None
 
         # Benenne die Datei in einen generischen Namen um
-        file = rename_file(file_path, UPLOADS_DIR)
-        logging.info(f"Datei umbenannt: {file}")
-        return file
+    file = rename_file(file_path, UPLOADS_DIR)
+    logging.info(f"Datei umbenannt: {file}")
+    return file
 
 
 if __name__ == "__main__":

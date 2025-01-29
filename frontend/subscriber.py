@@ -63,71 +63,16 @@ async def on_message(message: aio_pika.IncomingMessage):
                 im zweiten Fall muss aus den Daten ein QR-Code erzeugt werden
                 und in die Datenbank geschrieben werden! """
 
-                if kind == "blob":
-                    logging.info("message bytes")
-                    # Rückgabe des Blob QR-Codes aus Backend als Image an Frontend geben
-                    # Blob in ein Bild laden
-                    image_stream = io.BytesIO(event_data)
-                    image = Image.open(image_stream)
+                base64_decoded_qrcode = base64.b64decode(event_data)
 
-                    # Bild anzeigen
-                    image.show()
+                logging.info("message bytes")
+                # Rückgabe des Blob QR-Codes aus Backend als Image an Frontend geben
+                # Blob in ein Bild laden
+                image_stream = io.BytesIO(base64_decoded_qrcode)
+                image = Image.open(image_stream)
 
-                elif kind == "data":
-                    logging.info("message str")
-                    # TODO lösche QR-Code
-                    qr = qrcode.QRCode(
-                        version=1,  # Größe des QR-Codes (1 ist die kleinste Größe)
-                        error_correction=qrcode.constants.ERROR_CORRECT_L,  # Fehlertoleranzstufe
-                        box_size=10,  # Größe der Boxen im QR-Code
-                        border=4,  # Breite des Rands (Minimum ist 4)
-                    )
-
-                    # Inhalt zum QR-Code hinzufügen
-                    qr.add_data(event_data)
-                    qr.make(fit=True)
-
-                    # QR-Code als Bild erstellen
-                    image = qr.make_image(fill="black", back_color="white")
-                    logging.debug(f"qr_code: {image}")
-                    # Rückgabe des Image QR-Codes aus Frontend als Blob ans Backend
-                    # TODO hier die Funktion die aus event_data ein QR-Code erzeugt als Bild erzeugt einfügen
-                    # image = Image.open("example_image.png")
-
-                    # Bild in Blob konvertieren
-                    blob_stream = io.BytesIO()
-                    image.save(blob_stream, format="PNG")
-                    image_blob = blob_stream.getvalue()
-
-                    logging.debug(f"Bild-Blob erzeugt: {image_blob} Bytes")
-                    image_blob_base64 = base64.b64encode(image_blob).decode('utf-8')
-                    # TODO ins Backend verlagern und ein weiteres Event zum senden an Backend
-                    url = "http://nginx-proxy/eventing-service/publish/QRCodeGenerated"
-                    headers = {
-                        'Content-Type': 'application/json',
-                        "Authorization": f"{token}"
-                    }
-                    logging.info(f"Data: {headers}")
-                    # TODO change data with return values
-                    data = {
-                        "type": "ProcessQrcode",
-                        "data": {
-                            "image_blob": image_blob_base64,
-                            "encrypted_data": event_data,
-                            "token": token
-                        }
-                    }
-                    logging.info(f"Data: {data}")
-
-                    # POST-Anfrage senden
-                    response = requests.post(url, headers=headers, json=data)
-                    logging.info(f"Response: {response.request}")
-                    logging.info(f"Response: {response.status_code}")
-
-                    # TODO zurücksenden an QR-Code-Generierung und dort Update der Productdatenbank
-
-                else:
-                    logging.debug("Unbekannter Typ")
+                # Bild anzeigen
+                image.show()
             else:
                 logging.debug("if fehlgeschalgen")
         except Exception as e:
