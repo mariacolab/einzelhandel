@@ -60,8 +60,7 @@ async def on_message(message: aio_pika.IncomingMessage):
             if "ValidatedFiles" in event_type:
                 logging.info("Processing files after ImageUploaded event.")
                 # TODO aufruf von Methoden um weiteren Code auszuführen
-                result= detect("Datasets/FFv1/valid/images/20241205_190334_jpg.rf.b88f3d4639c5532bdaf7f8a20b2634f3.jpg", "2")
-                #result = detect(f"{event_path}{event_filename}",{event_filename})
+                result = detect(f"{event_path}{event_filename}",f"{event_filename}")
 
                 # löschen der Datei im shared Verzeichnis
                 try:
@@ -73,15 +72,6 @@ async def on_message(message: aio_pika.IncomingMessage):
                         logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
                 except Exception as e:
                     logging.error(f"Fehler beim Löschen der Datei: {e}")
-
-                # TODO entferne Test liste
-                #obst_und_gemuese = [
-                #    "Apfel", "Banane", "Kirsche", "Mango", "Orange",
-                #    "Traube", "Karotte", "Gurke", "Tomate", "Brokkoli",
-                #    "Zucchini", "Paprika", "Spinat", "Zwiebel", "Knoblauch"
-                #]
-                #zufaelliger_wert = random.choice(obst_und_gemuese)
-                #zufaelliger_wert = result
 
                 logging.info(f"result from image: {result}")
 

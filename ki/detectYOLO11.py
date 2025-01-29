@@ -4,12 +4,12 @@
 from ultralytics import YOLO
 import cv2
 import logging
+import os
 
+#gibt Dateinamen ohne Endung zurück (Bsp. "file.jpg" wird zu "file")
 def name_extrahieren(name):
-    name1 = str(name)
-    name1 = name1.strip("{}'")
-    name1 = name1.rstrip(".jpg")
-    return name1
+    dateiname,datei_endung =os.path.splitext(name)
+    return dateiname
 
 #fragt ab, ob Ergebnis der Objekterkennung korrekt
 #TODO anbinden an Frontend
@@ -48,7 +48,7 @@ def detect(bild, filename):
         logging.info("please make a better picture and ensure the object is clearly visible")
         return "nichts"
 
-    #Aus dem besten Ergebnis die Klassen-ID extrahieren und diese dem passenden Klassennamen zuordnen
+    #Aus dem besten Ergebnis die Klassen-ID extrahieren und dieser den passenden Klassennamen zuordnen
     names= model.names
     obj_id = best_result.boxes.cls
     obj_name =names[int(obj_id)]
@@ -58,11 +58,14 @@ def detect(bild, filename):
     if korrekt_bool is True:
         # TODO Pfad wo gespeichert
         # korrekt erkannt -> Bild und Label den Trainingsdaten hinzufügen
+        logging.info("Filename is " + filename)
         dateiname = name_extrahieren(filename)
+        logging.info("Filename is " + dateiname)
         labelpfad = "Datasets/TestDaten/labels/"
         imagespfad = "Datasets/TestDaten/images/"
         best_result.save_txt(labelpfad + dateiname + ".txt")
         logging.info("Resultlabel saved.")
+        #TODO resize
         bild2 = cv2.imread(bild)
         cv2.imwrite(imagespfad + dateiname + ".jpg",bild2)
     #TODO was wenn nicht richtig?
