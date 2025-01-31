@@ -7,6 +7,7 @@ import asyncio
 import requests
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
+from oauth2client.service_account import ServiceAccountCredentials
 
 from common.middleware import get_user_role_from_token
 from common.utils import load_secrets
@@ -114,17 +115,9 @@ async def on_message(message: aio_pika.IncomingMessage):
                     }
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
+                else:
+                    logging.info("Fehlermeldung für Kunde")
             if "CorrectedFiles" in event_type:
-                # löschen der Datei im shared Verzeichnis
-                try:
-                    # Überprüfen, ob die Datei existiert
-                    if os.path.exists(f"{event_path}{event_filename}"):
-                        os.remove(f"{event_path}{event_filename}")
-                        logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
-                    else:
-                        logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
-                except Exception as e:
-                    logging.error(f"Fehler beim Löschen der Datei: {e}")
                 event_classification = event.get("classification", "")
                 event_class_correct = event.get("is_classification_correct ", "")
                 event_filename = event.get("filename", "")
@@ -132,6 +125,17 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event file: {event_classification}")
                 logging.info(f"Event path: {event_class_correct}")
                 if event_class_correct:
+                    # löschen der Datei im shared Verzeichnis
+                    try:
+                        # Überprüfen, ob die Datei existiert
+                        if os.path.exists(f"{event_path}{event_filename}"):
+                            os.remove(f"{event_path}{event_filename}")
+                            logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
+                        else:
+                            logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
+                    except Exception as e:
+                        logging.error(f"Fehler beim Löschen der Datei: {e}")
+
                     url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                     headers = {
                         "Authorization": f"{token}"
@@ -143,29 +147,46 @@ async def on_message(message: aio_pika.IncomingMessage):
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
                 else:
+                    logging.info(f"Event file: {event_classification}")
                     # TODO Datei in Googledrive ablegen
+
+                    # Projekt-Root-Verzeichnis holen
+                    project_root = os.path.dirname(os.path.abspath(__file__))
+                    logging.info(f"project_root: {project_root}")
+                    # JSON-Datei im Projekt suchen
+                    file_path = os.path.join(project_root, "secrets/fapra-ki-einzelhandel-6f215d4ad989.json")
+                    logging.info(f"file_path: {file_path}")
+
                     # Authentifizieren mit Service Account
+                    scope = ['https://www.googleapis.com/auth/drive']
+                    credentials = ServiceAccountCredentials.from_json_keyfile_name(file_path, scope)
+
+                    # GoogleAuth mit den Service-Credentials
                     gauth = GoogleAuth()
-                    gauth.LoadCredentialsFile("fapra-ki-einzelhandel-6f215d4ad989.json")
-
-                    if gauth.credentials is None:
-                        gauth.LocalWebserverAuth()
-                    elif gauth.access_token_expired:
-                        gauth.Refresh()
-                    else:
-                        gauth.Authorize()
-
+                    gauth.credentials = credentials
                     drive = GoogleDrive(gauth)
 
-                    mimetype = get_mime_type(event_filename)
+                    ORDNER_ID = "1BV9kt1H9r9qSUcVAcFjSxFWvOxFfDwYm"
 
                     file = drive.CreateFile({
                         'title': f"{event_filename}",
-                        'mimeType': mimetype
+                        'mimeType': 'image/jpeg',
+                        'parents': [{'id': ORDNER_ID}]
                     })
                     file.SetContentFile(f"{event_path}{event_filename}")  # Lokale Datei setzen
                     file.Upload()
                     logging.debug(f"Bild hochgeladen: {file['title']}, ID: {file['id']}")
+                    # löschen der Datei im shared Verzeichnis
+                    logging.info(f"Bild hochgeladen in Ordner: https://drive.google.com/drive/folders/{ORDNER_ID}")
+                    # Google Drive API-Berechtigungen setzen
+                    file.InsertPermission({
+                        'type': 'user',          # Berechtigung für ein bestimmtes Konto
+                        'value': 'fapra73@gmail.com',  # Ersetze mit deiner Google-Mail-Adresse
+                        'role': 'writer'         # Alternativ 'reader' für nur-Lese-Zugriff
+                    })
+
+                    logging.info(f"Datei geteilt mit: fapra73@gmail.com")
+
                     # löschen der Datei im shared Verzeichnis
                     try:
                         # Überprüfen, ob die Datei existiert

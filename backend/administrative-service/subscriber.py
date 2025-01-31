@@ -1,9 +1,10 @@
 import json
 import os
-
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 import aio_pika
 import asyncio
-
+from oauth2client.service_account import ServiceAccountCredentials
 import requests
 
 from common.utils import load_secrets
@@ -55,13 +56,51 @@ async def on_message(message: aio_pika.IncomingMessage, ):
             #
             if "ProcessFiles" in event_type:
                 logging.info("Processing files after ImageUploaded event.")
-                file = process_files(event_filename)
-                logging.info(f"{file}")
+                processed_file = process_files(event_filename)
+                logging.info(f"{processed_file}")
 
-                directory, file_name = os.path.split(file)
+                directory, file_name = os.path.split(processed_file)
 
                 logging.info(f"Verzeichnispfad: {directory}")
                 logging.info(f"Dateiname: {file_name}")
+
+                # gauth = GoogleAuth()
+                # # Projekt-Root-Verzeichnis holen
+                # project_root = os.path.dirname(os.path.abspath(__file__))
+                # logging.info(f"project_root: {project_root}")
+                # # JSON-Datei im Projekt suchen
+                # file_path = os.path.join(project_root, "secrets/fapra-ki-einzelhandel-6f215d4ad989.json")
+                # logging.info(f"file_path: {file_path}")
+                #
+                # # Authentifizieren mit Service Account
+                # scope = ['https://www.googleapis.com/auth/drive']
+                # credentials = ServiceAccountCredentials.from_json_keyfile_name(file_path, scope)
+                #
+                # # GoogleAuth mit den Service-Credentials
+                # gauth = GoogleAuth()
+                # gauth.credentials = credentials
+                # drive = GoogleDrive(gauth)
+                #
+                # ORDNER_ID = "1BV9kt1H9r9qSUcVAcFjSxFWvOxFfDwYm"
+                #
+                # file = drive.CreateFile({
+                #     'title': f"{file_name}",
+                #     'mimeType': 'image/jpeg',
+                #     'parents': [{'id': ORDNER_ID}]
+                # })
+                # file.SetContentFile(f"{processed_file}")  # Lokale Datei setzen
+                # file.Upload()
+                # logging.debug(f"Bild hochgeladen: {file['title']}, ID: {file['id']}")
+                # # löschen der Datei im shared Verzeichnis
+                # logging.info(f"Bild hochgeladen in Ordner: https://drive.google.com/drive/folders/{ORDNER_ID}")
+                # # Google Drive API-Berechtigungen setzen
+                # file.InsertPermission({
+                #     'type': 'user',          # Berechtigung für ein bestimmtes Konto
+                #     'value': 'fapra73@gmail.com',  # Ersetze mit deiner Google-Mail-Adresse
+                #     'role': 'writer'         # Alternativ 'reader' für nur-Lese-Zugriff
+                # })
+                #
+                # logging.info(f"Datei geteilt mit: fapra73@gmail.com")
 
                 url = " http://nginx-proxy/eventing-service/publish/ImageValidated"
                 headers = {
@@ -70,8 +109,9 @@ async def on_message(message: aio_pika.IncomingMessage, ):
                 files = {
                     "type": (None, "ValidatedFiles"),
                     "model": event_model,
-                    "file": (f"{file_name}", open(f"{file}", "rb")),
+                    "file": (f"{file_name}", open(f"{processed_file}", "rb")),
                 }
+
 
                 response = requests.post(url, headers=headers, files=files)
                 logging.info(f"Response: {response}")
