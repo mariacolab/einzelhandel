@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y python3-pip && \
 FROM base AS production
 
 # Kopiere den gesamten Applikationscode in das Image
-COPY . .
+COPY . /workspace
 
 # Standardbefehl für die Produktion (hier: Gunicorn-Server)
 CMD ["gunicorn", "--bind", "0.0.0.0:5006", "app:app"]

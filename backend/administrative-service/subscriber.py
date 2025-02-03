@@ -56,6 +56,7 @@ async def on_message(message: aio_pika.IncomingMessage, ):
             #
             if "ProcessFiles" in event_type:
                 logging.info("Processing files after ImageUploaded event.")
+
                 processed_file = process_files(event_filename)
                 logging.info(f"{processed_file}")
 
