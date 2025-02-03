@@ -1,3 +1,4 @@
+import base64
 import json
 
 import requests
@@ -7,6 +8,7 @@ import aio_pika
 import asyncio
 from common.utils import load_secrets
 import logging
+import qrcode
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -29,21 +31,14 @@ async def on_message(message: aio_pika.IncomingMessage):
             event = message.body.decode()
             logging.debug(f"Received event: {event}")
 
-            event_raw = message.body.decode()
-            logging.debug(f"Raw event received: {event_raw}")
-
-            event_corrected = event_raw.replace("'", '"')
+            event_corrected = event.replace("'", '"')
             logging.debug(f"Corrected event JSON: {event_corrected}")
 
             event = json.loads(event_corrected)
             logging.debug(f"Parsed event: {event}")
 
             event_type = event.get("type", "")
-            event_data = event.get("data", "")
-            kind = event.get("kind", "")
             logging.info(f"Event type: {event_type}")
-            logging.info(f"Event Data: {event_data}")
-            logging.info(f"Event kind: {kind}")
 
             token = event.get("token", "")
 
@@ -52,61 +47,45 @@ async def on_message(message: aio_pika.IncomingMessage):
                 return
 
             logging.info(f"Extracted token: {token}")
-            #logging.info(f"if: {ProcessQrcode in event}")
-            if "ProcessQrcode" in event:
-                logging.info("Processing files after QRCodeGenerated event.")
+            logging.info(f"if: {event}")
+            if "ProcessQrcode" == event_type:
+                event_data = event.get("image_blob", "")
+                logging.info(f"Event Data: {event_data}")
+                logging.info("Processing files after ProcessQrcode event.")
 
-                """prüfen ob QR Code oder verschlüsselte Daten gesendet werden
-                im ersten Fall muss der QR-Code angezeigt werden
-                im zweiten Fall muss aus den Daten ein QR-Code erzeugt werden
-                und in die Datenbank geschrieben werden! """
+                base64_decoded_qrcode = base64.b64decode(event_data)
+                # Rückgabe des Blob QR-Codes aus Backend als Image an Frontend geben
+                # Blob in ein Bild laden
+                image_stream = io.BytesIO(base64_decoded_qrcode)
+                image = Image.open(image_stream)
 
-                if kind == "blob":
-                    logging.info("message bytes")
-                    # Rückgabe des Blob QR-Codes aus Backend als Image an Frontend geben
-                    # Blob in ein Bild laden
-                    image_stream = io.BytesIO(event_data)
-                    image = Image.open(image_stream)
+                # Bild anzeigen
+                image.show()
+            elif "MisclassifiedFiles" == event_type:
+                event_classification = event.get("classification", "")
+                logging.info(f"Event Data: {event_classification}")
+                event_filename = event.get("filename", "")
+                logging.info(f"Event Filename: {event_filename}")
+                event_path = event.get("path", "")
+                logging.info(f"Event Path: {event_path}")
+                # TODO Load the Image into a Viwer and submit if the classification is corect
+                logging.info("Processing files after MisclassifiedFiles event.")
 
-                    # Bild anzeigen
-                    image.show()
-
-                elif kind == "data":
-                    logging.info("message str")
-                    # Rückgabe des Image QR-Codes aus Frontend als Blob ans Backend
-                    # TODO hier die Funktion die aus event_data ein QR-Code erzeugt als Bild erzeugt einfügen
-                    image = Image.open("example_image.png")
-
-                    # Bild in Blob konvertieren
-                    blob_stream = io.BytesIO()
-                    image.save(blob_stream, format="PNG")
-                    image_blob = blob_stream.getvalue()
-
-                    logging.debug(f"Bild-Blob erzeugt: {len(image_blob)} Bytes")
-
-                    #TODO ins Backend verlagern und ein weiteres Event zum senden an Backend
-                    url = " http://nginx-proxy/qr-service/qrcode"
-                    headers = {
-                        'Content-Type': 'application/json',
-                        "Authorization": f"{token}"
-                    }
-                    logging.info(f"Data: {headers}")
-                    data = {
-                        "image_blob": image_blob,
-                        "encrypted_data": event_data
-                    }
-                    logging.info(f"Data: {data}")
-
-                    # POST-Anfrage senden
-                    response = requests.post(url, headers=headers, json=data)
-                    logging.info(f"Response: {response.request}")
-                    logging.info(f"Response: {response.status_code}")
-
-                    #TODO zurücksenden an QR-Code-Generierung und dort Update der Productdatenbank
-
-                else:
-                    return "Unbekannter Typ"
-
+                url = " http://nginx-proxy/eventing-service/publish/CorrectedClassification"
+                headers = {
+                    "Authorization": f"{token}"
+                }
+                files = {
+                    "type": (None, "CorrectedFiles"),
+                    "classification": (None, event_classification),
+                    "is_classification_correct": (None, True),
+                    "filename": event_filename,
+                    "path": event_path
+                }
+                response = requests.post(url, headers=headers, files=files)
+                logging.info(f"Response: {response}")
+            else:
+                logging.debug("if fehlgeschalgen")
         except Exception as e:
             logging.error(f"Error processing message: {e}")
 
@@ -119,10 +98,14 @@ async def main():
             logging.info("Connected to RabbitMQ.")
             channel = await connection.channel()
             exchange = await channel.declare_exchange("events", aio_pika.ExchangeType.TOPIC, durable=True)
-            queue = await channel.declare_queue("process_qrcode_queue", durable=True)
-            await queue.bind(exchange, routing_key="ProcessQrcode")  # Beispiel: Lauschen auf "ProcessFiles"
+            queue_mis = await channel.declare_queue("process_misclassified_queue", durable=True)
+            await queue_mis.bind(exchange, routing_key="MisclassifiedFiles")  # Beispiel: Lauschen auf "ProcessFiles"
 
-            await queue.consume(on_message)
+            queue_qrcode = await channel.declare_queue("process_qrcode_queue", durable=True)
+            await queue_qrcode.bind(exchange, routing_key="ProcessQrcode")
+
+            await queue_mis.consume(on_message)
+            await queue_qrcode.consume(on_message)
             logging.info("Waiting for messages. To exit press CTRL+C.")
             await asyncio.Future()  # Blockiert, um Nachrichten zu empfangen
     except Exception as e:

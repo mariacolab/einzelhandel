@@ -1,3 +1,5 @@
+import base64
+
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from models import Roles, Users, Products, QRCodes, FailedClassifications, Metadata
@@ -86,9 +88,11 @@ def delete_user(session: Session, user_id: int):
 
 
 # Product CRUD
-def create_product(session: Session, name: str, description: str, price: float, qr_code_id: int):
+def create_product(session: Session, name: str, description: str, shelf: int,
+                   price_piece: float, price_kg: float, qr_code_id: int):
     try:
-        products = Products(name=name, description=description, price=price, qr_code_id=qr_code_id)
+        products = Products(name=name, description=description, shelf=shelf,
+                            price_piece=price_piece, price_kg=price_kg, qr_code_id=qr_code_id)
         session.add(products)
         session.commit()
         return products
@@ -97,9 +101,11 @@ def create_product(session: Session, name: str, description: str, price: float, 
         return None
 
 
-def create_product_without_qr(session: Session, name: str, description: str, price: float):
+def create_product_without_qr(session: Session, name: str, description: str, shelf: int,
+                              price_piece: float, price_kg: float):
     try:
-        products = Products(name=name, description=description, price=price)
+        products = Products(name=name, description=description, shelf=shelf,
+                            price_piece=price_piece, price_kg=price_kg)
         session.add(products)
         session.commit()
         return products
@@ -136,8 +142,7 @@ def delete_product(session: Session, product_id: int):
 # QRCode CRUD
 def create_qrcode(session: Session, data: str):
     try:
-        binary_data = data.encode('utf-8')
-        qrcodes = QRCodes(data=binary_data)
+        qrcodes = QRCodes(data=data)
         session.add(qrcodes)
         session.commit()
         return qrcodes

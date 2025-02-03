@@ -100,6 +100,7 @@ services:
       - ./backend/qr-code-generator:/app
       - ./secrets:/app/secrets
       - ./common:/app/common
+      - ./class.json:/class.json
     command: ["python3", "subscriber.py"]
 
   eventing-service:
@@ -134,8 +135,10 @@ services:
     environment:
       FLASK_APP: app
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
-      PYTHONPATH: /app
+      PYTHONPATH: /workspace
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      NVIDIA_VISIBLE_DEVICES: all
+
       COMPOSE_HTTP_TIMEOUT: 900
     depends_on:
       - rabbitmq
@@ -144,10 +147,15 @@ services:
     secrets:
       - github_credentials
     volumes:
-      - ./secrets:/app/secrets
-      - ./common:/app/common
+      - ./secrets:/workspace/secrets
+      - ./common:/workspace/common
       - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [ gpu ]
 
   frontend:
     build:

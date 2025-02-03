@@ -32,90 +32,107 @@ components:
       payload:
         type: object
         properties:
-          metadata:
-            type: object
-            description: Metadaten des Bildes.
-            properties:
-              imageId:
-                type: string
-                description: Die eindeutige ID des Bildes.
-              timestamp:
-                type: string
-                format: date-time
-                description: Der Zeitpunkt des Hochladens.
-          image:
+          type:
+            type: string
+            default: ProcessFiles
+          model:
+            type: string
+            description: small oder big als Wert
+          filename:
             type: string
             format: binary
             description: Das hochgeladene Bild.
-
     ImageValidated:
       name: ImageValidated
       title: Bild validiert
       description: Validierung des Bilds abgeschlossen.
-      contentType: application/json
+      contentType: multipart/form-data
       payload:
         type: object
         properties:
-          imageId:
+          type:
             type: string
-            description: ID des Bildes
-          isValid:
-            type: boolean
-            description: Gibt an, ob das Bild gültig ist.
-          timestamp:
+            default: ValidatedFiles
+          model:
             type: string
-            format: date-time
-            description: Der Zeitpunkt der Validierung.
+            description: small oder big als Wert
+          file:
+            type: string
+            format: binary
+            description: Das hochgeladene Bild.
 
     ClassificationCompleted:
       name: ClassificationCompleted
       title: Klassifikation abgeschlossen
       description: Ergebnisse der Bildklassifikation.
-      contentType: application/json
+      contentType: multipart/form-data
       payload:
         type: object
         properties:
-          imageId:
+          type:
             type: string
-            description: ID des Bildes
-          classifications:
-            type: array
-            items:
-              type: object
-              properties:
-                label:
-                  type: string
-                  description: Der Klassifikationslabel.
-                confidence:
-                  type: number
-                  format: float
-                  description: Die Konfidenz der Klassifikation.
-          timestamp:
+            default: ClassFiles
+          result:
             type: string
-            format: date-time
-            description: Der Zeitpunkt der Klassifikation.
+            description: Rückgabe der Klassifizierung
 
     QRCodeGenerated:
       name: QRCodeGenerated
       title: QR-Code generiert
       description: Details zum generierten QR-Code.
-      contentType: application/json
+      contentType: multipart/form-data
       payload:
         type: object
         properties:
-          qrCodeId:
+          type:
             type: string
-            description: Die eindeutige ID des QR-Codes.
-          imageId:
+            default: ProcessQrcode
+          image_blob:
             type: string
-            description: Die ID Bildes
-          qrCodeData:
+            description: Base64 String des QR-Codes
+
+    MisclassificationReported:
+      name: MisclassificationReported
+      title: mögliche Fehlklassifizierung gemeldet
+      description: Meldung einer möglichen Fehlklassifizierung durch das Frontend.
+      contentType: multipart/form-data
+      payload:
+        type: object
+        properties:
+          type:
             type: string
-            description: Die Daten, die im QR-Code enthalten sind.
-          timestamp:
+            default: ProcessQrcode
+          classification:
             type: string
-            format: date-time
-            description: Der Zeitpunkt der QR-Code-Generierung.
+            description: Rückgabewert der KI
+          filename:
+            type: string
+            format: binary
+            description: Das klassifizierte Bild.
+
+    CorrectedClassification:
+      name: CorrectedClassification
+      title: Korrigierte Klassifikation
+      description: bestätigung der Klassifikation durch den Benutzer.
+      contentType: multipart/form-data
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            default: ProcessQrcode
+          is_classification_correct:
+            type: boolean
+            description: Rückgabe des Frontends
+          classification:
+            type: string
+            description: Rückgabewert der KI
+          filename:
+            type: array
+            description: Der Dateiname mit Dateiendung des Bilds.
+          path:
+            type: array
+            description: Der Ablagepfad des Bilds.
 
 channels:
   image_uploaded:
@@ -124,7 +141,7 @@ channels:
       summary: Backend empfängt das Bild vom Event.
       operationId: onImageUploaded
       security:
-        - OAuth2: [subscribe]
+        - OAuth2: [publish]
       message:
         $ref: '#/components/messages/ImageUploaded'
 
@@ -144,7 +161,7 @@ channels:
       summary: Backend empfängt das Ergbnis der Klassifikation.
       operationId: onClassificationCompleted
       security:
-        - OAuth2: [subscribe]
+        - OAuth2: [publish]
       message:
         $ref: '#/components/messages/ClassificationCompleted'
 
@@ -157,3 +174,23 @@ channels:
         - OAuth2: [publish]
       message:
         $ref: '#/components/messages/QRCodeGenerated'
+
+  misclassification_reported:
+    description: Event, das von der KI gesendet wird, wenn eine Fehlklassifikation erkannt wird und vom Frontend empfangen werden soll.
+    publish:
+      summary: Frontend sendet Fehlklassifizierung zur Verarbeitung an das Backend.
+      operationId: onMisclassificationReported
+      security:
+        - OAuth2: [publish]
+      message:
+        $ref: '#/components/messages/MisclassificationReported'
+
+  corrected_classification:
+    description: Event das vom Frontend gesendet wird, wenn eine korrigierte Klassifikation vom Mitarbeiter oder Admin bestätigt wurde.
+    publish:
+      summary: Frontend sendet die korrigierte Klassifikation zurück an die KI.
+      operationId: onCorrectedClassification
+      security:
+        - OAuth2: [publish]
+      message:
+        $ref: '#/components/messages/CorrectedClassification'

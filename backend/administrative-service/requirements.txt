@@ -4,3 +4,5 @@ aio-pika
 python-magic
 gunicorn
 requests
+pydrive
+oauth2client
