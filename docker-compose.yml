@@ -138,6 +138,7 @@ services:
       PYTHONPATH: /workspace
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
       NVIDIA_VISIBLE_DEVICES: all
+
       COMPOSE_HTTP_TIMEOUT: 900
     depends_on:
       - rabbitmq

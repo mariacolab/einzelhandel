@@ -1,6 +1,7 @@
 Flask
 filetype
 aio-pika
+Unicorn
 gunicorn
 requests
 pydrive

@@ -4,6 +4,11 @@ import os
 import random
 import aio_pika
 import asyncio
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from my_function_TF import predict_object_TF
+
 import requests
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
@@ -11,7 +16,10 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 from common.middleware import get_user_role_from_token
 from common.utils import load_secrets
+
 import logging
+
+from common.utils import load_secrets
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -62,22 +70,44 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event path: {event_path}")
 
                 logging.info("Processing files after ImageUploaded event.")
-                # TODO aufruf von Methoden um weiteren Code auszuführen
 
-                is_classification_correct = False  # Rückgabe der KI, ob Klassifizierung möglicherweise Fehlerhaft
+
+                # TODO aufruf von Methoden um weiteren Code auszuführen
+                img_file = f"{event_path}{event_filename}"
+                img = plt.imread(img_file)  # Lädt das Bild als NumPy-Array
+                img = np.resize(img, (128, 128, 3))
+
+                class_name = predict_object_TF(img)
+                #class_name = predict_object_YOLO(img_file)
+                #logging.info(f"Exampleresult: {class_name}")
+                #url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
+                #headers = {
+                #    'Content-Type': 'application/json',
+                #    "Authorization": f"{token}"
+                #}
+
+                #logging.info(f"Headers: {headers}")
+
+                #data = {
+                 #   "type": "ClassFiles",
+                 #   "data": {
+                 #     #  "result": f"{zufaelliger_wert}"
+                 #       "result": f"{class_name}"
+
+                #is_classification_correct = False  # Rückgabe der KI, ob Klassifizierung möglicherweise Fehlerhaft
 
                 # TODO entferne Test liste
-                obst_und_gemuese = [
-                    "Apfel", "Aubergine", "Avocado", "Banane", "Birne", "Bohnen", "Cerealien", "Chips", "Essig",
-                    "Fisch", "Gewuerze", "Granatapfel", "Honig", "Kaffee", "Kaki", "Karotte", "Kartoffel", "Kiwi",
-                    "Knoblauch", "Kuchen", "Mais", "Mandarine", "Mango", "Marmelade", "Mehl", "Milch", "Nudeln",
-                    "Nuss", "Oel", "Orange", "Pampelmuse", "Paprika", "Pflaume", "Reis", "Saft", "Schokolade", "Soda",
-                    "Suessigkeit", "Tee", "Tomate", "Tomatensauce", "Wasser", "Zitrone", "Zucchini", "Zucker",
-                    "Zwiebel"
-                ]
+                #obst_und_gemuese = [
+                #    "Apfel", "Aubergine", "Avocado", "Banane", "Birne", "Bohnen", "Cerealien", "Chips", "Essig",
+                #    "Fisch", "Gewuerze", "Granatapfel", "Honig", "Kaffee", "Kaki", "Karotte", "Kartoffel", "Kiwi",
+                #    "Knoblauch", "Kuchen", "Mais", "Mandarine", "Mango", "Marmelade", "Mehl", "Milch", "Nudeln",
+                #    "Nuss", "Oel", "Orange", "Pampelmuse", "Paprika", "Pflaume", "Reis", "Saft", "Schokolade", "Soda",
+                #    "Suessigkeit", "Tee", "Tomate", "Tomatensauce", "Wasser", "Zitrone", "Zucchini", "Zucker",
+                #    "Zwiebel"
+                #]
 
-                zufaelliger_wert = random.choice(obst_und_gemuese)
-                logging.info(f"Exampleresult: {zufaelliger_wert}")
+                #zufaelliger_wert = random.choice(obst_und_gemuese)
+                #logging.info(f"Exampleresult: {zufaelliger_wert}")
 
                 # TODO Rolle filtern wenn Kunde dann erhält er bei FALse eine Fehlermeldung in classification
                 user_role = get_user_role_from_token(token)
@@ -99,7 +129,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     }
                     files = {
                         "type": (None, "ClassFiles"),
-                        "result": (None, zufaelliger_wert),
+                        "result": (None, result),
                     }
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
@@ -231,7 +261,6 @@ async def main():
         logging.error(f"Error in RabbitMQ connection or setup: {e}")
         await asyncio.sleep(5)  # Delay before retrying
         await main()
-
 
 if __name__ == "__main__":
     try:

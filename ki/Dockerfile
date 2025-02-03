@@ -34,7 +34,6 @@ RUN apt-get update && apt-get install -y python3-pip && \
     python3 -m pip install --upgrade --force-reinstall pip && \
     python3 -m pip install --no-cache-dir -r requirements.txt
 
-
 # ---- Production Stage ----
 FROM base AS production
 
