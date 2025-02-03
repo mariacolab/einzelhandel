@@ -1,0 +1,417 @@
+[
+  {
+    "class_name": "Apfel",
+    "info": null,
+    "Regal": 1,
+    "preis": {
+      "pro_stueck": null,
+      "pro_kg": 3.19
+    }
+  },
+  {
+    "class_name": "Aubergine",
+    "info": null,
+    "Regal": 2,
+    "preis": {
+      "pro_stueck": 2.29,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Avocado",
+    "info": null,
+    "Regal": 2,
+    "preis": {
+      "pro_stueck": 1.39,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Banane",
+    "info": null,
+    "Regal": 1,
+    "preis": {
+      "pro_stueck": null,
+      "pro_kg": 1.79
+    }  
+  },
+  {
+    "class_name": "Birne",
+    "info": null,
+    "Regal": 1,
+    "preis": {
+      "pro_stueck": null,
+      "pro_kg": 1.99
+    }  
+  },
+  {
+    "class_name": "Bohnen",
+    "info": null,
+    "Regal": 9,
+    "preis": {
+      "pro_stueck": 1.79,
+      "pro_kg": 7.16
+    }  
+  },
+  {
+    "class_name": "Cerealien",
+    "info": null,
+    "Regal": 4,
+    "preis": {
+      "pro_stueck": 5.39,
+      "pro_kg": 10.78
+    }  
+  },
+  {
+    "class_name": "Chips",
+    "info": null,
+    "Regal": 5,
+    "preis": {
+      "pro_stueck": 1.99,
+      "pro_kg": 13.27
+    }  
+  },
+  {
+    "class_name": "Essig",
+    "info": null,
+    "Regal": 8,
+    "preis": {
+      "pro_stueck": 0.55,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Fisch",
+    "info": null,
+    "Regal": 9,
+    "preis": {
+      "pro_stueck": 1.59,
+      "pro_kg": 23.39
+    }  
+  },
+  {
+    "class_name": "Gewuerze",
+    "info": null,
+    "Regal": 8,
+    "preis": {
+      "pro_stueck": 2.29,
+      "pro_kg": 152.67
+    }  
+  },
+  {
+    "class_name": "Granatapfel",
+    "info": null,
+    "Regal": 1,
+    "preis": {
+      "pro_stueck": 1.99,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Honig",
+    "info": null,
+    "Regal": 10,
+    "preis": {
+      "pro_stueck": 5.49,
+      "pro_kg": 10.98
+    }  
+  },
+  {
+    "class_name": "Kaffee",
+    "info": null,
+    "Regal": 4,
+    "preis": {
+      "pro_stueck": 6.29,
+      "pro_kg": 62.9
+    }  
+  },
+  {
+    "class_name": "Kaki",
+    "info": null,
+    "Regal": 1,
+    "preis": {
+      "pro_stueck": 1.79,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Karotte",
+    "info": null,
+    "Regal": 2,
+    "preis": {
+      "pro_stueck": null,
+      "pro_kg": 1.19
+    }  
+  },
+  {
+    "class_name": "Kartoffel",
+    "info": null,
+    "Regal": 2,
+    "preis": {
+      "pro_stueck": 2.22,
+      "pro_kg": 1.11
+    }  
+  },
+  {
+    "class_name": "Kiwi",
+    "info": null,
+    "Regal": 1,
+    "preis": {
+      "pro_stueck": 0.39,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Knoblauch",
+    "info": null,
+    "Regal": 2,
+    "preis": {
+      "pro_stueck": 1.19,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Kuchen",
+    "info": null,
+    "Regal": 6,
+    "preis": {
+      "pro_stueck": 3.79,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Mais",
+    "info": null,
+    "Regal": 9,
+    "preis": {
+      "pro_stueck": 1.79,
+      "pro_kg": 6.28
+    }  
+  },
+  {
+    "class_name": "Mandarine",
+    "info": null,
+    "Regal": 1,
+    "preis": {
+      "pro_stueck": null,
+      "pro_kg": 1.69
+    }  
+  },
+  {
+    "class_name": "Mango",
+    "info": null,
+    "Regal": 1,
+    "preis": {
+      "pro_stueck": 1.69,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Marmelade",
+    "info": null,
+    "Regal": 10,
+    "preis": {
+      "pro_stueck": 1.69,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Mehl",
+    "info": null,
+    "Regal": 7,
+    "preis": {
+      "pro_stueck": 0.99,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Milch",
+    "info": null,
+    "Regal": 11,
+    "preis": {
+      "pro_stueck": 1.69,
+      "pro_kg": null
+    }  
+  },
+  {
+    "class_name": "Nudeln",
+    "info": null,
+    "Regal": 6,
+    "preis": {
+      "pro_stueck": 1.89,
+      "pro_kg": 3.78
+    }  
+  },
+  {
+    "class_name": "Nuss",
+    "info": null,
+    "regal": 4,
+    "preis": {
+      "pro_stueck": 4.99,
+      "pro_kg": 16.63
+    }
+  },
+  {
+    "class_name": "Oel",
+    "info": null,
+    "regal": 8,
+    "preis": {
+      "pro_stueck": 2.99,
+      "pro_kg": 3.99
+    }
+  },
+  {
+    "class_name": "Orange",
+    "info": null,
+    "regal": 1,
+    "preis": {
+      "pro_stueck": null,
+      "pro_kg": 3.99
+    }
+  },
+  {
+    "class_name": "Pampelmuse",
+    "info": null,
+    "regal": 1,
+    "preis": {
+      "pro_stueck": 3.19,
+      "pro_kg": null
+    }
+  },
+  {
+    "class_name": "Paprika",
+    "info": null,
+    "regal": 1,
+    "preis": {
+      "pro_stueck": 2.19,
+      "pro_kg": 4.38
+    }
+  },
+  {
+    "class_name": "Pflaume",
+    "info": null,
+    "regal": 1,
+    "preis": {
+      "pro_stueck": 0.5,
+      "pro_kg": 4.99
+    }
+  },
+  {
+    "class_name": "Reis",
+    "info": null,
+    "regal": 6,
+    "preis": {
+      "pro_stueck": 2.49,
+      "pro_kg": 4.98
+    }
+  },
+  {
+    "class_name": "Saft",
+    "info": null,
+    "regal": 3,
+    "preis": {
+      "pro_stueck": 2.19,
+      "pro_kg": null
+    }
+  },
+  {
+    "class_name": "Schokolade",
+    "info": null,
+    "regal": 5,
+    "preis": {
+      "pro_stueck": 2.49,
+      "pro_kg": null
+    }
+  },
+  {
+    "class_name": "Soda",
+    "info": null,
+    "regal": 3,
+    "preis": {
+      "pro_stueck": 1.59,
+      "pro_kg": null
+    }
+  },
+  {
+    "class_name": "Suessigkeit",
+    "info": null,
+    "regal": 5,
+    "preis": {
+      "pro_stueck": 1.19,
+      "pro_kg": null
+    }
+  },
+  {
+    "class_name": "Tee",
+    "info": null,
+    "regal": 4,
+    "preis": {
+      "pro_stueck": 2.29,
+      "pro_kg": null
+    }
+  },
+  {
+    "class_name": "Tomate",
+    "info": null,
+    "regal": 2,
+    "preis": {
+      "pro_stueck": 1.25,
+      "pro_kg": 4.99
+    }
+  },
+  {
+    "class_name": "Tomatensauce",
+    "info": null,
+    "regal": 6,
+    "preis": {
+      "pro_stueck": 1.49,
+      "pro_kg": 2.98
+    }
+  },
+  {
+    "class_name": "Wasser",
+    "info": null,
+    "regal": 3,
+    "preis": {
+      "pro_stueck": 0.65,
+      "pro_kg": null
+    }
+  },
+  {
+    "class_name": "Zitrone",
+    "info": null,
+    "regal": 2,
+    "preis": {
+      "pro_stueck": 0.79,
+      "pro_kg": null
+    }
+  },
+  {
+    "class_name": "Zucchini",
+    "info": null,
+    "regal": 2,
+    "preis": {
+      "pro_stueck": 0.99,
+      "pro_kg": 3.29
+    }
+  },
+  {
+    "class_name": "Zucker",
+    "info": null,
+    "regal": 7,
+    "preis": {
+      "pro_stueck": null,
+      "pro_kg": 1.49
+    }
+  },
+  {
+    "class_name": "Zwiebel",
+    "info": null,
+    "regal": 2,
+    "preis": {
+      "pro_stueck": null,
+      "pro_kg": 1.09
+    }
+  }
+]
+    

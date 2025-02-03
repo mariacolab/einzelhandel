@@ -15,8 +15,9 @@ except Exception as e:
     raise
 
 
-def save_qr_code_in_database(token: str, image_blob: bytes, encrypted_data: str):
-    # TODO ins Backend verlagern und ein weiteres Event zum senden an Backend
+def save_qr_code_in_database(token: str, image_blob: str, encrypted_data: str):
+    # TODO qr-code in database decodieren und encoded_data hier
+
     url = " http://nginx-proxy/database-management/qrcodes"
     headers = {
         'Content-Type': 'application/json',
@@ -24,10 +25,7 @@ def save_qr_code_in_database(token: str, image_blob: bytes, encrypted_data: str)
     }
     logging.info(f"Data: {headers}")
     data = {
-        "type": "ProcessQrcode",
-        "data": {
-            "code": image_blob
-        }
+        "data": image_blob
     }
     logging.info(f"Data: {data}")
 
