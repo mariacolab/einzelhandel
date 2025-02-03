@@ -8,3 +8,7 @@ oauth2client
 python-magic
 redis
 PyJWT
+ultralytics
+numpy
+matplotlib
+tensorflow
