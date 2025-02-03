@@ -16,37 +16,44 @@ components:
             user: User access
 
   schemas:
-    User:
+    UserRegister:
       type: object
       properties:
-        id:
-          type: integer
         username:
+          type: string
+        password:
           type: string
         role:
           type: string
-          enum: [user, employee, admin]
+          enum: [Kunde, Mitarbeiter, Admin]
+
+    UserLogin:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
 
     Product:
       type: object
       properties:
-        id:
-          type: integer
         name:
           type: string
         description:
           type: string
-        price:
+        shelf:
+          type: string
+        price_piece:
           type: number
           format: float
-        qrCode:
-          type: string
+        price_kg:
+          type: number
+          format: float
 
     AIImageCollection:
       type: object
       properties:
-        taskId:
-          type: string
         images:
           type: array
           items:
@@ -56,26 +63,17 @@ components:
     AIResult:
       type: object
       properties:
-        taskId:
-          type: string
         results:
           type: array
           items:
             type: object
             properties:
-              imageId:
-                type: string
               label:
                 type: string
-              confidence:
-                type: number
-                format: float
 
     QRCodeScanResult:
       type: object
       properties:
-        qrCodeId:
-          type: string
         scannedData:
           type: string
         timestamp:
@@ -95,20 +93,16 @@ paths:
     post:
       summary: Nutzer registriert sich
       security:
-        - OAuth2: [user, employee, admin]
+        - OAuth2: [Kunde, Mitarbeiter, Admin]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
+              $ref: '#/components/schemas/UserRegister'
       responses:
         '201':
           description: Nutzer registriert
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
         '404':
           description: Fehler beim registriren
 
@@ -116,7 +110,13 @@ paths:
     post:
       summary: Nutzer meldet sich an
       security:
-        - OAuth2: [user, employee, admin]
+        - OAuth2: [Kunde, Mitarbeiter, Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
       responses:
         '200':
           description: Erfolgreich angemeldet mit OAuth token
@@ -124,12 +124,14 @@ paths:
           description: Unauthorized
         '404':
           description: Fehler beim anmelden
+      x-rate-limit:
+        limit: 10
 
   /auth/logout:
     post:
       summary: Nutzer meldet sich ab, der Zugriffstoken und die Session werden invalide
       security:
-        - OAuth2: [user, employee, admin]
+        - OAuth2: [Kunde, Mitarbeiter, Admin]
       responses:
         '200':
           description: Erfolgreich abgemeldet
@@ -140,7 +142,7 @@ paths:
     get:
       summary: Alle QR codes auflisten
       security:
-        - OAuth2: [user, employee, admin]
+        - OAuth2: [Mitarbeiter, Admin]
       responses:
         '200':
           description: Liste der QR-Codes
@@ -152,59 +154,28 @@ paths:
                   $ref: '#/components/schemas/Product'
         '404':
           description: QR-Codes nicht gefunden
-      x-rate-limit:
-        limit: 10
-        window: 60
-              
+
   /qrcode/scan:
     get:
       summary: Scan eines QR-Codes
       security:
-        - OAuth2: [user, employee, admin]
+        - OAuth2: [Kunde, Mitarbeiter, Admin]
       responses:
         '200':
           description: QR-Code erfolgreich gescannt
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QRCodeScanResult'
+                $ref: '#/components/schemas/Product'
         '404':
           description: QR-Code nicht gefunden
-      x-rate-limit:
-        limit: 10
-        window: 60
 
-  /qrcode/information:
-    post:
-      summary: Informationen vom QR-Code zurückgeben
-      security:
-        - OAuth2: [admin]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/QRCodeInformation'
-      responses:
-        '201':
-          description: Informationen erfolgreich hinzugefügt
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "success"
-        '404':
-          description: Informationen nicht gefunden
-                    
 
   /ai/start-task:
     post:
       summary: Starten eines KI laufes mit den fehlgeschlagenen Bildern
       security:
-        - OAuth2: [admin]
+        - OAuth2: [Admin]
       requestBody:
         required: true
         content:
@@ -219,36 +190,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  taskId:
-                    type: string
-        '404':
-          description: Fehler beim starten des KI laufs
-      x-rate-limit:
-        limit: 10
-        window: 60
-
-  /ai/send-results:
-    post:
-      summary: Ergebnisse des KI lauf zurückgeben
-      security:
-        - OAuth2: [admin]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AIResult'
-      responses:
-        '200':
-          description: Ergebnisse erfolgreich erhalten
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
                   status:
                     type: string
                     example: "success"
         '404':
-          description: Fehler beim zurückgeben der Ergebnisse des KI lauf
-      
+          description: Fehler beim starten des KI laufs
+      x-rate-limit:
+        limit: 10
