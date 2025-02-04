@@ -71,7 +71,7 @@ def update_model_TF():
     logging.info(f"Update durchgeführt!")
 
     # Aktualisiertes Modell speichern
-    updated_model_path = './MODELS/obst_gemuese_TF_100_updated.h5'
+    updated_model_path = './MODELS/obst_gemuese_TF_100.h5'
     model.save(updated_model_path)
 
     logging.info(f"Modell gespeichert {updated_model_path}.")
