@@ -5,3 +5,4 @@ Unicorn
 requests
 numpy
 matplotlib
+scipy

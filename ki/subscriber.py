@@ -5,14 +5,16 @@ import aio_pika
 import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
+
 import tensorflow as tf
-from my_function_TF import predict_object_TF
+
+from rh_TF_Training import predict_object_TF
+from rh_TF_Update import update_model_TF
 
 import requests
-
+#from einzelhandel.common.utils import load_secrets
+from common.utils import load_secrets 
 import logging
-
-from common.utils import load_secrets
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -60,18 +62,20 @@ async def on_message(message: aio_pika.IncomingMessage):
 
             logging.info(f"Extracted token: {token}")
 
-            #
             if "ValidatedFiles" in event_type:
                 logging.info("Processing files after ImageUploaded event.")
 
-                # TODO aufruf von Methoden um weiteren Code auszuführen
                 img_file = f"{event_path}{event_filename}"
                 img = plt.imread(img_file)  # Lädt das Bild als NumPy-Array
                 img = np.resize(img, (128, 128, 3))
 
                 class_name = predict_object_TF(img)
-                #class_name = predict_object_YOLO(img_file)
-                logging.info(f"Exampleresult: {class_name}")
+
+                logging.info(f"Example Result: {class_name}")
+
+                update_model_TF()
+                logging.info(f"Example Result after Update.")
+
                 url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                 headers = {
                     'Content-Type': 'application/json',
