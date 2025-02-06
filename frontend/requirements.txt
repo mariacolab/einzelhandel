@@ -5,3 +5,5 @@ gunicorn
 Pillow
 requests
 qrcode[pil]
+pydrive
+oauth2client

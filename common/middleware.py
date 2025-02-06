@@ -42,12 +42,11 @@ def decode_token(token):
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = None
-        if 'Authorization' in request.headers:
-            token = request.headers['Authorization'].split(" ")[1]
-            logging.debug(f"Token: {token}")
+        token = session.get('token')  # Token aus der Session holen
         if not token:
-            return jsonify({"message": "Token is missing"}), 401
+            return jsonify({"message": "Unauthorized: No active session"}), 401
+
+        logging.debug(f"Token from session: {token}")
 
         if redis_client.get(f"blacklist:{token}"):
             logging.debug(f"Token {token} is blacklisted")
@@ -59,14 +58,10 @@ def token_required(f):
             if 'error' in decoded:
                 return jsonify({"message": decoded['error']}), 401
 
-            # Überprüfen, ob der Token in der Blacklist ist
-            if token in TOKEN_BLACKLIST:
-                logging.debug(f"Token {token} is blacklisted")
-                return jsonify({"message": "Token has been revoked"}), 401
+            request.user = decoded  # Benutzerinformationen im Request speichern
 
-            request.user = decoded
         except jwt.ExpiredSignatureError as e:
-            return jsonify({"message": f"Token expired. Please refresh your token.: {str(e)}"}), 401
+            return jsonify({"message": f"Token expired. Please log in again: {str(e)}"}), 401
         except jwt.InvalidTokenError as e:
             return jsonify({"message": f"Invalid token: {str(e)}"}), 401
         except Exception as e:
@@ -81,25 +76,15 @@ def role_required(*required_roles):
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            username = request.user.get('username')
-            logging.debug(f"Loaded username: {username}")
-            if not username:
-                return jsonify({"message": "Username missing from token"}), 403
+            role_name = session.get('role')  # Rolle aus der Session holen
+            logging.debug(f"Session role: {role_name}")
 
-            role_name = request.user.get('role')
-            logging.debug(f"Loaded user_role: {role_name}")
             if not role_name:
-                return jsonify({"message": "Role missing from token"}), 403
+                return jsonify({"message": "Unauthorized: No role found"}), 403
 
-            try:
-                # Check if the user has at least one required role
-                if role_name not in required_roles:
-                    logging.debug(f"Role validation failed for {required_roles} and {role_name}")
-                    return jsonify({"message": "Access denied"}), 403
-
-            except requests.RequestException as e:
-                logging.debug(f"Role validation exception: {e}")
-                return jsonify({"message": f"Failed to validate roles {required_roles}", "details": str(e)}), 500
+            if role_name not in required_roles:
+                logging.debug(f"Access denied for role {role_name}, required: {required_roles}")
+                return jsonify({"message": "Access denied"}), 403
 
             return f(*args, **kwargs)
 
@@ -108,8 +93,8 @@ def role_required(*required_roles):
     return decorator
 
 
-def get_user_role_from_token(token):
-    decoded_token = decode_token(token)
+def get_user_role_from_token():
+    decoded_token = decode_token(session.get('token'))
     if 'error' in decoded_token:
         logging.debug(f"Error decoding token: {decoded_token['error']}")
         return None

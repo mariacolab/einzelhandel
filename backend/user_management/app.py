@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, session
 from flask_jwt_extended import JWTManager
 from flask_session import Session
 
@@ -43,18 +43,13 @@ def health_check():
     return jsonify({"status": "ok"}), 200
 
 
-@app.route('/admin', methods=['GET'])
+@app.route('/user/profile', methods=['GET'])
 @token_required
-@role_required('Admin')
-def admin_dashboard():
-    return jsonify({"message": "Admin access granted"})
-
-
-@app.route('/user', methods=['GET'])
-@token_required
-@role_required('Kunde')
-def user_dashboard():
-    return jsonify({"message": "User access granted"})
+def user_profile():
+    return jsonify({
+        "username": session.get('username'),
+        "role": session.get('role')
+    })
 
 
 if __name__ == "__main__":

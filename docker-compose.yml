@@ -131,6 +131,9 @@ services:
     build:
       context: ./ki
       target: production
+      dockerfile: Dockerfile
+      args:
+        - DOCKER_BUILDKIT=1
     container_name: ki
     environment:
       FLASK_APP: app
@@ -138,8 +141,7 @@ services:
       PYTHONPATH: /workspace
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
       NVIDIA_VISIBLE_DEVICES: all
-
-      COMPOSE_HTTP_TIMEOUT: 900
+      COMPOSE_HTTP_TIMEOUT: 1500
     depends_on:
       - rabbitmq
     ports:

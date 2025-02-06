@@ -75,8 +75,10 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                 # TODO aufruf von Methoden um weiteren Code auszuführen
 
+                user_role = get_user_role_from_token()
+
                 if event_model == "big":
-                  result = detect(f"{event_path}{event_filename}",f"{event_filename}")
+                  result = detect(f"{event_path}{event_filename}",f"{event_filename}", user_role)
                 elif event_model == "small":
                   img_file = f"{event_path}{event_filename}"
                   img = plt.imread(img_file)  # Lädt das Bild als NumPy-Array
@@ -85,40 +87,12 @@ async def on_message(message: aio_pika.IncomingMessage):
                   class_name = predict_object_TF(img)
                   #class_name = predict_object_YOLO(img_file)
                   #logging.info(f"Exampleresult: {class_name}")
-                #url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
-                #headers = {
-                #    'Content-Type': 'application/json',
-                #    "Authorization": f"{token}"
-                #}
-
-                #logging.info(f"Headers: {headers}")
-
-                #data = {
-                 #   "type": "ClassFiles",
-                 #   "data": {
-                 #     #  "result": f"{zufaelliger_wert}"
-                 #       "result": f"{class_name}"
-
-
-                #is_classification_correct = False  # Rückgabe der KI, ob Klassifizierung möglicherweise Fehlerhaft
 
                 logging.info(f"result from image: {result}")
 
-                # TODO entferne Test liste
-                #obst_und_gemuese = [
-                #    "Apfel", "Aubergine", "Avocado", "Banane", "Birne", "Bohnen", "Cerealien", "Chips", "Essig",
-                #    "Fisch", "Gewuerze", "Granatapfel", "Honig", "Kaffee", "Kaki", "Karotte", "Kartoffel", "Kiwi",
-                #    "Knoblauch", "Kuchen", "Mais", "Mandarine", "Mango", "Marmelade", "Mehl", "Milch", "Nudeln",
-                #    "Nuss", "Oel", "Orange", "Pampelmuse", "Paprika", "Pflaume", "Reis", "Saft", "Schokolade", "Soda",
-                #    "Suessigkeit", "Tee", "Tomate", "Tomatensauce", "Wasser", "Zitrone", "Zucchini", "Zucker",
-                #    "Zwiebel"
-                #]
 
-                #zufaelliger_wert = random.choice(obst_und_gemuese)
-                #logging.info(f"Exampleresult: {zufaelliger_wert}")
-
-                # TODO Rolle filtern wenn Kunde dann erhält er bei FALse eine Fehlermeldung in classification
-                user_role = get_user_role_from_token(token)
+                # TODO Rolle filtern wenn Kunde dann erhält er bei FaLse eine Fehlermeldung in classification
+                is_classification_correct = True
 
                 if is_classification_correct:
                     # löschen der Datei im shared Verzeichnis

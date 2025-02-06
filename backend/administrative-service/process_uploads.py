@@ -48,6 +48,8 @@ def process_files(filename):
     Sucht Dateien im Uploads-Ordner, überprüft den Typ und benennt sie um.
     """
 
+    #google_uploade_file_to_folder()
+
     file_path = os.path.join(UPLOADS_DIR, filename)
 
     if not os.path.exists(file_path):
