@@ -10,9 +10,7 @@ import tensorflow as tf
 from my_function_TF import predict_object_TF
 
 import requests
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
-from oauth2client.service_account import ServiceAccountCredentials
+
 
 from common.middleware import get_user_role_from_token
 from common.utils import load_secrets
@@ -78,7 +76,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 user_role = get_user_role_from_token()
 
                 if event_model == "big":
-                  result = detect(f"{event_path}{event_filename}",f"{event_filename}", user_role)
+                  result = detect(f"{event_path}{event_filename}",f"{event_filename}")
                 elif event_model == "small":
                   img_file = f"{event_path}{event_filename}"
                   img = plt.imread(img_file)  # Lädt das Bild als NumPy-Array
@@ -162,53 +160,53 @@ async def on_message(message: aio_pika.IncomingMessage):
                     logging.info(f"Event file: {event_classification}")
                     # TODO Datei in Googledrive ablegen
 
-                    # Projekt-Root-Verzeichnis holen
-                    project_root = os.path.dirname(os.path.abspath(__file__))
-                    logging.info(f"project_root: {project_root}")
-                    # JSON-Datei im Projekt suchen
-                    file_path = os.path.join(project_root, "secrets/fapra-ki-einzelhandel-6f215d4ad989.json")
-                    logging.info(f"file_path: {file_path}")
-
-                    # Authentifizieren mit Service Account
-                    scope = ['https://www.googleapis.com/auth/drive']
-                    credentials = ServiceAccountCredentials.from_json_keyfile_name(file_path, scope)
-
-                    # GoogleAuth mit den Service-Credentials
-                    gauth = GoogleAuth()
-                    gauth.credentials = credentials
-                    drive = GoogleDrive(gauth)
-
-                    ORDNER_ID = "1BV9kt1H9r9qSUcVAcFjSxFWvOxFfDwYm"
-
-                    file = drive.CreateFile({
-                        'title': f"{event_filename}",
-                        'mimeType': 'image/jpeg',
-                        'parents': [{'id': ORDNER_ID}]
-                    })
-                    file.SetContentFile(f"{event_path}{event_filename}")  # Lokale Datei setzen
-                    file.Upload()
-                    logging.debug(f"Bild hochgeladen: {file['title']}, ID: {file['id']}")
-                    # löschen der Datei im shared Verzeichnis
-                    logging.info(f"Bild hochgeladen in Ordner: https://drive.google.com/drive/folders/{ORDNER_ID}")
-                    # Google Drive API-Berechtigungen setzen
-                    file.InsertPermission({
-                        'type': 'user',          # Berechtigung für ein bestimmtes Konto
-                        'value': 'fapra73@gmail.com',  # Ersetze mit deiner Google-Mail-Adresse
-                        'role': 'writer'         # Alternativ 'reader' für nur-Lese-Zugriff
-                    })
-
-                    logging.info(f"Datei geteilt mit: fapra73@gmail.com")
-
-                    # löschen der Datei im shared Verzeichnis
-                    try:
-                        # Überprüfen, ob die Datei existiert
-                        if os.path.exists(f"{event_path}{event_filename}"):
-                            os.remove(f"{event_path}{event_filename}")
-                            logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
-                        else:
-                            logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
-                    except Exception as e:
-                        logging.error(f"Fehler beim Löschen der Datei: {e}")
+                    # # Projekt-Root-Verzeichnis holen
+                    # project_root = os.path.dirname(os.path.abspath(__file__))
+                    # logging.info(f"project_root: {project_root}")
+                    # # JSON-Datei im Projekt suchen
+                    # file_path = os.path.join(project_root, "secrets/fapra-ki-einzelhandel-6f215d4ad989.json")
+                    # logging.info(f"file_path: {file_path}")
+                    #
+                    # # Authentifizieren mit Service Account
+                    # scope = ['https://www.googleapis.com/auth/drive']
+                    # credentials = ServiceAccountCredentials.from_json_keyfile_name(file_path, scope)
+                    #
+                    # # GoogleAuth mit den Service-Credentials
+                    # gauth = GoogleAuth()
+                    # gauth.credentials = credentials
+                    # drive = GoogleDrive(gauth)
+                    #
+                    # ORDNER_ID = "1BV9kt1H9r9qSUcVAcFjSxFWvOxFfDwYm"
+                    #
+                    # file = drive.CreateFile({
+                    #     'title': f"{event_filename}",
+                    #     'mimeType': 'image/jpeg',
+                    #     'parents': [{'id': ORDNER_ID}]
+                    # })
+                    # file.SetContentFile(f"{event_path}{event_filename}")  # Lokale Datei setzen
+                    # file.Upload()
+                    # logging.debug(f"Bild hochgeladen: {file['title']}, ID: {file['id']}")
+                    # # löschen der Datei im shared Verzeichnis
+                    # logging.info(f"Bild hochgeladen in Ordner: https://drive.google.com/drive/folders/{ORDNER_ID}")
+                    # # Google Drive API-Berechtigungen setzen
+                    # file.InsertPermission({
+                    #     'type': 'user',          # Berechtigung für ein bestimmtes Konto
+                    #     'value': 'fapra73@gmail.com',  # Ersetze mit deiner Google-Mail-Adresse
+                    #     'role': 'writer'         # Alternativ 'reader' für nur-Lese-Zugriff
+                    # })
+                    #
+                    # logging.info(f"Datei geteilt mit: fapra73@gmail.com")
+                    #
+                    # # löschen der Datei im shared Verzeichnis
+                    # try:
+                    #     # Überprüfen, ob die Datei existiert
+                    #     if os.path.exists(f"{event_path}{event_filename}"):
+                    #         os.remove(f"{event_path}{event_filename}")
+                    #         logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
+                    #     else:
+                    #         logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
+                    # except Exception as e:
+                    #     logging.error(f"Fehler beim Löschen der Datei: {e}")
 
                     logging.info("Fehlerhafte Klassifizierung")
         except Exception as e:

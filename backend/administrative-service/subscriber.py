@@ -1,11 +1,13 @@
 import json
 import os
+import tempfile
 
 import aio_pika
 import asyncio
 
 import requests
 
+from common.google_drive import google_download_file
 from common.utils import load_secrets
 import logging
 from process_uploads import process_files
@@ -56,28 +58,30 @@ async def on_message(message: aio_pika.IncomingMessage, ):
             if "ProcessFiles" in event_type:
                 logging.info("Processing files after ImageUploaded event.")
 
-                processed_file = process_files(event_filename)
+                fileid, processed_file = process_files(event_filename, event_path)
                 logging.info(f"{processed_file}")
 
-                directory, file_name = os.path.split(processed_file)
+                # Download file from Google Drive
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    local_file_path = google_download_file(fileid, temp_dir)
 
-                logging.info(f"Verzeichnispfad: {directory}")
-                logging.info(f"Dateiname: {file_name}")
-
+                    if not local_file_path:
+                        logging.error(f"Failed to download file with ID: {fileid}")
+                        return
 
                 url = " http://nginx-proxy/eventing-service/publish/ImageValidated"
                 headers = {
                     "Authorization": f"{token}"
                 }
-                files = {
-                    "type": (None, "ValidatedFiles"),
-                    "model": event_model,
-                    "file": (f"{file_name}", open(f"{processed_file}", "rb")),
-                }
+                with open(local_file_path, "rb") as file:
+                    files = {
+                        "type": (None, "ValidatedFiles"),
+                        "model": (None, event_model),
+                        "file": (processed_file, file, "application/octet-stream"),
+                    }
 
-
-                response = requests.post(url, headers=headers, files=files)
-                logging.info(f"Response: {response}")
+                    response = requests.post(url, headers=headers, files=files)
+                    logging.info(f"Response: {response}")
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")
