@@ -21,6 +21,7 @@ app.config['JWT_SECRET_KEY'] = secrets.get('JWT_SECRET_KEY')
 app.config['SESSION_TYPE'] = 'filesystem'  # Alternativen: 'redis', 'memcached', etc.
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
+app.config["SESSION_COOKIE_SECURE"] = False
 
 # Initialisiere Flask-Session
 Session(app)
@@ -30,7 +31,6 @@ jwt = JWTManager(app)
 
 # Registriere die REST-Schnittstellen
 register_routes(app)
-
 
 # Routes
 @app.route('/')

@@ -3,14 +3,15 @@ from pydrive.drive import GoogleDrive
 from oauth2client.service_account import ServiceAccountCredentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
-from google.oauth2 import service_account
 import io
-import torch
 import os
 import logging
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
+# Google Drive API Authentication
+SERVICE_ACCOUNT_FILE = "secrets/fapra-ki-einzelhandel-555f5e4a0722.json"
+SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 def google_auth():
 
@@ -18,11 +19,11 @@ def google_auth():
     project_root = os.path.dirname(os.path.abspath(__file__))
     logging.info(f"project_root: {project_root}")
     # JSON-Datei im Projekt suchen
-    file_path = os.path.join(project_root, "secrets/fapra-ki-einzelhandel-6f215d4ad989.json")
+    file_path = os.path.join(project_root, SERVICE_ACCOUNT_FILE)
     logging.info(f"file_path: {file_path}")
 
     # Authentifizieren mit Service Account
-    scope = ['https://www.googleapis.com/auth/drive']
+    scope = SCOPES
     credentials = ServiceAccountCredentials.from_json_keyfile_name(file_path, scope)
 
     # GoogleAuth mit den Service-Credentials
@@ -167,12 +168,7 @@ def google_get_file_in_folder(folder_id, file_name, save_path):
         logging.error(f"Error fetching file from Google Drive: {e}")
         return None
 
-# Google Drive API Authentication
-SERVICE_ACCOUNT_FILE = "secrets/fapra-ki-einzelhandel-6f215d4ad989.json"
-SCOPES = ["https://www.googleapis.com/auth/drive"]
-
 def google_drive_service():
-    """Authenticate and return Google Drive service instance."""
     creds = ServiceAccountCredentials.from_json_keyfile_name(
         SERVICE_ACCOUNT_FILE,
         scopes=SCOPES
@@ -180,9 +176,6 @@ def google_drive_service():
     return build("drive", "v3", credentials=creds)
 
 def google_get_file_stream(folder_id, file_name):
-    """
-    Get a file from Google Drive via folder ID and file name and return as a stream.
-    """
     service = google_drive_service()
 
     # Search for the file in the folder

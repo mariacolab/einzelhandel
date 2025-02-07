@@ -1,6 +1,5 @@
 import tensorflow as tf
 import numpy as np
-
 from common.DriveFolders import DriveFolders
 from common.google_drive import google_get_file_stream
 

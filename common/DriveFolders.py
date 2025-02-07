@@ -36,6 +36,3 @@ class DriveFolders(enum.Enum):
     DATA_ObstGemuese_Neu_3_VALIDATE_Kaki = "1duSK6Dp8uVt7iig4mwMRhj1aMZ6aX5aJ"
     DATA_ObstGemuese_Neu_3_VALIDATE_Aubergine = "1vbDaWXJrxpmyvi2GHYgq2SQCKvnF-x_e"
     DATA_ObstGemuese_Neu_3_VALIDATE_Apfel = "1hbF9KYk_QLV7VXYk2InjcVW4Pocs0Oze"
-
-# Example usage
-print(f"Folder Name: {DriveFolders.IMAGES.name}, Folder ID: {DriveFolders.IMAGES.value}")

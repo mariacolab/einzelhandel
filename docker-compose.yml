@@ -36,7 +36,7 @@ services:
       - github_credentials
     volumes:
       - ./backend/database-management:/app
-      - ./secrets:/app/secrets
+      - ./secrets:/app/common/secrets
       - ./common:/app/common
 
   admin-service:
@@ -56,7 +56,7 @@ services:
     secrets:
       - github_credentials
     volumes:
-      - ./secrets:/app/secrets
+      - ./secrets:/app/common/secrets
       - ./common:/app/common
       - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
@@ -77,7 +77,7 @@ services:
       - github_credentials
     volumes:
       - ./backend/user_management:/app
-      - ./secrets:/app/secrets
+      - ./secrets:/app/common/secrets
       - ./common:/app/common
 
   qr-service:
@@ -98,7 +98,7 @@ services:
       - github_credentials
     volumes:
       - ./backend/qr-code-generator:/app
-      - ./secrets:/app/secrets
+      - ./secrets:/app/common/secrets
       - ./common:/app/common
       - ./class.json:/class.json
     command: ["python3", "subscriber.py"]
@@ -123,7 +123,7 @@ services:
     secrets:
       - github_credentials
     volumes:
-      - ./secrets:/app/secrets
+      - ./secrets:/app/common/secrets
       - ./common:/app/common
       - shared_uploads:/shared/uploads
 
@@ -149,7 +149,7 @@ services:
     secrets:
       - github_credentials
     volumes:
-      - ./secrets:/workspace/secrets
+      - ./secrets:/workspace/common/secrets
       - ./common:/workspace/common
       - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
@@ -176,7 +176,7 @@ services:
     secrets:
       - github_credentials
     volumes:
-      - ./secrets:/app/secrets
+      - ./secrets:/app/common/secrets
       - ./common:/app/common
       - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
@@ -194,7 +194,7 @@ services:
     secrets:
       - github_credentials
     volumes:
-      - ./secrets:/app/secrets
+      - ./secrets:/app/common/secrets
       - ./rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
 
   nginx:
