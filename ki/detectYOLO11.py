@@ -12,6 +12,7 @@ from common.DriveFolders import DriveFolders
 from common.google_drive import google_get_file_stream, google_uploade_file_to_folder, \
     google_upload_file_to_drive
 
+logging.info(f"torch available: {torch.cuda.is_available()}")
 
 # gibt Dateinamen ohne Endung zurück (Bsp. "file.jpg" wird zu "file")
 def name_extrahieren(name):
@@ -46,46 +47,49 @@ def detect(fileid):
     if file_stream:
         # "KIModelle/trainiert_mit_ganzem_Datensatz/bestTrain40.pt"
         # "cpu" for CPU use or "cuda" for GPU
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = "cpu" #"cuda" if torch.cuda.is_available() else "cpu"
         logging.info(f"device: {device}")
         # Temporäre Datei für YOLO-Modell erstellen
         with tempfile.NamedTemporaryFile(suffix=".pt", delete=False) as temp_model_file:
             temp_model_file.write(file_stream.read())
             temp_model_path = temp_model_file.name
             model = YOLO(temp_model_path).to(device)
-            logging.info(f"model: {model}")
+            #logging.info(f"model: {model}")
         # TODO ggf conf niedriger setzen
-            file_stream2 = google_get_file_stream(folder_id=DriveFolders.UPLOAD.value,
+            file_stream_img = google_get_file_stream(folder_id=DriveFolders.UPLOAD.value,
                                                   file_id=fileid)
-            results = model(file_stream2,
+            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_img_file:
+                temp_img_file.write(file_stream_img.read())
+                temp_img_path = temp_img_file.name
+                results = model(temp_img_path,
                             conf=0.75)  # Objekterkennung vom YOLO11-Modell durchführen, dabei nur erkannte Obj mit Konfidenz mind 0,75 beachten
-            logging.info(f"result: {results}")
-            # Objekt mit höchster Konfidenz auswählen
-            best_result = None
-            for result in results[0]:
+                logging.info(f"result: {results}")
+                # Objekt mit höchster Konfidenz auswählen
+                best_result = None
+                for result in results[0]:
+                    if best_result is None:
+                        best_result = result
+                    elif result.boxes.conf > best_result.boxes.conf:
+                        best_result = result
+                    else:
+                        logging.info("2 or more classes detected and lower confidences ignored")
+                # TODO Falls kein Objekt erkannt wurde
                 if best_result is None:
-                    best_result = result
-                elif result.boxes.conf > best_result.boxes.conf:
-                    best_result = result
-                else:
-                    logging.info("2 or more classes detected and lower confidences ignored")
-            # TODO Falls kein Objekt erkannt wurde
-            if best_result is None:
-                logging.info("please make a better picture and ensure the object is clearly visible")
-                return "nichts"
+                    logging.info("please make a better picture and ensure the object is clearly visible")
+                    return "nichts"
 
-            # Aus dem besten Ergebnis die Klassen-ID extrahieren und dieser den passenden Klassennamen zuordnen
-            names = model.names
-            obj_id = best_result.boxes.cls
-            obj_name = names[int(obj_id)]
+                # Aus dem besten Ergebnis die Klassen-ID extrahieren und dieser den passenden Klassennamen zuordnen
+                names = model.names
+                obj_id = best_result.boxes.cls
+                obj_name = names[int(obj_id)]
 
         # Nachlernen
         korrekt_bool = abfrage(obj_name)
         if korrekt_bool is True:
             # TODO Pfad wo gespeichert
             # korrekt erkannt -> Bild und Label den Trainingsdaten hinzufügen
-            logging.info("Filename is " + file_stream2.name)
-            dateiname = name_extrahieren(file_stream2.name)
+            logging.info("Filename is " + file_stream.name)
+            dateiname = name_extrahieren(file_stream.name)
             logging.info("Filename is " + dateiname)
             with tempfile.TemporaryDirectory() as temp_dir:
                 # labelpfad = "Datasets/TestDaten/labels/"
@@ -100,7 +104,7 @@ def detect(fileid):
                                               dateiname + ".txt",
                                               temp_dir)
                 # TODO resize
-                bild2 = cv2.imread(file_stream2)
+                bild2 = cv2.imread(file_stream)
                 # .imwrite(temp_dir + dateiname + ".jpg", bild2)
                 google_upload_file_to_drive(DriveFolders.Datasets_TestDaten_labels.value, bild2)
 

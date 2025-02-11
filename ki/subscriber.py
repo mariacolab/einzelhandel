@@ -3,12 +3,12 @@ import aio_pika
 import asyncio
 from common.DriveFolders import DriveFolders
 from common.google_drive import google_move_to_another_folder
-from my_function_TF import predict_object_TF
 import requests
 from common.middleware import get_user_role_from_token
 import logging
 from detectYOLO11 import detect
 from common.utils import load_secrets
+from rh_TF_Predict import predict_object_TF
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)

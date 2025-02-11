@@ -270,30 +270,38 @@ def google_upload_file_to_drive(folder_id, file):
     :return: Google Drive file ID
     """
     try:
-        logging.info(f"google_upload_file_to_drive, folder: {folder_id}")
-        file_content = file.read()  # Read the file content into memory
-        file_name = file.filename   # Extract filename
-        mimetype = file.mimetype
-        logging.info(f"google_upload_file_to_drive, file_name: {file_name}")
-        logging.info(f"google_upload_file_to_drive, mimetype: {mimetype}")
-        #mimetype = get_mime_type(file_name)
-        logging.info(f"google_upload_file_to_drive, mimetype: {mimetype}")
+        logging.info(f"Uploading file: {file.filename} to Google Drive Folder: {folder_id}")
 
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            file.save(temp_file.name)  # Save the uploaded file to a temp location
+        # Reset file pointer before reading
+        file.seek(0)
+
+        # Save to a temporary file with explicit binary mode
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
+            temp_file.write(file.read())  # Save binary content
             temp_file_path = temp_file.name
+
+        # Check if file was written correctly
+        if os.path.getsize(temp_file_path) == 0:
+            logging.error("Temporary file is empty. Possible file read issue.")
+            return None
+
+        logging.info(f"Temp file created at: {temp_file_path}, Size: {os.path.getsize(temp_file_path)} bytes")
 
         # Create file on Google Drive
         drive_file = _drive.CreateFile({
-            'title': file_name,
-            'mimeType': mimetype, #'image/jpeg',
+            'title': file.filename,
+            'mimeType': file.mimetype,
             'parents': [{'id': folder_id}]
         })
-        drive_file.SetContentFile(temp_file_path)  # Set file content
-        drive_file.Upload()  # Upload to Google Drive
+        drive_file.SetContentFile(temp_file_path)
+        drive_file.Upload()
 
-        logging.info(f"File uploaded: {file_name}, ID: {drive_file['id']}")
+        # Remove temp file
+        os.remove(temp_file_path)
+
+        logging.info(f"File uploaded successfully: {drive_file['title']}, ID: {drive_file['id']}")
         return drive_file['id']
+
 
     except Exception as e:
         logging.error(f"Error uploading file: {e}")

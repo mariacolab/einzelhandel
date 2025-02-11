@@ -8,10 +8,10 @@ def predict_object_TF(img):
     size = 128
     img = cv2.resize(img, dsize=(size, size), interpolation=cv2.INTER_CUBIC)
 
-    img_file = f"{event_fileid}{event_filename}"
+    #img_file = f"{event_fileid}{event_filename}"
 
-    img = plt.imread(img_file)  # Lädt das Bild als NumPy-Array
-    img = np.resize(img, (128, 128, 3))
+    #img = plt.imread(img_file)  # Lädt das Bild als NumPy-Array
+    #img = np.resize(img, (128, 128, 3))
 
     class_names = ['Apfel', 'Aubergine', 'Avocado', 'Birne',
                    'Granatapfel', 'Kaki', 'Kartoffel', 'Kiwi',
