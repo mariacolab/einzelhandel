@@ -86,36 +86,16 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                 logging.info(f"result from image: {result}")
 
-                # TODO entferne Test liste
-                #obst_und_gemuese = [
-                #    "Apfel", "Aubergine", "Avocado", "Banane", "Birne", "Bohnen", "Cerealien", "Chips", "Essig",
-                #    "Fisch", "Gewuerze", "Granatapfel", "Honig", "Kaffee", "Kaki", "Karotte", "Kartoffel", "Kiwi",
-                #    "Knoblauch", "Kuchen", "Mais", "Mandarine", "Mango", "Marmelade", "Mehl", "Milch", "Nudeln",
-                #    "Nuss", "Oel", "Orange", "Pampelmuse", "Paprika", "Pflaume", "Reis", "Saft", "Schokolade", "Soda",
-                #    "Suessigkeit", "Tee", "Tomate", "Tomatensauce", "Wasser", "Zitrone", "Zucchini", "Zucker",
-                #    "Zwiebel"
-                #]
-
-                #zufaelliger_wert = random.choice(obst_und_gemuese)
-                #logging.info(f"Exampleresult: {zufaelliger_wert}")
-
-                # TODO Rolle filtern wenn Kunde dann erhält er bei FALse eine Fehlermeldung in classification
-                user_role = get_user_role_from_token(token)
-
-                if is_classification_correct:
-                    # löschen der Datei im shared Verzeichnis
-                    try:
-                        # Überprüfen, ob die Datei existiert
-                        if os.path.exists(f"{event_path}{event_filename}"):
-                            os.remove(f"{event_path}{event_filename}")
-                            logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
-                        else:
-                            logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
-                    except Exception as e:
-                        logging.error(f"Fehler beim Löschen der Datei: {e}")
+                # TODO Rolle filtern wenn Kunde dann erhält er bei FaLse eine Fehlermeldung in classification
+                if event_role == "Kunde":
+                    """
+                        - Bild wird in traningsordner verschoben
+                        - Klassifizierung weitergegeben
+                    """
+                    google_move_to_another_folder(event_fileid, DriveFolders.TRAININGSSATZ.value)
                     url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                     headers = {
-                        "Authorization": f"{token}"
+                        "Cookie": f"{event_cookie}",
                     }
                     files = {
                         "type": (None, "ClassFiles"),
@@ -123,42 +103,38 @@ async def on_message(message: aio_pika.IncomingMessage):
                     }
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
-                elif is_classification_correct == False and user_role != "Kunde":
+                else:
+                    """
+                        - prüfen ob Klassifizierung korrekt ist
+                        - falls ja Klassifizierung weitergegeben
+                        - falls nein Nachtraining
+                    """
                     url = " http://nginx-proxy/eventing-service/publish/MisclassificationReported"
                     headers = {
-                        "Authorization": f"{token}"
+                        "Cookie": f"{event_cookie}",
                     }
                     files = {
                         "type": (None, "MisclassifiedFiles"),
                         "classification": (None, result),
-                        "filename": (f"{event_filename}", open(f"{event_path}{event_filename}", "rb")),
+                        "fileid": event_fileid,
+                        "model": event_model,
+                        "filename": event_filename,
                     }
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
-                else:
-                    logging.info("Fehlermeldung für Kunde")
+
             if "CorrectedFiles" in event_type:
                 event_classification = event.get("classification", "")
                 event_class_correct = event.get("is_classification_correct ", "")
                 event_filename = event.get("filename", "")
-                event_path = event.get("path ", "")
                 logging.info(f"Event file: {event_classification}")
                 logging.info(f"Event path: {event_class_correct}")
+                logging.info(f"Event path: {event_filename}")
                 if event_class_correct:
-                    # löschen der Datei im shared Verzeichnis
-                    try:
-                        # Überprüfen, ob die Datei existiert
-                        if os.path.exists(f"{event_path}{event_filename}"):
-                            os.remove(f"{event_path}{event_filename}")
-                            logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
-                        else:
-                            logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
-                    except Exception as e:
-                        logging.error(f"Fehler beim Löschen der Datei: {e}")
-
+                    google_move_to_another_folder(event_fileid, DriveFolders.TRAININGSSATZ.value)
                     url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                     headers = {
-                        "Authorization": f"{token}"
+                        "Cookie": f"{event_cookie}",
                     }
                     files = {
                         "type": (None, "ClassFiles"),
@@ -169,54 +145,6 @@ async def on_message(message: aio_pika.IncomingMessage):
                 else:
                     logging.info(f"Event file: {event_classification}")
                     # TODO Datei in Googledrive ablegen
-
-                    # Projekt-Root-Verzeichnis holen
-                    project_root = os.path.dirname(os.path.abspath(__file__))
-                    logging.info(f"project_root: {project_root}")
-                    # JSON-Datei im Projekt suchen
-                    file_path = os.path.join(project_root, "secrets/fapra-ki-einzelhandel-6f215d4ad989.json")
-                    logging.info(f"file_path: {file_path}")
-
-                    # Authentifizieren mit Service Account
-                    scope = ['https://www.googleapis.com/auth/drive']
-                    credentials = ServiceAccountCredentials.from_json_keyfile_name(file_path, scope)
-
-                    # GoogleAuth mit den Service-Credentials
-                    gauth = GoogleAuth()
-                    gauth.credentials = credentials
-                    drive = GoogleDrive(gauth)
-
-                    ORDNER_ID = "1BV9kt1H9r9qSUcVAcFjSxFWvOxFfDwYm"
-
-                    file = drive.CreateFile({
-                        'title': f"{event_filename}",
-                        'mimeType': 'image/jpeg',
-                        'parents': [{'id': ORDNER_ID}]
-                    })
-                    file.SetContentFile(f"{event_path}{event_filename}")  # Lokale Datei setzen
-                    file.Upload()
-                    logging.debug(f"Bild hochgeladen: {file['title']}, ID: {file['id']}")
-                    # löschen der Datei im shared Verzeichnis
-                    logging.info(f"Bild hochgeladen in Ordner: https://drive.google.com/drive/folders/{ORDNER_ID}")
-                    # Google Drive API-Berechtigungen setzen
-                    file.InsertPermission({
-                        'type': 'user',          # Berechtigung für ein bestimmtes Konto
-                        'value': 'fapra73@gmail.com',  # Ersetze mit deiner Google-Mail-Adresse
-                        'role': 'writer'         # Alternativ 'reader' für nur-Lese-Zugriff
-                    })
-
-                    logging.info(f"Datei geteilt mit: fapra73@gmail.com")
-
-                    # löschen der Datei im shared Verzeichnis
-                    try:
-                        # Überprüfen, ob die Datei existiert
-                        if os.path.exists(f"{event_path}{event_filename}"):
-                            os.remove(f"{event_path}{event_filename}")
-                            logging.debug(f"Datei {event_path}{event_filename} wurde erfolgreich gelöscht.")
-                        else:
-                            logging.debug(f"Datei {event_path}{event_filename} wurde nicht gefunden.")
-                    except Exception as e:
-                        logging.error(f"Fehler beim Löschen der Datei: {e}")
 
                     logging.info("Fehlerhafte Klassifizierung")
         except Exception as e:
