@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 
 import tensorflow as tf
 
-from rh_TF_Training import predict_object_TF
+from rh_TF_Predict import predict_object_TF
 from rh_TF_Update import update_model_TF
+from rh_TF_Update import prepare_Data
 
 import requests
 #from einzelhandel.common.utils import load_secrets
@@ -61,7 +62,6 @@ async def on_message(message: aio_pika.IncomingMessage):
                 return
 
             logging.info(f"Extracted token: {token}")
-
             if "ValidatedFiles" in event_type:
                 logging.info("Processing files after ImageUploaded event.")
 
@@ -72,6 +72,10 @@ async def on_message(message: aio_pika.IncomingMessage):
                 class_name = predict_object_TF(img)
 
                 logging.info(f"Example Result: {class_name}")
+
+                input_Directory = "./DATA/Unprepared_Data/"
+                output_Directory = "./DATA/Prepared_Data/"
+                prepare_Data(input_Directory, output_Directory)
 
                 update_model_TF()
                 logging.info(f"Example Result after Update.")

@@ -3,9 +3,24 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import os
 import logging
+import cv2
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
+
+def prepare_Data(input_Directory, output_Directory):
+    size_txt = "128"  # input("Größe eingeben: ")
+    size = int(size_txt)
+    for root, dirs, files in os.walk(input_Directory):
+            for file in files:
+                full_path_in = os.path.join(input_Directory, file)
+                full_path_out = os.path.join(output_Directory, file)
+                img = cv2.imread(full_path_in,cv2.IMREAD_COLOR)
+                img_res = cv2.resize(img, dsize=(size, size), interpolation=cv2.INTER_CUBIC)
+                img_res = cv2.cvtColor(img_res,cv2.COLOR_BGR2RGB)
+                img_res = cv2.cvtColor(img_res,cv2.COLOR_RGB2BGR)
+                cv2.imwrite(full_path_out,img_res)
+                logging.info(f"Verarbeitetes Photo: {full_path_out}")
 
 def update_model_TF():
     logging.info("Beginn Funktion.")

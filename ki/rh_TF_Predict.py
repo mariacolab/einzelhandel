@@ -1,7 +1,11 @@
 import tensorflow as tf
 import numpy as np
+import cv2
 
 def predict_object_TF(img):
+
+    size = 128
+    img = cv2.resize(img, dsize=(size, size), interpolation=cv2.INTER_CUBIC)
 
     class_names = ['Apfel', 'Aubergine', 'Avocado', 'Birne',
                    'Granatapfel', 'Kaki', 'Kartoffel', 'Kiwi',
