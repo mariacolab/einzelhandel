@@ -37,16 +37,11 @@ async def on_message(message: aio_pika.IncomingMessage):
             logging.debug(f"Parsed event: {event}")
 
             event_type = event.get("type", "")
+            event_cookie = event.get("cookie", "")
 
             logging.info(f"Event type: {event_type}")
+            logging.info(f"Event cookie: {cookie}")
 
-            token = event.get("token", "")
-
-            if not token:
-                logging.warning("Token not found in event payload")
-                return
-
-            logging.info(f"Extracted token: {token}")
 
             if "ClassFiles" in event_type:
                 logging.info("Processing files after ClassificationCompleted event.")
@@ -63,7 +58,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 url = f"http://nginx-proxy/database-management/products/{event_data}"
                 headers = {
                     'Content-Type': 'application/json',
-                    "Authorization": f"{token}"
+                    "Cookie": f"{event_cookie}",
                 }
                 logging.info(f"Header get Product: {headers}")
 
@@ -108,7 +103,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     url = " http://nginx-proxy/database-management/qrcodes"
                     headers = {
                         'Content-Type': 'application/json',
-                        "Authorization": f"{token}"
+                        "Cookie": f"{event_cookie}",
                     }
                     logging.info(f"Data: {headers}")
                     data = {
@@ -125,7 +120,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     url = " http://nginx-proxy/database-management/products"
                     headers = {
                         'Content-Type': 'application/json',
-                        "Authorization": f"{token}"
+                        "Cookie": f"{event_cookie}",
                     }
                     logging.info(f"Data: {headers}")
                     # TODO Daten ersetzen mit Rückgabe der KI
@@ -150,7 +145,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     url = f"http://nginx-proxy/database-management/products/{qr_code_id}"
                     headers = {
                         'Content-Type': 'application/json',
-                        "Authorization": f"{token}"
+                        "Cookie": f"{event_cookie}",
                     }
                     logging.info(f"Header get Product: {headers}")
 
@@ -165,7 +160,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 url = " http://nginx-proxy/eventing-service/publish/Encoded"
                 headers = {
                     'Content-Type': 'application/json',
-                    "Authorization": f"{token}"
+                    "Cookie": f"{event_cookie}",
                 }
                 logging.info(f"Data: {headers}")
                 # TODO change data with return values

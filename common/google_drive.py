@@ -1,8 +1,11 @@
+import mimetypes
+import tempfile
+
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 from oauth2client.service_account import ServiceAccountCredentials
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 import io
 import os
 import logging
@@ -169,39 +172,159 @@ def google_get_file_in_folder(folder_id, file_name, save_path):
         return None
 
 def google_drive_service():
+    # Projekt-Root-Verzeichnis holen
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    logging.info(f"project_root: {project_root}")
+    # JSON-Datei im Projekt suchen
+    file_path = os.path.join(project_root, SERVICE_ACCOUNT_FILE)
+    logging.info(f"file_path: {file_path}")
+
     creds = ServiceAccountCredentials.from_json_keyfile_name(
-        SERVICE_ACCOUNT_FILE,
+        file_path,
         scopes=SCOPES
     )
     return build("drive", "v3", credentials=creds)
 
-def google_get_file_stream(folder_id, file_name):
+def google_get_file_stream(folder_id, file_name=None, file_id=None):
+    """
+    Streamt eine Datei aus Google Drive entweder anhand des Dateinamens oder der Datei-ID.
+    Falls der Dateiname nicht existiert, versucht es die Datei-ID zu verwenden und umgekehrt.
+
+    :param folder_id: ID des Google Drive-Ordners, in dem die Datei liegt.
+    :param file_name: (Optional) Name der Datei.
+    :param file_id: (Optional) ID der Datei.
+    :return: BytesIO-Stream der Datei oder None, falls die Datei nicht gefunden wird.
+    """
     service = google_drive_service()
 
-    # Search for the file in the folder
-    query = f"name = '{file_name}' and '{folder_id}' in parents and trashed = false"
-    results = service.files().list(q=query, fields="files(id, name)").execute()
-    files = results.get("files", [])
+    # Falls eine Datei-ID angegeben ist, versuche sie direkt zu laden
+    if file_id:
+        try:
+            request = service.files().get_media(fileId=file_id)
+            file_stream = io.BytesIO()
+            downloader = MediaIoBaseDownload(file_stream, request)
 
-    if not files:
+            done = False
+            while not done:
+                _, done = downloader.next_chunk()
+
+            file_stream.seek(0)  # Zurück zum Anfang setzen
+            logging.info(f"File with ID '{file_id}' loaded into memory stream successfully.")
+            return file_stream
+        except Exception as e:
+            logging.error(f"Error loading file with ID '{file_id}': {e}")
+
+    # Falls die Datei-ID nicht vorhanden ist oder fehlschlägt, suche nach dem Dateinamen
+    if file_name:
+        query = f"name = '{file_name}' and '{folder_id}' in parents and trashed = false"
+        results = service.files().list(q=query, fields="files(id, name)").execute()
+        files = results.get("files", [])
+
+        if files:
+            file_id = files[0]["id"]
+            logging.info(f"Found file: {file_name} (ID: {file_id}) in folder {folder_id}")
+
+            # Datei mit der gefundenen ID streamen
+            try:
+                request = service.files().get_media(fileId=file_id)
+                file_stream = io.BytesIO()
+                downloader = MediaIoBaseDownload(file_stream, request)
+
+                done = False
+                while not done:
+                    _, done = downloader.next_chunk()
+
+                file_stream.seek(0)  # Zurück zum Anfang setzen
+                logging.info(f"File '{file_name}' loaded into memory stream successfully.")
+                return file_stream
+            except Exception as e:
+                logging.error(f"Error loading file '{file_name}' with ID '{file_id}': {e}")
+
         logging.error(f"File '{file_name}' not found in folder ID {folder_id}.")
+
+    logging.error("No valid file_name or file_id provided or file not found.")
+    return None  # Falls keine Datei gefunden wurde
+
+def google_rename_file(file_id, new_name):
+    try:
+        # Fetch file metadata
+        file = _drive.CreateFile({'id': file_id})
+        file.FetchMetadata()
+
+        logging.info(f"Current file name: {file['title']}, ID: {file_id}")
+
+        # Rename the file
+        file['title'] = new_name
+        file.Upload()
+
+        logging.info(f"File renamed successfully to {new_name}")
+    except Exception as e:
+        logging.error(f"Error renaming file: {e}")
+
+def google_upload_file_to_drive(folder_id, file):
+    """
+    Uploads a file received from a POST request to Google Drive.
+
+    :param file: The file object from request.files['file']
+    :param folder_id: The Google Drive folder ID where the file should be uploaded.
+    :return: Google Drive file ID
+    """
+    try:
+        logging.info(f"google_upload_file_to_drive, folder: {folder_id}")
+        file_content = file.read()  # Read the file content into memory
+        file_name = file.filename   # Extract filename
+        mimetype = file.mimetype
+        logging.info(f"google_upload_file_to_drive, file_name: {file_name}")
+        logging.info(f"google_upload_file_to_drive, mimetype: {mimetype}")
+        #mimetype = get_mime_type(file_name)
+        logging.info(f"google_upload_file_to_drive, mimetype: {mimetype}")
+
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            file.save(temp_file.name)  # Save the uploaded file to a temp location
+            temp_file_path = temp_file.name
+
+        # Create file on Google Drive
+        drive_file = _drive.CreateFile({
+            'title': file_name,
+            'mimeType': mimetype, #'image/jpeg',
+            'parents': [{'id': folder_id}]
+        })
+        drive_file.SetContentFile(temp_file_path)  # Set file content
+        drive_file.Upload()  # Upload to Google Drive
+
+        logging.info(f"File uploaded: {file_name}, ID: {drive_file['id']}")
+        return drive_file['id']
+
+    except Exception as e:
+        logging.error(f"Error uploading file: {e}")
         return None
 
-    file_id = files[0]["id"]
-    logging.info(f"Found file: {file_name} (ID: {file_id}) in folder {folder_id}")
+def google_stream_file_to_new_file(source_file_id, new_file_name, folder_id=None):
+    service = google_drive_service()
 
-    # Create an in-memory stream
+    # 1️⃣ Datei aus Google Drive in ein io.BytesIO-Objekt streamen
     file_stream = io.BytesIO()
-
-    # Request to stream the file
-    request = service.files().get_media(fileId=file_id)
+    request = service.files().get_media(fileId=source_file_id)
     downloader = MediaIoBaseDownload(file_stream, request)
 
     done = False
     while not done:
         _, done = downloader.next_chunk()
 
-    file_stream.seek(0)  # Reset the stream position to the beginning
-    logging.info(f"File '{file_name}' loaded into memory stream successfully.")
+    file_stream.seek(0)  # Stream auf Anfang setzen
 
-    return file_stream  # Now you can use this stream without saving locally
+    # 2️⃣ Datei direkt aus dem Stream in Google Drive hochladen
+    file_metadata = {
+        'name': new_file_name,
+        'parents': [folder_id] if folder_id else []
+    }
+
+    media = MediaIoBaseUpload(file_stream, mimetype="application/octet-stream", resumable=True)
+    uploaded_file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+
+    print(f"File uploaded successfully: {uploaded_file.get('id')}")
+    return uploaded_file.get("id")
+
+#def get_mime_type(filename):
+#    mime_type, _ = mimetypes.guess_type(filename)
+#    return mime_type if mime_type else "application/octet-stream"

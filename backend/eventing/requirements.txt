@@ -5,3 +5,6 @@ PyJWT
 redis
 flask-limiter
 gunicorn
+redis
+flask_session
+pydrive

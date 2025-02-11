@@ -1,5 +1,5 @@
 import logging
-import redis
+import os
 import jwt
 import datetime
 
@@ -7,12 +7,22 @@ import requests
 from flask import jsonify, session
 from functools import wraps
 from flask import request
+import redis
+
+# Lade das Redis-Passwort aus der Umgebung
+redis_password = os.getenv("REDIS_PASSWORD", None)
+
+redis_client = redis.StrictRedis(
+    host='redis',
+    port=6379,
+    db=0,
+    decode_responses=True,
+    password=redis_password  # Passwort setzen
+)
 
 SECRET_KEY = 'your_secret_key'
 logging.basicConfig(level=logging.DEBUG)
 TOKEN_BLACKLIST = set()
-redis_client = redis.StrictRedis(host='redis', port=6379, decode_responses=True)
-
 
 def generate_token(username, role):
     return jwt.encode({
@@ -42,6 +52,7 @@ def decode_token(token):
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        logging.debug(f"Session before access: {dict(session)}")  # DEBUG
         token = session.get('token')  # Token aus der Session holen
         if not token:
             return jsonify({"message": "Unauthorized: No active session"}), 401

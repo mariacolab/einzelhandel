@@ -1,13 +1,14 @@
-import os
-import uuid
 import logging
+import os
 import tempfile
+import uuid
+from pathlib import Path
 
 from common.DriveFolders import DriveFolders
-from common.google_drive import google_uploade_file_to_folder
+from common.google_drive import google_uploade_file_to_folder, google_download_file, google_rename_file
 
 # Pfad zu shared_uploads
-UPLOADS_DIR = "/shared/uploads"
+# UPLOADS_DIR = "/shared/uploads"
 
 MAGIC_BYTES = {
     b'\xFF\xD8\xFF': 'JPEG image',
@@ -17,67 +18,49 @@ MAGIC_BYTES = {
 logging.basicConfig(level=logging.DEBUG)
 
 
-def validate_file_magic(file_path):
+def validate_file_magic(fileid):
     try:
-        with open(file_path, 'rb') as file:
-            # Read the first few bytes of the file
-            file_header = file.read(8)  # Read enough bytes for all known signatures
+        with tempfile.TemporaryDirectory() as temp_dir:
+            local_file_path = google_download_file(fileid, temp_dir)
+            logging.info("validate_file_magic")
+            with open(local_file_path, 'rb') as file:
+                # Read the first few bytes of the file
+                file_header = file.read(8)  # Read enough bytes for all known signatures
 
-            # Compare with known magic bytes
-            for magic, file_type in MAGIC_BYTES.items():
-                if file_header.startswith(magic):
-                    return f"File type: {file_type}"
+                # Compare with known magic bytes
+                for magic, file_type in MAGIC_BYTES.items():
+                    if file_header.startswith(magic):
+                        return f"File type: {file_type}"
 
-        return "Unknown file type"
+            return "Unknown file type"
     except Exception as e:
         return f"Error: {e}"
 
-
-def rename_file(file_path, uploads_dir):
+def rename_file(filename, fileid):
     """
     Benennt eine Datei in einen generischen Namen um.
     """
-    file, extension = file_path.split(".", 1)
-    new_name = f"{uuid.uuid4()}.{extension}"
+    logging.info("rename_file")
+    extension = Path(filename).suffix
+    new_name = f"{uuid.uuid4()}{extension}"
     logging.info(f"Dateiendung: {extension}")
     logging.info(f"Datei: {new_name}")
-    new_path = os.path.join(uploads_dir, new_name)
-    os.rename(file_path, new_path)
-    logging.info(f"Datei umbenannt: {file_path} -> {new_path}")
-    return new_path
+    google_rename_file(fileid, new_name)
 
 
-def process_files(filename, filepath):
+def process_files(filename, fileid):
     """
     Sucht Dateien im Uploads-Ordner, überprüft den Typ und benennt sie um.
     """
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_file_path = os.path.join(temp_dir, filename)
-        os.rename(filepath, temp_file_path)
+    logging.info("methode process_files")
+    file_type = validate_file_magic(fileid)
+    # Überprüfe Magic Bytes
+    if not file_type:
+        logging.warning(f"Ungültiger Dateityp: {filename}. Datei wird übersprungen.")
 
-        # file_path = os.path.join(UPLOADS_DIR, filename)
+    # Benenne die Datei in einen generischen Namen um
+    rename_file(filename, fileid)
 
-        # if not os.path.exists(file_path):
-        #    logging.error(f"Datei existiert nicht: {file_path}")
-        #    return None
-
-        # logging.info(f"Verarbeite Datei: {file_path}")
-
-        file_type = validate_file_magic(temp_file_path)
-        # Überprüfe Magic Bytes
-        if not file_type:
-            logging.warning(f"Ungültiger Dateityp: {temp_file_path}. Datei wird übersprungen.")
-            return None
-
-            # Benenne die Datei in einen generischen Namen um
-        file = rename_file(temp_file_path, temp_file_path)
-        logging.info(f"Datei umbenannt: {file}")
-        directory, file_name = os.path.split(file)
-        logging.info(f"Verzeichnispfad: {directory}")
-        logging.info(f"Dateiname: {file_name}")
-        fileid = google_uploade_file_to_folder(DriveFolders.UPLOAD, file_name, directory)
-
-        return fileid, file_name
 
 
 if __name__ == "__main__":

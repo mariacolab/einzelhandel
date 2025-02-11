@@ -1,9 +1,12 @@
 import base64
+import os
 
 from flask import Flask, jsonify, request, session
+import redis
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-
+from flask_session import Session
+from common.config import Config
 from common.middleware import token_required, role_required
 from common.utils import load_secrets
 from models import db
@@ -19,6 +22,24 @@ from crud import (
 
 # Flask application initialization
 app = Flask(__name__)
+# app.config.from_object(Config)  # Lade zentrale Config
+#
+# # Initialisiere Flask-Session
+# Session(app)
+#
+# redis_password = os.getenv("REDIS_PASSWORD", None)
+#
+# redis_client = redis.StrictRedis(
+#     host='redis',
+#     port=6379,
+#     db=0,
+#     decode_responses=True,
+#     password=redis_password  # Passwort setzen
+# )
+app.config.from_object(Config)  # Lade zentrale Config
+
+# Initialisiere Flask-Session
+Session(app)
 
 # Database configuration
 secrets = load_secrets()

@@ -38,15 +38,10 @@ async def on_message(message: aio_pika.IncomingMessage):
             logging.debug(f"Parsed event: {event}")
 
             event_type = event.get("type", "")
+            event_cookie = event.get("cookie", "")
             logging.info(f"Event type: {event_type}")
+            logging.info(f"Event type: {event_cookie}")
 
-            token = event.get("token", "")
-
-            if not token:
-                logging.warning("Token not found in event payload")
-                return
-
-            logging.info(f"Extracted token: {token}")
             logging.info(f"if: {event}")
             if "ProcessQrcode" == event_type:
                 event_data = event.get("image_blob", "")
@@ -66,21 +61,24 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event Data: {event_classification}")
                 event_filename = event.get("filename", "")
                 logging.info(f"Event Filename: {event_filename}")
-                event_path = event.get("path", "")
-                logging.info(f"Event Path: {event_path}")
+                event_model = event.get("model", "")
+                logging.info(f"Event Filename: {event_model}")
+                event_fileid = event.get("fileid", "")
+                logging.info(f"Event Path: {event_fileid}")
                 # TODO Load the Image into a Viwer and submit if the classification is corect
                 logging.info("Processing files after MisclassifiedFiles event.")
 
                 url = " http://nginx-proxy/eventing-service/publish/CorrectedClassification"
                 headers = {
-                    "Authorization": f"{token}"
+                    "Cookie": f"{event_cookie}",
                 }
                 files = {
                     "type": (None, "CorrectedFiles"),
                     "classification": (None, event_classification),
                     "is_classification_correct": (None, True),
                     "filename": event_filename,
-                    "path": event_path
+                    "model": event_model,
+                    "fileid": event_fileid
                 }
                 response = requests.post(url, headers=headers, files=files)
                 logging.info(f"Response: {response}")

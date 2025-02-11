@@ -1,19 +1,48 @@
 import json
 import logging
 import os
+import tempfile
 from threading import Thread
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-
-from common.middleware import token_required, role_required
+import redis
+from flask_session import Session
+from common import JSONSerializer
+from common.DriveFolders import DriveFolders
+from common.config import Config
+from common.google_drive import google_uploade_file_to_folder, google_upload_file_to_drive
+from common.middleware import token_required, role_required, get_user_role_from_token
+from common.utils import load_secrets
 from producer import send_message
 import asyncio
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
-logging.basicConfig(level=logging.DEBUG)
 
+# app.config['DEBUG'] = True
+# logging.basicConfig(level=logging.DEBUG)
+#
+# secrets = load_secrets()
+# app.config['SECRET_KEY'] = secrets.get('SECRET_KEY')
+#
+# redis_password = os.getenv("REDIS_PASSWORD", None)
+# # Session-Konfiguration
+# app.config['SESSION_TYPE'] = 'redis'
+# app.config['SESSION_PERMANENT'] = False
+# app.config['SESSION_USE_SIGNER'] = True
+# app.config['SESSION_KEY_PREFIX'] = 'flask_session:'
+# app.config['SESSION_COOKIE_SECURE'] = False  # Deaktivieren, falls HTTPS nicht verwendet wird
+# app.config['SESSION_COOKIE_HTTPONLY'] = True  # Session-Cookie vor JavaScript schützen
+# app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Cookie-Freigabe für API-Calls
+# app.config['SESSION_REDIS'] = redis.StrictRedis(
+#     host='redis', port=6379, db=0, decode_responses=False, password=redis_password
+# )
+# app.config["SESSION_SERIALIZATION"] = JSONSerializer
+app.config.from_object(Config)  # Lade zentrale Config
+
+
+# Initialisiere Flask-Session
+Session(app)
 
 @app.route("/")
 def home():
@@ -83,14 +112,8 @@ def publish_event(event):
                 logging.debug(f"Invalid file format: {file.filename}")
                 return jsonify({"error": "Only JPG and PNG files are allowed"}), 400
 
-            # Speichern der Datei
-            save_path = f"/shared/uploads/{file.filename}"
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)  # Sicherstellen, dass das Verzeichnis existiert
-            file.save(save_path)
-            logging.debug(f"File {file.filename} saved to {save_path}")
-
-            token = request.headers.get('Authorization', '')
-            logging.debug(f"Authorization {token}")
+            fileid = google_upload_file_to_drive(DriveFolders.UPLOAD.value, file)
+            cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             model = request.form.get('model', '')
             logging.debug(f"Type {message_type}")
@@ -98,9 +121,9 @@ def publish_event(event):
             message = {
                 "type": message_type,
                 "filename": file.filename,
-                "path": save_path,
+                "fileid": fileid,
                 "model": model,
-                "token": token
+                "cookie": cookie,
             }
             logging.debug(f"Message ImageUploaded: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
@@ -125,18 +148,21 @@ def publish_event(event):
                 logging.debug("No file selected.")
                 return jsonify({"error": "No selected file"}), 400
 
-            token = request.headers.get('Authorization', '')
-            logging.debug(f"Authorization {token}")
+            user_role = get_user_role_from_token()
+
+            cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             model = request.form.get('model', '')
+            fileid = request.form.get('fileid', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
                 "file": file.filename,
-                "path": "/shared/uploads/",
+                "fileid": fileid,
                 "model": model,
-                "token": token
+                "role": user_role,
+                "cookie": cookie
             }
             logging.debug(f"Message ImageValidated: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
@@ -149,8 +175,7 @@ def publish_event(event):
             logging.debug(f"Form: {request.form}")
             logging.debug(f"Files: {request.files}")
 
-            token = request.headers.get('Authorization', '')
-            logging.debug(f"Authorization {token}")
+            cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             result = request.form.get('result', '')
             logging.debug(f"data {result}")
@@ -159,7 +184,7 @@ def publish_event(event):
             message = {
                 "type": message_type,
                 "result": result,
-                "token": token
+                "cookie": cookie
             }
             logging.debug(f"Message ClassificationCompleted: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
@@ -172,8 +197,7 @@ def publish_event(event):
             logging.debug(f"Form: {request.form}")
             logging.debug(f"Files: {request.files}")
 
-            token = request.headers.get('Authorization', '')
-            logging.debug(f"Authorization {token}")
+            cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             image_blob = request.form.get('image_blob', '')
             logging.debug(f"data {image_blob}")
@@ -182,7 +206,7 @@ def publish_event(event):
             message = {
                 "type": message_type,
                 "image_blob": image_blob,
-                "token": token
+                "cookie": cookie
             }
             logging.debug(f"Message Encoded: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
@@ -207,18 +231,21 @@ def publish_event(event):
                 logging.debug("No file selected.")
                 return jsonify({"error": "No selected file"}), 400
 
-            token = request.headers.get('Authorization', '')
-            logging.debug(f"Authorization {token}")
+
+            cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
+            fileid = request.form.get('fileid', '')
+            model = request.form.get('model', '')
             classification = request.form.get('classification', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
                 "filename": file.filename,
-                "path": "",
+                "fileid": fileid,
+                "model": model,
                 "classification": classification,
-                "token": token
+                "cookie": cookie
             }
             logging.debug(f"Message QRCodeGenerated: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
@@ -230,12 +257,12 @@ def publish_event(event):
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
 
-            token = request.headers.get('Authorization', '')
-            logging.debug(f"Authorization {token}")
+            cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
+            model = request.form.get('model', '')
             classification = request.form.get('classification', '')
             filename = request.form.get('filename', '')
-            path = request.form.get('path', '')
+            fileid = request.form.get('fileid', '')
             class_correct = request.form.get('is_classification_correct', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
@@ -244,8 +271,9 @@ def publish_event(event):
                 "is_classification_correct": class_correct,
                 "classification": classification,
                 "filename": filename,
-                "path": path,
-                "token": token
+                "model": model,
+                "fileid": fileid,
+                "cookie": cookie
             }
             logging.debug(f"Message QRCodeGenerated: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
@@ -258,6 +286,9 @@ def publish_event(event):
         logging.debug(f"Error in publish_event: {e}")
         return jsonify({"message": "Internal server error", "details": str(e)}), 500
 
+@app.route('/debug/session', methods=['GET'])
+def debug_session():
+    return jsonify(dict(session))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5005)

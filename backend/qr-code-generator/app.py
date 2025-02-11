@@ -1,9 +1,29 @@
+import os
+
 import requests
 from flask import Flask, jsonify, request
+import redis
+
+from common.config import Config
 from common.middleware import token_required
+from flask_session import Session
 
 app = Flask(__name__)
+# redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
+# redis_password = os.getenv("REDIS_PASSWORD", None)
+#
+# redis_client = redis.StrictRedis(
+#     host='redis',
+#     port=6379,
+#     db=0,
+#     decode_responses=True,
+#     password=redis_password  # Passwort setzen
+# )
 
+app.config.from_object(Config)  # Lade zentrale Config
+
+# Initialisiere Flask-Session
+Session(app)
 
 @app.route("/")
 def home():

@@ -8,3 +8,5 @@ PyJWT
 redis
 gunicorn
 requests
+redis
+flask_session
