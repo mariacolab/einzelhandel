@@ -75,62 +75,14 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                 logging.info("Processing files after ImageUploaded event.")
 
-              #  img_file = f"{event_path}{event_filename}"
-              #  img = plt.imread(img_file)  # Lädt das Bild als NumPy-Array
-              #  img = np.resize(img, (128, 128, 3))
-              #  class_name = predict_object_TF(img)
-
-              #  logging.info(f"Example Result: {class_name}")
-              #  input_Directory = "./DATA/Unprepared_Data/"
-              #  output_Directory = "./DATA/Prepared_Data/"
-
-              #  prepare_Data(input_Directory, output_Directory)
-              #  update_model_TF()
-                
-                logging.info(f"Example Result after Update.")
-
-                url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
-                headers = {
-                    'Content-Type': 'application/json',
-                    "Authorization": f"{token}"
-                }
-
-                logging.info(f"Headers: {headers}")
-
-                data = {
-                    "type": "ClassFiles",
-                    "data": {
-                      #  "result": f"{zufaelliger_wert}"
-                        "result": f"{class_name}"
-
                 # TODO aufruf von Methoden um weiteren Code auszuführen
-
                 if event_model == "big":
                   result = detect(f"{event_path}{event_filename}",f"{event_filename}")
                 elif event_model == "small":
                   img_file = f"{event_path}{event_filename}"
                   img = plt.imread(img_file)  # Lädt das Bild als NumPy-Array
                   img = np.resize(img, (128, 128, 3))
-
-                  class_name = predict_object_TF(img)
-                  #class_name = predict_object_YOLO(img_file)
-                  #logging.info(f"Exampleresult: {class_name}")
-                #url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
-                #headers = {
-                #    'Content-Type': 'application/json',
-                #    "Authorization": f"{token}"
-                #}
-
-                #logging.info(f"Headers: {headers}")
-
-                #data = {
-                 #   "type": "ClassFiles",
-                 #   "data": {
-                 #     #  "result": f"{zufaelliger_wert}"
-                 #       "result": f"{class_name}"
-
-
-                #is_classification_correct = False  # Rückgabe der KI, ob Klassifizierung möglicherweise Fehlerhaft
+                  result = predict_object_TF(img)
 
                 logging.info(f"result from image: {result}")
 
