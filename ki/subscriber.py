@@ -55,14 +55,11 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event filename: {event_filename}")
 
                 # TODO aufruf von Methoden um weiteren Code auszuführen
-
                 if event_model == "big":
                   #result = detect(f"{event_path}{event_filename}",f"{event_filename}")
                     result = detect(event_fileid)
                 elif event_model == "small":
                     result = predict_object_TF(event_fileid)
-                  #class_name = predict_object_YOLO(img_file)
-                  #logging.info(f"Exampleresult: {class_name}")
 
                 logging.info(f"result from image: {result}")
 

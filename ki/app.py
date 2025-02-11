@@ -4,6 +4,7 @@ from flask_session import Session
 
 from common.config import Config
 from common.middleware import token_required, role_required
+from ki.rh_TF_Update import update_model_TF, prepare_Data
 
 app = Flask(__name__)
 # app.config['DEBUG'] = True
@@ -40,7 +41,11 @@ def start_ai_task():
         return jsonify({"error": "Keine Bilder hochgeladen"}), 400
 
     files = {'images': request.files.getlist('images')}
+
     # TODO start des Nachtest aufrufen
+
+    prepare_Data(input_Directory, output_Directory)
+    update_model_TF()
 
     if len(files) >= 1:
         return jsonify({"status": "KI-Lauf gestartet"}), 202
