@@ -8,11 +8,12 @@ from flask import jsonify, session
 from functools import wraps
 from flask import request
 
-
 SECRET_KEY = 'your_secret_key'
 logging.basicConfig(level=logging.DEBUG)
 TOKEN_BLACKLIST = set()
 redis_client = redis.StrictRedis(host='redis', port=6379, decode_responses=True)
+
+
 def generate_token(username, role):
     return jwt.encode({
         'username': username,
@@ -107,4 +108,9 @@ def role_required(*required_roles):
     return decorator
 
 
-
+def get_user_role_from_token(token):
+    decoded_token = decode_token(token)
+    if 'error' in decoded_token:
+        logging.debug(f"Error decoding token: {decoded_token['error']}")
+        return None
+    return decoded_token.get('role')

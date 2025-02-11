@@ -2,8 +2,16 @@ Flask
 filetype
 aio-pika
 Unicorn
+gunicorn
 requests
+pydrive
+oauth2client
+python-magic
+redis
+PyJWT
+ultralytics
 numpy
 matplotlib
 scipy
 opencv-python
+tensorflow

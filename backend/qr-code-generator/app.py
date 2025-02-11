@@ -1,5 +1,5 @@
+import requests
 from flask import Flask, jsonify, request
-from qrcode import save_qr_code_in_database
 from common.middleware import token_required
 
 app = Flask(__name__)
@@ -14,17 +14,21 @@ def home():
 def health_check():
     return jsonify({"status": "ok"}), 200
 
-@app.route('/qrcode', methods=['POST'])
-@token_required
-def add_product():
-    data = request.json
-    token = data.get("token")
-    image_blob = data.get("image_blob")
-    encrypted_data = data.get("encrypted_data")
-    qrcode = save_qr_code_in_database(token, image_blob, encrypted_data)
-    if qrcode:
-        return jsonify({"id": qrcode.id}), 201
-    return jsonify({"error": "Product could not be created"}), 400
+DATABASE_API_URL = "http://database-management-service:5001"
+
+@app.route('/qrcode/scan/result', methods=['GET'])
+def qrcode_scan_result():
+    response = requests.get(f"{DATABASE_API_URL}/qrcodes")
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    return jsonify({"error": "QR-Codes nicht gefunden"}), 404
+
+@app.route('/qrcode/information/<int:qrcode_id>', methods=['GET'])
+def qrcode_information(qrcode_id):
+    response = requests.get(f"{DATABASE_API_URL}/qrcodes/{qrcode_id}")
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    return jsonify({"error": "QR-Code nicht gefunden"}), 404
 
 
 if __name__ == "__main__":
