@@ -1,14 +1,18 @@
 import tensorflow as tf
 import numpy as np
+import cv2
 
 def predict_object_TF(img):
+
+    size = 128
+    img = cv2.resize(img, dsize=(size, size), interpolation=cv2.INTER_CUBIC)
 
     class_names = ['Apfel', 'Aubergine', 'Avocado', 'Birne',
                    'Granatapfel', 'Kaki', 'Kartoffel', 'Kiwi',
                    'Mandarine', 'Orange', 'Pampelmuse', 'Paprika',
                    'Tomate', 'Zitrone', 'Zucchini', 'Zwiebel']
 
-    model_path = "./MODELS/obst_gemuese_TF_50.h5"
+    model_path = "./MODELS/obst_gemuese_TF_100.h5"
     model = tf.keras.models.load_model(model_path)
 
     # Bereitet ein Bild für das Modell vor.

@@ -12,4 +12,6 @@ PyJWT
 ultralytics
 numpy
 matplotlib
+scipy
+opencv-python
 tensorflow

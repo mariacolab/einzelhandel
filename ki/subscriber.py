@@ -6,9 +6,13 @@ import aio_pika
 import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
-import tensorflow as tf
-from my_function_TF import predict_object_TF
 
+import tensorflow as tf
+
+
+from rh_TF_Predict import predict_object_TF
+from rh_TF_Update import update_model_TF
+from rh_TF_Update import prepare_Data
 import requests
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
@@ -17,10 +21,11 @@ from oauth2client.service_account import ServiceAccountCredentials
 from common.middleware import get_user_role_from_token
 from common.utils import load_secrets
 
+import requests
+#from einzelhandel.common.utils import load_secrets
+from common.utils import load_secrets 
 import logging
 from detectYOLO11 import detect
-
-from common.utils import load_secrets
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -59,8 +64,6 @@ async def on_message(message: aio_pika.IncomingMessage):
                 return
 
             logging.info(f"Extracted token: {token}")
-
-            #
             if "ValidatedFiles" in event_type:
 
                 event_filename = event.get("file", "")
@@ -72,6 +75,33 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                 logging.info("Processing files after ImageUploaded event.")
 
+              #  img_file = f"{event_path}{event_filename}"
+              #  img = plt.imread(img_file)  # Lädt das Bild als NumPy-Array
+              #  img = np.resize(img, (128, 128, 3))
+              #  class_name = predict_object_TF(img)
+
+              #  logging.info(f"Example Result: {class_name}")
+              #  input_Directory = "./DATA/Unprepared_Data/"
+              #  output_Directory = "./DATA/Prepared_Data/"
+
+              #  prepare_Data(input_Directory, output_Directory)
+              #  update_model_TF()
+                
+                logging.info(f"Example Result after Update.")
+
+                url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
+                headers = {
+                    'Content-Type': 'application/json',
+                    "Authorization": f"{token}"
+                }
+
+                logging.info(f"Headers: {headers}")
+
+                data = {
+                    "type": "ClassFiles",
+                    "data": {
+                      #  "result": f"{zufaelliger_wert}"
+                        "result": f"{class_name}"
 
                 # TODO aufruf von Methoden um weiteren Code auszuführen
 
