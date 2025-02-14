@@ -4,3 +4,4 @@ aio-pika
 gunicorn
 requests
 ultralytics
+numpy

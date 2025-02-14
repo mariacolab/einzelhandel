@@ -100,6 +100,7 @@ services:
       - ./backend/qr-code-generator:/app
       - ./secrets:/app/secrets
       - ./common:/app/common
+      - ./class.json:/class.json
     command: ["python3", "subscriber.py"]
 
   eventing-service:
@@ -130,12 +131,17 @@ services:
     build:
       context: ./ki
       target: production
+      dockerfile: Dockerfile
+      args:
+        - DOCKER_BUILDKIT=1
     container_name: ki
     environment:
       FLASK_APP: app
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /workspace
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      NVIDIA_VISIBLE_DEVICES: all
+      COMPOSE_HTTP_TIMEOUT: 1500
     depends_on:
       - rabbitmq
     ports:
@@ -147,6 +153,11 @@ services:
       - ./common:/workspace/common
       - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [ gpu ]
 
   frontend:
     build:
@@ -221,3 +232,4 @@ volumes:
 secrets:
   github_credentials:
     file: secrets/github_credentials.txt
+

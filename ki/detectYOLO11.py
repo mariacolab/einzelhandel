@@ -5,11 +5,13 @@ from ultralytics import YOLO
 import cv2
 import logging
 import os
+import numpy
 
-#gibt Dateinamen ohne Endung zurück (Bsp. "file.jpg" wird zu "file")
+
+#gibt Dateinamen und Endung getrennt zurück (Bsp. "file.jpg" wird zu "file")
 def name_extrahieren(name):
     dateiname,datei_endung =os.path.splitext(name)
-    return dateiname
+    return dateiname,datei_endung
 
 #fragt ab, ob Ergebnis der Objekterkennung korrekt
 #TODO anbinden an Frontend
@@ -30,9 +32,13 @@ def abfrage(obj):
 #Ein Bild von der KI erkennen lassen, je nach Klassifikationsergebnis zum Lernen weiterverarbeiten und Klassennamen zurückgebe
 def detect(bild, filename):
     logging.info("Sent to AI for detection.")
-    model = YOLO("KIModelle/trainiert_mit_ganzem_Datensatz/bestTrain40.pt") #Laden des trainierten Modells
+    #resizing given image to 224x224
+    img=cv2.imread(bild)
+    img_small=cv2.resize(img,(224,224))
+
+    model = YOLO("KIModelle/trainiert_mit_ganzem_Datensatz/train65/weights/best.pt") #Laden des trainierten Modells
     #TODO ggf conf niedriger setzen
-    results = model(bild, conf=0.75) #Objekterkennung vom YOLO11-Modell durchführen, dabei nur erkannte Obj mit Konfidenz mind 0,75 beachten
+    results = model(img_small, conf=0.75) #Objekterkennung vom YOLO11-Modell durchführen, dabei nur erkannte Obj mit Konfidenz mind 0,75 beachten
 
     # Objekt mit höchster Konfidenz auswählen
     best_result = None
@@ -58,16 +64,26 @@ def detect(bild, filename):
     if korrekt_bool is True:
         # TODO Pfad wo gespeichert
         # korrekt erkannt -> Bild und Label den Trainingsdaten hinzufügen
-        logging.info("Filename is " + filename)
-        dateiname = name_extrahieren(filename)
-        logging.info("Filename is " + dateiname)
-        labelpfad = "Datasets/TestDaten/labels/"
-        imagespfad = "Datasets/TestDaten/images/"
+        #logging.info("Filename is " + filename)
+        dateiname,datei_endung = name_extrahieren(filename)
+        #logging.info("Dateiename is " + dateiname)
+        labelpfad = "datasets/Testdaten/labels/"
+        imagespfad = "datasets/Testdaten/images/"
         best_result.save_txt(labelpfad + dateiname + ".txt")
         logging.info("Resultlabel saved.")
-        #TODO resize
-        bild2 = cv2.imread(bild)
-        cv2.imwrite(imagespfad + dateiname + ".jpg",bild2)
+        cv2.imwrite(imagespfad + dateiname + datei_endung,img_small)
     #TODO was wenn nicht richtig?
+
+    train=True
+    if train:
+        #TODO je nachdem wo alles abgelegt wird anpassen
+        metrics_old = model.val(data="datasets/FFv3/data.yaml")
+        map50_old = metrics_old.box.map50
+        model.train(data="datasets/FFv3/data.yaml", device=0, workers = 0, epochs=1, imgsz=224, batch=16)
+        #new_model = YOLO("runs/detect/train/weights/best.pt")
+        #metrics_new = new_model.val()
+        metrics_new=model.val()
+        map50_new=metrics_new.box.map50
+        logging.info("old map50 is " + str(map50_old) + " and new map50 is " + str(map50_new))
 
     return obj_name

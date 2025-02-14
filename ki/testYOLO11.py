@@ -8,8 +8,8 @@ import logging
 #TODO Modell übergeben
 def yolotest():
     #Pfade setzen
-    path_img = "Datasets/FFv1/test/images"
-    path_labels = "Datasets/FFv1/test/labels"
+    path_img = "datasets/FFv1/test/images"
+    path_labels = "datasets/FFv1/test/labels"
     model = YOLO("KIModelle/trainiert_mit_ganzem_Datensatz/bestTrain40.pt")  # Laden des trainierten Modells
     results = model(path_img, conf=0.75, stream=False) #alle Bilder des Testordners erkennen lassen
 

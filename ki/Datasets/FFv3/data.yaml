@@ -1,0 +1,13 @@
+train: ../../../FFv3/train/images
+val: ../../../FFv3/valid/images
+test: ../../../FFv3/test/images
+
+nc: 46
+names: ['Apfel', 'Aubergine', 'Avocado', 'Banane', 'Birne', 'Bohnen', 'Cerealien', 'Chips', 'Essig', 'Fisch', 'Gewuerze', 'Granatapfel', 'Honig', 'Kaffee', 'Kaki', 'Karotte', 'Kartoffel', 'Kiwi', 'Knoblauch', 'Kuchen', 'Mais', 'Mandarine', 'Mango', 'Marmelade', 'Mehl', 'Milch', 'Nudeln', 'Nuss', 'Oel', 'Orange', 'Pampelmuse', 'Paprika', 'Pflaume', 'Reis', 'Saft', 'Schokolade', 'Soda', 'Suessigkeit', 'Tee', 'Tomate', 'Tomatensauce', 'Wasser', 'Zitrone', 'Zucchini', 'Zucker', 'Zwiebel']
+
+roboflow:
+  workspace: fapra
+  project: freiburgundobst2
+  version: 3
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/fapra/freiburgundobst2/dataset/3
