@@ -78,20 +78,28 @@ oder per Terminal (ehr für Linux Nutzer, unter Windows recht umständlich umzus
        RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
        ENCRYPTION_KEY=-mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=
         ````
-   3. ebenfalls in dem Projektverzeichnis muss eine .env angelegt werden
-         ````bash
-        PEPPER_KEY=my-secret-pepper
-        POSTGRES_PASSWORD=a2GtDwGcCYpPMfzb9T
-        RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
-        ENCRYPTION_KEY=-mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=
-        ````
+   3. Die Datei [fapra-ki-einzelhandel-555f5e4a0722.json](https://drive.google.com/file/d/1VB18ly18vYcwqRV6CTjhETdnbLM6qQU7/view?usp=drive_link) 
+   downloaden und in das Verzeichnis einzelhandel/secrets/ einfügen. Docker build ausführen und starten. 
+   4. ebenfalls in dem Projektverzeichnis einzelhandel/ muss eine .env angelegt werden
+            ````bash
+           PEPPER_KEY=my-secret-pepper
+           POSTGRES_PASSWORD=a2GtDwGcCYpPMfzb9T
+           RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
+           ENCRYPTION_KEY=-mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=
+           ````
     
 
 
 1. Docker Daemon starten, in dem Docker Desktop gestartet wird oder per Terminal. 
 2. Bauen der Docker Images mit dem Befehl:
     ````bash
-    docker-compose -f docker-compose.yml build
+    #Powershell
+    $env:DOCKER_BUILDKIT=1
+    #CMD
+    set DOCKER_BUILDKIT=1
+   
+    docker-compose -f docker-compose.yml build --parallel
+    docker-compose -f docker-compose.yml up
     ````
 3. Erstellen und Starten der Docker-Container mit dem Befehl:
     ````bash
@@ -127,14 +135,13 @@ einfügen und senden
     ````
 - Endpunkt login:
     ````bash
-    curl --location "http://localhost/user-management/auth/login" ^
+    curl -c cookies.txt --location "http://localhost/user-management/auth/login" ^
     --header "Content-Type: application/json" ^
     --data "{\"username\": \"testuser5\", \"password\": \"securepassword\"}"
     ````
 - Event ImageUploaded:
      ````bash
-    curl --location "http://localhost/eventing-service/publish/ImageUploaded" ^
-    --header "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3R1c2VyMiIsInJvbGUiOiJNaXRhcmJlaXRlciIsImV4cCI6MTczNjc3MDczMX0.emw6GdIF2hZSIA_QT6o9_8a_NsNWk4fomQcATTCTb8E" ^
+    curl -b cookies.txt --location "http://localhost/eventing-service/publish/ImageUploaded" ^
     --form "type=ProcessFiles" ^
     --form "filename=@Pfad\desBildes.jpg"
      ````

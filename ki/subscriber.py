@@ -4,7 +4,6 @@ import asyncio
 from common.DriveFolders import DriveFolders
 from common.google_drive import google_move_to_another_folder
 import requests
-from common.middleware import get_user_role_from_token
 import logging
 from detectYOLO11 import detect
 from common.utils import load_secrets
@@ -57,7 +56,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 # TODO aufruf von Methoden um weiteren Code auszuführen
                 if event_model == "big":
                   #result = detect(f"{event_path}{event_filename}",f"{event_filename}")
-                    result = detect(event_fileid)
+                    result = detect(event_fileid, event_filename)
                 elif event_model == "small":
                     result = predict_object_TF(event_fileid)
 
@@ -65,7 +64,7 @@ async def on_message(message: aio_pika.IncomingMessage):
 
 
                 # TODO Rolle filtern wenn Kunde dann erhält er bei FaLse eine Fehlermeldung in classification
-                if event_role == "Kunde":
+                if event_role == "Admin":
                     """
                         - Bild wird in traningsordner verschoben
                         - Klassifizierung weitergegeben
@@ -79,6 +78,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                         "type": (None, "ClassFiles"),
                         "result": (None, result),
                     }
+                    logging.info(f"files: {files}")
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
                 else:

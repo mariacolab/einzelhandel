@@ -22,20 +22,6 @@ from crud import (
 
 # Flask application initialization
 app = Flask(__name__)
-# app.config.from_object(Config)  # Lade zentrale Config
-#
-# # Initialisiere Flask-Session
-# Session(app)
-#
-# redis_password = os.getenv("REDIS_PASSWORD", None)
-#
-# redis_client = redis.StrictRedis(
-#     host='redis',
-#     port=6379,
-#     db=0,
-#     decode_responses=True,
-#     password=redis_password  # Passwort setzen
-# )
 app.config.from_object(Config)  # Lade zentrale Config
 
 # Initialisiere Flask-Session
@@ -236,9 +222,10 @@ def delete_product_info(product_id):
 @token_required
 def add_qrcode():
     data = request.json
-    qrcodes = create_qrcode(db.session, **data)
+    image_blob = base64.b64decode(data['data'])
+    qrcodes = create_qrcode(db.session, image_blob)
     if qrcodes:
-        return jsonify({"id": qrcodes.id, "data": data}), 201
+        return jsonify({"id": qrcodes.id}), 201
     return jsonify({"error": "QRCode could not be created"}), 400
 
 
@@ -247,7 +234,10 @@ def add_qrcode():
 def get_qrcode(qrcode_id):
     qrcodes = read_qrcode(db.session, qr_code_id=qrcode_id)
     if qrcodes:
-        return jsonify({"id": qrcodes.id, "data": qrcodes.data}), 200
+        return jsonify({
+            "id": qrcodes.id,
+            "data": base64.b64encode(qrcodes.data).decode()  # Konvertiere in Base64 für die API
+        }), 200
     return jsonify({"error": "QRCode not found"}), 404
 
 

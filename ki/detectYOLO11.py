@@ -4,8 +4,10 @@
 import logging
 import os
 import tempfile
-import torch
+
 import cv2
+import torch
+import numpy as np
 from ultralytics import YOLO
 
 from common.DriveFolders import DriveFolders
@@ -13,6 +15,7 @@ from common.google_drive import google_get_file_stream, google_uploade_file_to_f
     google_upload_file_to_drive
 
 logging.info(f"torch available: {torch.cuda.is_available()}")
+
 
 # gibt Dateinamen ohne Endung zurück (Bsp. "file.jpg" wird zu "file")
 def name_extrahieren(name):
@@ -38,8 +41,7 @@ def abfrage(obj):
 
 
 # Ein Bild von der KI erkennen lassen, je nach Klassifikationsergebnis zum Lernen weiterverarbeiten und Klassennamen zurückgebe
-# def detect(bild, filename):
-def detect(fileid):
+def detect(fileid, filename):
     logging.info("Sent to AI for detection.")
     file_stream = google_get_file_stream(folder_id=DriveFolders.KIModelle_trainiert_mit_ganzem_Datensatz.value,
                                          file_name="bestTrain40.pt")
@@ -47,70 +49,92 @@ def detect(fileid):
     if file_stream:
         # "KIModelle/trainiert_mit_ganzem_Datensatz/bestTrain40.pt"
         # "cpu" for CPU use or "cuda" for GPU
-        device = "cpu" #"cuda" if torch.cuda.is_available() else "cpu"
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         logging.info(f"device: {device}")
         # Temporäre Datei für YOLO-Modell erstellen
         with tempfile.NamedTemporaryFile(suffix=".pt", delete=False) as temp_model_file:
             temp_model_file.write(file_stream.read())
             temp_model_path = temp_model_file.name
-            model = YOLO(temp_model_path).to(device)
-            #logging.info(f"model: {model}")
+        model = YOLO(temp_model_path).to(device)
+        #logging.info(f"model: {model}")
+
+        if model is None:
+            logging.error("Fehler: Modell konnte nicht geladen werden!")
+            return "Fehler: Modell nicht geladen."
+
         # TODO ggf conf niedriger setzen
-            file_stream_img = google_get_file_stream(folder_id=DriveFolders.UPLOAD.value,
-                                                  file_id=fileid)
-            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_img_file:
-                temp_img_file.write(file_stream_img.read())
-                temp_img_path = temp_img_file.name
-                results = model(temp_img_path,
-                            conf=0.75)  # Objekterkennung vom YOLO11-Modell durchführen, dabei nur erkannte Obj mit Konfidenz mind 0,75 beachten
-                logging.info(f"result: {results}")
-                # Objekt mit höchster Konfidenz auswählen
-                best_result = None
-                for result in results[0]:
-                    if best_result is None:
-                        best_result = result
-                    elif result.boxes.conf > best_result.boxes.conf:
-                        best_result = result
-                    else:
-                        logging.info("2 or more classes detected and lower confidences ignored")
-                # TODO Falls kein Objekt erkannt wurde
-                if best_result is None:
-                    logging.info("please make a better picture and ensure the object is clearly visible")
-                    return "nichts"
+        file_stream_img = google_get_file_stream(folder_id=DriveFolders.UPLOAD.value,
+                                                 file_id=fileid)
+        if file_stream_img is None:
+            logging.error("Error: File stream is empty!")
+            return "Fehler: Datei nicht gefunden oder leer."
 
-                # Aus dem besten Ergebnis die Klassen-ID extrahieren und dieser den passenden Klassennamen zuordnen
-                names = model.names
-                obj_id = best_result.boxes.cls
-                obj_name = names[int(obj_id)]
+        file_stream_img.seek(0)
+        image_data = file_stream_img.read()
+        logging.info(f"Image data length: {len(image_data)}")
 
-        # Nachlernen
-        korrekt_bool = abfrage(obj_name)
-        if korrekt_bool is True:
-            # TODO Pfad wo gespeichert
-            # korrekt erkannt -> Bild und Label den Trainingsdaten hinzufügen
-            logging.info("Filename is " + file_stream.name)
-            dateiname = name_extrahieren(file_stream.name)
-            logging.info("Filename is " + dateiname)
-            with tempfile.TemporaryDirectory() as temp_dir:
-                # labelpfad = "Datasets/TestDaten/labels/"
-                # imagespfad = "Datasets/TestDaten/images/"
-                # google_move_to_another_folder()
-                # label
-                # google_stream_file_to_new_file(fileid, dateiname + ".txt", DriveFolders.Datasets_TestDaten_labels.value)
+        image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
+        if image is None:
+            logging.error("Error: Unable to decode image!")
+            return "Fehler: Bild konnte nicht geladen werden."
+        results = model(image,
+                        conf=0.75)  # Objekterkennung vom YOLO11-Modell durchführen, dabei nur erkannte Obj mit Konfidenz mind 0,75 beachten
+        #logging.info(f"result: {results}")
 
-                best_result.save_txt(temp_dir + dateiname + ".txt")
-                logging.info("Resultlabel saved.")
-                google_uploade_file_to_folder(DriveFolders.Datasets_TestDaten_labels.value,
-                                              dateiname + ".txt",
-                                              temp_dir)
-                # TODO resize
-                bild2 = cv2.imread(file_stream)
-                # .imwrite(temp_dir + dateiname + ".jpg", bild2)
-                google_upload_file_to_drive(DriveFolders.Datasets_TestDaten_labels.value, bild2)
+        if not results or len(results[0]) == 0:
+            logging.info("Kein Objekt erkannt.")
+            return "Kein Objekt erkannt. Bitte ein besseres Bild machen."
 
-                # image
-                # google_stream_file_to_new_file(fileid, dateiname + ".jpg", DriveFolders.Datasets_TestDaten_labels.value)
+        # Objekt mit höchster Konfidenz auswählen
+        best_result = None
+        for result in results[0]:
+            if best_result is None:
+                best_result = result
+            elif result.boxes.conf > best_result.boxes.conf:
+                best_result = result
+            else:
+                logging.info("2 or more classes detected and lower confidences ignored")
+        # TODO Falls kein Objekt erkannt wurde
+        if best_result is None:
+            logging.info("please make a better picture and ensure the object is clearly visible")
+            return "nichts"
 
-        # TODO was wenn nicht richtig?
+        # Aus dem besten Ergebnis die Klassen-ID extrahieren und dieser den passenden Klassennamen zuordnen
+        names = model.names
+        obj_id = best_result.boxes.cls
+        obj_name = names[int(obj_id)]
+        logging.info(f"result: {obj_name}")
+    # Nachlernen
+    korrekt_bool = abfrage(obj_name)
+    if korrekt_bool is True:
+        # TODO Pfad wo gespeichert
+        # korrekt erkannt -> Bild und Label den Trainingsdaten hinzufügen
+        #logging.info("Filename is " + filename)
+        dateiname = name_extrahieren(filename)
+        logging.info("Filename is " + dateiname)
+        #file_stream_img.seek(0)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            label_path = os.path.join(temp_dir, dateiname + ".txt")
+            best_result.save_txt(label_path)
+            google_uploade_file_to_folder(DriveFolders.Datasets_TestDaten_labels.value,
+                                          dateiname + ".txt",
+                                          label_path)
+        # TODO resize
+        # file_stream.seek(0)
+        # image_data = file_stream.read()
+        #
+        # # Direkt in OpenCV laden
+        # image_array = np.frombuffer(image_data, np.uint8)
+        # bild2 = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+        #
+        # if bild2 is None:
+        #     logging.error("Fehler beim Dekodieren des Bildes!")
+        #     return "Fehler: Bild konnte nicht dekodiert werden."
 
-        return obj_name
+        #with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_img_file:
+            #cv2.imwrite(temp_img_file.name, bild2)
+        google_upload_file_to_drive(DriveFolders.Datasets_TestDaten_images.value, image)
+
+    # TODO was wenn nicht richtig?
+
+    return obj_name

@@ -12,7 +12,6 @@ PyJWT
 ultralytics
 numpy
 matplotlib
-tensorflow
 pydrive
 oauth2client
 google-auth
@@ -23,4 +22,3 @@ flask_session
 torch
 scipy
 opencv-python
-

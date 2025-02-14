@@ -1,36 +1,23 @@
-# Basis-Image auswählen
-FROM python:3.10-slim AS base
+# Use Node.js as the base image
+FROM node:18
 
-# Arbeitsverzeichnis setzen
+# Set the working directory inside the container
 WORKDIR /app
 
-# Allgemeine Abhängigkeiten installieren
-RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
-RUN apt-get update && apt-get install -y libmagic1 file
-# Anforderungen installieren
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Kopiere package.json und package-lock.json aus `frontend_einzelhandel`
+COPY frontend_einzelhandel/package.json frontend_einzelhandel/package-lock.json ./
 
-# ---- Build für Tests ----
-FROM base AS test
+# Install dependencies
+RUN npm install
 
-# Zusätzliche Abhängigkeiten für Tests installieren
-RUN pip install pytest pytest-flask
+# Kopiere den gesamten Code ins Arbeitsverzeichnis
+COPY frontend_einzelhandel/. .
 
-# Anwendung und Testdateien kopieren
-COPY . .
+# Build the Angular application
+RUN npm run build
 
-COPY tests /app/tests
+# Install and use http-server to serve the built Angular app
+RUN npm install -g http-server
 
-# Standardbefehl für Tests
-CMD ["pytest", "tests/"]
-
-# ---- Build für normale Ausführung ----
-FROM base AS production
-
-# Anwendung kopieren
-COPY . .
-COPY . /app
-
-# Standardbefehl für Produktion
-CMD ["gunicorn", "--bind", "0.0.0.0:5007", "app:app"]
+# Serve the Angular app
+CMD ["npx", "http-server", "dist/frontend", "-p", "4200"]

@@ -180,11 +180,10 @@ services:
           devices:
             - capabilities: [ gpu ]
 
-  frontend:
+  webhook-service:
     build:
-      context: ./frontend
-      target: production
-    container_name: frontend
+      context: ./backend/webhook
+    container_name: webhook_service
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -196,14 +195,25 @@ services:
     depends_on:
       - rabbitmq
     ports:
-      - "5007:5000"
+      - "5008:5008"
     secrets:
       - github_credentials
     volumes:
+      - shared_uploads:/shared/uploads
       - ./secrets:/app/common/secrets
       - ./common:/app/common
-      - shared_uploads:/shared/uploads
-    command: ["python3", "subscriber.py"]
+    command: [ "python3", "webhook.py" ]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - webhook-service
+    command: ["npx", "http-server", "dist/frontend_einzelhandel/browser", "-p", "4200"]
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -220,6 +230,30 @@ services:
     volumes:
       - ./secrets:/app/common/secrets
       - ./rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
+
+  webhook-subscriber:
+    build:
+      context: ./backend/webhook-subscriber
+    container_name: webhook-subscriber
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      FLASK_APP: app
+      GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
+      PYTHONPATH: /app
+      RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+    ports:
+      - "5009:5000"
+    depends_on:
+      - rabbitmq
+    secrets:
+      - github_credentials
+    volumes:
+      - shared_uploads:/shared/uploads
+      - ./secrets:/app/common/secrets
+      - ./common:/app/common
+    command: [ "python3", "/app/subscriber.py" ]
 
   nginx:
     image: nginx:latest

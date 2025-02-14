@@ -140,9 +140,9 @@ def delete_product(session: Session, product_id: int):
 
 
 # QRCode CRUD
-def create_qrcode(session: Session, data: str):
+def create_qrcode(session: Session, image_blob: bytes):
     try:
-        qrcodes = QRCodes(data=data)
+        qrcodes = QRCodes(data=image_blob)
         session.add(qrcodes)
         session.commit()
         return qrcodes

@@ -40,13 +40,13 @@ async def on_message(message: aio_pika.IncomingMessage):
             event_cookie = event.get("cookie", "")
 
             logging.info(f"Event type: {event_type}")
-            logging.info(f"Event cookie: {cookie}")
+            logging.info(f"Event cookie: {event_cookie}")
 
 
             if "ClassFiles" in event_type:
                 logging.info("Processing files after ClassificationCompleted event.")
-                event_data = event.get("data", "")
-                logging.info(f"Event Data: {event_data}")
+                event_result = event.get("result", "")
+                logging.info(f"Event Data: {event_result}")
                 # TODO aufruf von Methoden um weiteren Code auszuführen
                 """Fälle:
                 1. Datensatz ist nicht in der Datenbank vorhanden
@@ -55,7 +55,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     dann wird der Datensatz """
 
                 # prüft ob der Datensatz in der Datenbank vorhanden ist
-                url = f"http://nginx-proxy/database-management/products/{event_data}"
+                url = f"http://nginx-proxy/database-management/products/{event_result}"
                 headers = {
                     'Content-Type': 'application/json',
                     "Cookie": f"{event_cookie}",
@@ -73,7 +73,7 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                     json_data = load_json("class.json")
                     logging.info(f"json_data: {json_data}")
-                    item = get_item_by_class_name(json_data, event_data)
+                    item = get_item_by_class_name(json_data, event_result)
                     logging.info(f"item: {item}")
                     data = {
                         "Produkt": item["class_name"],
@@ -94,9 +94,9 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                     # Verschlüsseln der Daten
                     encrypted_data = cipher.encrypt(data_to_encrypt.encode())
-                    logging.debug("Verschlüsselte Daten:", encrypted_data)
+                    logging.debug(f"Verschlüsselte Daten: {encrypted_data}")
                     qr_data = base64.b64encode(encrypted_data).decode("utf-8")
-                    logging.debug("Verschlüsselte Daten:", qr_data)
+                    logging.debug(f"Verschlüsselte Daten: {qr_data}")
                     message_data = qr_data
 
                     # qr-code generieren
@@ -125,7 +125,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     logging.info(f"Data: {headers}")
                     # TODO Daten ersetzen mit Rückgabe der KI
                     data = {
-                        "name": f"{event_data}",
+                        "name": f"{event_result}",
                         "description": item.get("info"),
                         "shelf": item.get("regal"),
                         "price_piece": item["preis"].get("pro_stueck"),
@@ -142,9 +142,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                     # id des QR-Codes aus dem Body gelesen
                     qr_code_id = body.get("qr_code_id")
                     # QR-Code wird aus der Datenbank geholt
-                    url = f"http://nginx-proxy/database-management/products/{qr_code_id}"
+                    url = f"http://nginx-proxy/database-management/qrcodes/{qr_code_id}"
                     headers = {
-                        'Content-Type': 'application/json',
                         "Cookie": f"{event_cookie}",
                     }
                     logging.info(f"Header get Product: {headers}")
@@ -152,41 +151,27 @@ async def on_message(message: aio_pika.IncomingMessage):
                     # POST-Anfrage senden
                     response = requests.get(url, headers=headers)
                     body = response.json()
-                    message_data = body.get("code")
-                    logging.info(f"body GET Product: {body}")
+                    message_data = body.get("data")
+                    logging.info(f"body GET qrcodes: {body}")
                     logging.info(f"code from body GET Product: {message_data}")
 
                 # Event QR-Code generated wird mit den entsprechenden Daten abgesetzt
-                url = " http://nginx-proxy/eventing-service/publish/Encoded"
+                url = " http://nginx-proxy/eventing-service/publish/QRCodeGenerated"
                 headers = {
-                    'Content-Type': 'application/json',
                     "Cookie": f"{event_cookie}",
                 }
                 logging.info(f"Data: {headers}")
                 # TODO change data with return values
-                data = {
-                    "type": "EncodedFiles",
-                    "data": {
-                        "code": f"{message_data}",
-                    }
+                files = {
+                    "type": (None, "ProcessQrcode"),
+                    "image_blob": (None, message_data),
                 }
-                logging.info(f"Data: {data}")
+                logging.info(f"Files QRCodeGenerated: {files}")
 
                 # POST-Anfrage senden
-                response = requests.post(url, headers=headers, json=data)
+                response = requests.post(url, headers=headers, files=files)
                 logging.info(f"Response: {response.request}")
                 logging.info(f"Response: {response.status_code}")
-
-            if "ProcessQrcode" in event_type:
-                logging.info("Processing files after ProcessQrcode event.")
-                image_blob = event.get("data", "")
-                logging.info(f"Event Data: {image_blob}")
-                encrypted_data = event.get("encrypted_data", "")
-                logging.info(f"Event Data: {encrypted_data}")
-                token = event.get("token", "")
-                logging.info(f"Event Data: {token}")
-
-                save_qr_code_in_database(token, image_blob, encrypted_data)
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")

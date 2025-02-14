@@ -1,38 +1,33 @@
-# ---- Base Stage mit CUDA-Unterstützung ----
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu20.04 AS base
+# NVIDIA CUDA 12.3.2 + CuDNN 9.3+ (Runtime-Image für YOLO)
+FROM nvidia/cuda:12.3.2-cudnn9-runtime-ubuntu22.04 AS base
 
-# Verhindere interaktive Eingaben während der Installation
+# Setze Umgebungsvariablen für NVIDIA (nur für YOLO relevant)
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONPATH=""
 
-# Aktualisieren und notwendige Pakete installieren, inklusive deadsnakes-PPA für Python 3.10
+# Installiere Python 3.10 + Pip + Systempakete
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && \
-    apt-get install -y \
-      python3.10 \
-      python3.10-venv \
-      python3.10-dev \
-      python3-pip \
-      gcc \
-      libpq-dev \
-      libmagic1 \
-      file \
-      libgl1 \
-      libglib2.0-0 && \
+    apt-get install -y python3.10 python3.10-venv python3.10-dev python3-pip \
+    libgl1-mesa-glx libglib2.0-0 && \
+    ln -s /usr/bin/python3.10 /usr/bin/python && \
     rm -rf /var/lib/apt/lists/*
 
-# Setze den Symlink, damit "python" auf Python 3.10 zeigt
-RUN ln -s /usr/bin/python3.10 /usr/bin/python
 
-# Arbeitsverzeichnis festlegen
+# Arbeitsverzeichnis setzen
 WORKDIR /workspace
 
-# Kopiere die requirements.txt und installiere die Python-Abhängigkeiten
+# Installiere Python-Abhängigkeiten (einschließlich aio-pika)
 COPY requirements.txt .
-RUN apt-get update && apt-get install -y python3-pip && \
-    python3 -m pip install --upgrade --force-reinstall pip && \
-    python3 -m pip install --no-cache-dir -r requirements.txt
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
+
+# Installiere TensorFlow **ohne GPU**
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install tensorflow-cpu==2.18.0
+
+# Installiere PyTorch mit GPU-Unterstützung (nur für YOLO)
+RUN python3 -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 # ---- Production Stage ----
 FROM base AS production

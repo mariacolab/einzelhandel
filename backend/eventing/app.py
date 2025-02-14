@@ -18,26 +18,6 @@ from producer import send_message
 import asyncio
 
 app = Flask(__name__)
-
-# app.config['DEBUG'] = True
-# logging.basicConfig(level=logging.DEBUG)
-#
-# secrets = load_secrets()
-# app.config['SECRET_KEY'] = secrets.get('SECRET_KEY')
-#
-# redis_password = os.getenv("REDIS_PASSWORD", None)
-# # Session-Konfiguration
-# app.config['SESSION_TYPE'] = 'redis'
-# app.config['SESSION_PERMANENT'] = False
-# app.config['SESSION_USE_SIGNER'] = True
-# app.config['SESSION_KEY_PREFIX'] = 'flask_session:'
-# app.config['SESSION_COOKIE_SECURE'] = False  # Deaktivieren, falls HTTPS nicht verwendet wird
-# app.config['SESSION_COOKIE_HTTPONLY'] = True  # Session-Cookie vor JavaScript schützen
-# app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Cookie-Freigabe für API-Calls
-# app.config['SESSION_REDIS'] = redis.StrictRedis(
-#     host='redis', port=6379, db=0, decode_responses=False, password=redis_password
-# )
-# app.config["SESSION_SERIALIZATION"] = JSONSerializer
 app.config.from_object(Config)  # Lade zentrale Config
 
 
@@ -89,7 +69,7 @@ def publish_event(event):
             logging.debug("Event not recognized")
             return jsonify({"error": "Event not recognized"}), 400
 
-        if event == "ImageUploaded":
+        elif event == "ImageUploaded":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
             logging.debug(f"Files: {request.files}")
@@ -131,7 +111,7 @@ def publish_event(event):
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
 
-        if event == "ImageValidated":
+        elif event == "ImageValidated":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
             logging.debug(f"Files: {request.files}")
@@ -170,15 +150,14 @@ def publish_event(event):
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
 
-        if event == "ClassificationCompleted":
+        elif event == "ClassificationCompleted":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
-            logging.debug(f"Files: {request.files}")
 
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             result = request.form.get('result', '')
-            logging.debug(f"data {result}")
+            logging.debug(f"result {result}")
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
@@ -192,7 +171,7 @@ def publish_event(event):
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Result {result} uploaded successfully."}), 200
 
-        if event == "QRCodeGenerated":
+        elif event == "QRCodeGenerated":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
             logging.debug(f"Files: {request.files}")
@@ -214,7 +193,7 @@ def publish_event(event):
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
 
-        if event == "MisclassificationReported":
+        elif event == "MisclassificationReported":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
             logging.debug(f"Files: {request.files}")
@@ -231,7 +210,6 @@ def publish_event(event):
                 logging.debug("No file selected.")
                 return jsonify({"error": "No selected file"}), 400
 
-
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             fileid = request.form.get('fileid', '')
@@ -247,13 +225,13 @@ def publish_event(event):
                 "classification": classification,
                 "cookie": cookie
             }
-            logging.debug(f"Message QRCodeGenerated: {message}")
+            logging.debug(f"Message MisclassificationReported: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
             asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
 
-        if event == "CorrectedClassification":
+        elif event == "CorrectedClassification":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
 
@@ -275,7 +253,7 @@ def publish_event(event):
                 "fileid": fileid,
                 "cookie": cookie
             }
-            logging.debug(f"Message QRCodeGenerated: {message}")
+            logging.debug(f"Message CorrectedClassification: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
             asyncio.run(send_message(message))
 
