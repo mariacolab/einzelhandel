@@ -64,7 +64,7 @@ async def on_message(message: aio_pika.IncomingMessage):
 
 
                 # TODO Rolle filtern wenn Kunde dann erhält er bei FaLse eine Fehlermeldung in classification
-                if event_role == "Admin":
+                if event_role == "Kunde":
                     """
                         - Bild wird in traningsordner verschoben
                         - Klassifizierung weitergegeben
@@ -94,9 +94,9 @@ async def on_message(message: aio_pika.IncomingMessage):
                     files = {
                         "type": (None, "MisclassifiedFiles"),
                         "classification": (None, result),
-                        "fileid": event_fileid,
-                        "model": event_model,
-                        "filename": event_filename,
+                        "fileid": (None, event_fileid),
+                        "model": (None, event_model),
+                        "filename": (None, event_filename),
                     }
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")

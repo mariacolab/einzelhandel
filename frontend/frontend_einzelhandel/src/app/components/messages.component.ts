@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WebsocketService } from '../services/websocket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-messages',
@@ -9,17 +10,27 @@ import { WebsocketService } from '../services/websocket.service';
   styleUrls: ['./messages.component.css'],
   imports: [CommonModule]
 })
-export class MessagesComponent implements OnInit {
-  qrCodeData: string | null = null;  // Hier wird das Base64-Bild gespeichert
+export class MessagesComponent implements OnInit, OnDestroy {
+  private subscription!: Subscription;
+  qrCodeImage: string | null = null;
+  misclassifiedFile: any = null;
 
   constructor(private websocketService: WebsocketService) {}
 
   ngOnInit() {
-    this.websocketService.getMessages().subscribe((data: any) => {
-      console.log("QR-Code Event empfangen:", data);
-      if (data.image) {
-        this.qrCodeData = `data:image/png;base64,${data.image}`; // Base64-Bild setzen
+    this.subscription = this.websocketService.getMessages().subscribe(msg => {
+      if (msg.eventType === "QRCodeGenerated") {
+        this.qrCodeImage = `data:image/png;base64,${msg.data}`;
+      }
+      else if (msg.eventType === "MisclassifiedFiles") {
+        this.misclassifiedFile = msg;
       }
     });
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
   }
 }

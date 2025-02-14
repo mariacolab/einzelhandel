@@ -1,8 +1,14 @@
-<h1>RabbitMQ Nachrichten</h1>
+<h1> Nachrichten</h1>
 
-<div *ngIf="qrCodeData">
-  <h2>Empfangener QR-Code:</h2>
-  <img [src]="qrCodeData" alt="Empfangener QR-Code">
+<div *ngIf="qrCodeImage">
+  <h2>Generierter QR-Code</h2>
+  <img [src]="qrCodeImage" alt="QR Code">
 </div>
 
-
+<div *ngIf="misclassifiedFile">
+  <h2>Falsch klassifizierte Datei</h2>
+  <p><strong>Dateiname:</strong> {{ misclassifiedFile.filename }}</p>
+  <p><strong>Modell:</strong> {{ misclassifiedFile.model }}</p>
+  <p><strong>Klassifikation:</strong> {{ misclassifiedFile.classification }}</p>
+  <img [src]="'data:image/png;base64,' + misclassifiedFile.file" alt="Fehlklassifiziertes Bild">
+</div>

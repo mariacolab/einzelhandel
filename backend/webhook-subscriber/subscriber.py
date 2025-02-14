@@ -1,11 +1,13 @@
 import base64
 import json
-
 import requests
 from PIL import Image
 import io
 import aio_pika
 import asyncio
+
+from common.DriveFolders import DriveFolders
+from common.google_drive import google_get_file_stream
 from common.utils import load_secrets
 import logging
 
@@ -69,12 +71,24 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event Path: {event_fileid}")
                 # TODO Load the Image into a Viwer and submit if the classification is corect
                 logging.info("Processing files after MisclassifiedFiles event.")
+                file_stream = google_get_file_stream(folder_id=DriveFolders.UPLOAD.value, file_id=event_fileid)
+                if file_stream is None:
+                    logging.error("Error: File stream is empty!")
+                    return "Fehler: Datei nicht gefunden oder leer."
+
+                try:
+                    # Read file content and encode in Base64
+                    file_data = file_stream.read()
+                    base64_encoded = base64.b64encode(file_data).decode("utf-8")
+                except Exception as e:
+                    logging.error(f"Error processing file: {e}")
+                    return f"Fehler: Datei konnte nicht verarbeitet werden. {str(e)}"
 
                 response = requests.post(WEBHOOK_URL, json={"type": "QRCodeGenerated",
                                                             "classification": event_classification,
                                                             "filename": event_filename,
                                                             "model": event_model,
-                                                            "file": event_fileid})
+                                                            "file": base64_encoded})
                 logging.info(f"Webhook response: {response.status_code}, {response.text}")
 
                 url = " http://nginx-proxy/eventing-service/publish/CorrectedClassification"

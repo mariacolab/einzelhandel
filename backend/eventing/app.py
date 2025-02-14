@@ -196,30 +196,18 @@ def publish_event(event):
         elif event == "MisclassificationReported":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
-            logging.debug(f"Files: {request.files}")
-
-            # Datei aus `form-data` abrufen
-            if 'filename' not in request.files:
-                logging.debug("No file part in the request.")
-                return jsonify({"error": "No file part in the request"}), 400
-
-            file = request.files['filename']
-
-            # Überprüfen, ob eine Datei ausgewählt wurde
-            if file.filename == '':
-                logging.debug("No file selected.")
-                return jsonify({"error": "No selected file"}), 400
 
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             fileid = request.form.get('fileid', '')
+            filename = request.form.get('filename', '')
             model = request.form.get('model', '')
             classification = request.form.get('classification', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
-                "filename": file.filename,
+                "filename": filename,
                 "fileid": fileid,
                 "model": model,
                 "classification": classification,
