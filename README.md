@@ -143,7 +143,8 @@ einfügen und senden
      ````bash
     curl -b cookies.txt --location "http://localhost/eventing-service/publish/ImageUploaded" ^
     --form "type=ProcessFiles" ^
-    --form "filename=@Pfad\desBildes.jpg"
+    --form "filename=@Pfad\desBildes.jpg" ^
+    --form "model=small" 
      ````
 
 # Docker aufräumen
