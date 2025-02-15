@@ -1,5 +1,7 @@
 import base64
 import json
+import os
+
 import requests
 from PIL import Image
 import io
@@ -84,9 +86,11 @@ async def on_message(message: aio_pika.IncomingMessage):
                     logging.error(f"Error processing file: {e}")
                     return f"Fehler: Datei konnte nicht verarbeitet werden. {str(e)}"
 
-                response = requests.post(WEBHOOK_URL, json={"type": "QRCodeGenerated",
+                filename = os.path.basename(event_filename)
+
+                response = requests.post(WEBHOOK_URL, json={"type": "MisclassifiedFiles",
                                                             "classification": event_classification,
-                                                            "filename": event_filename,
+                                                            "filename": filename,
                                                             "model": event_model,
                                                             "file": base64_encoded})
                 logging.info(f"Webhook response: {response.status_code}, {response.text}")
