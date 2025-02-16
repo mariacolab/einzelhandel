@@ -79,7 +79,7 @@ def register_routes(app):
         logging.debug(f"token: {token}")
         logging.debug(f"refresh_token: {refresh_token}")
 
-        return jsonify({'token': token, 'refresh_token': refresh_token}), 200
+        return jsonify({'token': token, 'refresh_token': refresh_token, 'role_name': role_name}), 200
         #'refresh_token': refresh_token}
         # access_token = create_access_token(identity=user['id'])
         # return jsonify({"token": access_token}), 200
