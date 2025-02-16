@@ -51,23 +51,19 @@ def process_files(filename):
         logging.error(f"Uploads-Verzeichnis existiert nicht: {DriveFolders.UPLOAD.value}")
         return
 
-    for filename in os.listdir(DriveFolders.UPLOAD.value):
-        file_path = os.path.join(DriveFolders.UPLOAD.value, filename)
+    file_path = os.path.join(DriveFolders.UPLOAD.value, filename)
 
-        if not os.path.isfile(file_path):
-            continue  # Überspringe, falls es kein regulärer Dateityp ist
 
-        logging.info(f"Verarbeite Datei: {file_path}")
+    logging.info(f"Verarbeite Datei: {file_path}")
 
-        # Überprüfe Magic Bytes
-        if not validate_file_magic(file_path):
-            logging.warning(f"Ungültiger Dateityp: {file_path}. Datei wird übersprungen.")
-            continue
+    # Überprüfe Magic Bytes
+    if not validate_file_magic(file_path):
+        logging.warning(f"Ungültiger Dateityp: {file_path}. Datei wird übersprungen.")
 
         # Benenne die Datei in einen generischen Namen um
-        file = rename_file(file_path, DriveFolders.UPLOAD.value)
-        logging.info(f"Datei umbenannt: {file}")
-        return file
+    file = rename_file(filename)
+    logging.info(f"Datei umbenannt: {file}")
+    return file
 
 
 if __name__ == "__main__":

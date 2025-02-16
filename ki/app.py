@@ -4,7 +4,7 @@ from flask_session import Session
 
 from common.config import Config
 from common.middleware import token_required, role_required
-from ki.rh_TF_Update import update_model_TF, prepare_Data
+from rh_TF_Update import update_model_TF, prepare_Data
 
 app = Flask(__name__)
 app.config.from_object(Config)  # Lade zentrale Config

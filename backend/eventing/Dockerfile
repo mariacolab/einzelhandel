@@ -43,7 +43,7 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo 'echo "Fixing /etc/davfs2/secrets permissions..."' >> /start.sh && \
     echo 'chmod 600 /etc/davfs2/secrets' >> /start.sh && \
     echo 'echo "Trying to mount WebDAV..."' >> /start.sh && \
-    echo 'mount -t davfs http://host.docker.internal:8081 /mnt/gdrive || echo "Mount failed!"' >> /start.sh && \
+    echo 'mount -t davfs http://host.docker.internal:8081 /mnt/gdrive -o rw,dir_mode=0755,file_mode=0777 || echo "Mount failed!"' >> /start.sh && \
     echo 'ls -lah /mnt/gdrive' >> /start.sh && \
     echo 'exec gunicorn --bind 0.0.0.0:5005 app:app' >> /start.sh && \
     chmod +x /start.sh

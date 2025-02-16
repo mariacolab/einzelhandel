@@ -3,16 +3,14 @@
 # Rückgabe ist Klassenname
 import logging
 import os
-import tempfile
 
 import cv2
 import torch
-import numpy as np
+
 from ultralytics import YOLO
 
 from common.DriveFolders import DriveFolders
-from common.google_drive import google_get_file_stream, google_uploade_file_to_folder, \
-    google_upload_file_to_drive
+
 
 logging.info(f"torch available: {torch.cuda.is_available()}")
 
