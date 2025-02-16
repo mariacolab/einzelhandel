@@ -1,41 +1,57 @@
 import enum
 
 class DriveFolders(enum.Enum):
-    MODELS = "1epkWoGNRCWeHZbrqMW6okGcmhde1yLQy"  # Replace with actual folder ID
-    KIModelle = "13HRqvGLxjQtZwxrOoJQR9JvenIWiQheg"
-    Datasets = "1w35_EVX5okPYtZGivVCXQJ-2nWbW1RNQ"
-    UPLOAD = "1xoA3-4RWkeizafEYUqfovjgD6Q3oSR7q"
-    TRAININGSSATZ = "1BV9kt1H9r9qSUcVAcFjSxFWvOxFfDwYm"
-    Datasets_FFv1 = "1Tiw3S-Q2qo85x6mfl6cgMHZVv6nwl1fX"
-    Datasets_FFv1_test = "1IbNv1CAXiq8YHVsgql-Vv76pZ1-HnFIe"
-    Datasets_FFv1_valid = "18Ttcc8aZ9SMk3FnkrqD-Tp1R2F8ZPxAy"
-    Datasets_FFv1_test_labels = "1IbNv1CAXiq8YHVsgql-Vv76pZ1-HnFIe"
-    Datasets_FFv1_test_images = "1IbNv1CAXiq8YHVsgql-Vv76pZ1-HnFIe"
-    Datasets_FFv1_valid_images = "1GcyMb-yKaE8Sor5sYS1Jjx_b8OAQKMlJ"
-    Datasets_TestDaten = "1BYI9iTj0ECmhHKbTyEtoLwX7zKA1OMv2"
-    Datasets_TestDaten_labels = "1TUbXNSyfx6Y7XpqW2121u_dNImTJnBFs"
-    Datasets_TestDaten_images = "1ib18ViHeclHI_DDXDDuO-rpUGV7cDF9H"
-    KIModelle_trainiert_mit_ganzem_Datensatz = "1pMRcbhDr0DHNDWD-Nf01zhqNCKhAyYgC"
-    DATA = "1BsgVTHe48xN-lKKPEz7LNwC_4yAoNrVV"
-    DATA_ObstGemuese_Neu = "1XyofiXvobyc22wrJeXLHbSO0p2Q3fO5v"
-    DATA_ObstGemuese_Neu_1_TRAIN= "1S1QkbMxfC62WlOWd5dObBVKZA6APwVTI"
-    DATA_ObstGemuese_Neu_1_TRAIN_Tomate = "13w6zH_SqxUle3ULVXWLZ-gGdS4Gp9vTp"
-    DATA_ObstGemuese_Neu_1_TRAIN_Paprika = "1EnVek1Psm1fqnGKqTuDBMYCaQ57cX5g0"
-    DATA_ObstGemuese_Neu_1_TRAIN_Orange = "19wYOKUNBUN2tkjAftPjYJFkmhTSr7Ptj"
-    DATA_ObstGemuese_Neu_1_TRAIN_Kaki = "1IifRBJACj9wTaE-om06041mijQ20FRew"
-    DATA_ObstGemuese_Neu_1_TRAIN_Aubergine = "1YzfuuU7LQ60TtY3q5E8gTIHh5HOpo4kB"
-    DATA_ObstGemuese_Neu_1_TRAIN_Apfel = "1DIgTbgJ5jldZoYSIZ3Nax1INQ85aRIhX"
-    DATA_ObstGemuese_Neu_2_TEST = "1iCjiMPaujobZ3ricQVhGGnx-P6unSEiA"
-    DATA_ObstGemuese_Neu_2_TEST_Tomate = "1l4tEoeMmVf2vpyuazQlFvwJFe_yqkVJe"
-    DATA_ObstGemuese_Neu_2_TEST_Paprika = "1KSCtcctcSdW-w8QzetBm9UutfQhNVHGJ"
-    DATA_ObstGemuese_Neu_2_TEST_Orange = "1OLA6DTxEA5sCsGiAubK9xe_SFebE-qSx"
-    DATA_ObstGemuese_Neu_2_TEST_Kaki = "1_0ywE-rIQ33NiidYHaWP8gvrYKyUHkMc"
-    DATA_ObstGemuese_Neu_2_TEST_Aubergine = "18MQuO9kSgyg3vyRJ5oI8b5z6LNoodALI"
-    DATA_ObstGemuese_Neu_2_TEST_Apfel = "1TsZVycRQGiDbgJ1q9EijZqqayGOUwvp6"
-    DATA_ObstGemuese_Neu_3_VALIDATE = "1jyBpCYB6zeCnFKRsDVTNI0L_RrYCHB-P"
-    DATA_ObstGemuese_Neu_3_VALIDATE_Tomate = "1haXXHmCT6hL7MUT20n45ck1MtYwX6yU5"
-    DATA_ObstGemuese_Neu_3_VALIDATE_Paprika = "1rWZJw4UTX1gNcDb5hmntAUryPDoY5cjZ"
-    DATA_ObstGemuese_Neu_3_VALIDATE_Orange = "1gBMNoBOwCZzhYNi1vBqhrbQbToX-N9VY"
-    DATA_ObstGemuese_Neu_3_VALIDATE_Kaki = "1duSK6Dp8uVt7iig4mwMRhj1aMZ6aX5aJ"
-    DATA_ObstGemuese_Neu_3_VALIDATE_Aubergine = "1vbDaWXJrxpmyvi2GHYgq2SQCKvnF-x_e"
-    DATA_ObstGemuese_Neu_3_VALIDATE_Apfel = "1hbF9KYk_QLV7VXYk2InjcVW4Pocs0Oze"
+    BASE = "/mnt/gdrive"
+
+    # Hauptordner
+    MODELS = f"{BASE}/MODELS"
+    KI_MODELLE = f"{BASE}/KIModelle"
+    DATASETS = f"{BASE}/Datasets"
+    UPLOAD = f"{BASE}/UPLOAD"
+    TRAININGSSATZ = f"{BASE}/TRAININGSSATZ"
+    DATA = f"{BASE}/DATA"
+
+    # Datasets-Unterordner
+    DATASETS_FFv1 = f"{DATASETS}/FFv1"
+    DATASETS_FFv1_TEST = f"{DATASETS_FFv1}/test"
+    DATASETS_FFv1_VALID = f"{DATASETS_FFv1}/valid"
+    DATASETS_FFv1_TEST_LABELS = f"{DATASETS_FFv1_TEST}/labels"
+    DATASETS_FFv1_TEST_IMAGES = f"{DATASETS_FFv1_TEST}/images"
+    DATASETS_FFv1_VALID_IMAGES = f"{DATASETS_FFv1_VALID}/images"
+
+    DATASETS_TESTDATEN = f"{DATASETS}/TestDaten"
+    DATASETS_TESTDATEN_LABELS = f"{DATASETS_TESTDATEN}/labels"
+    DATASETS_TESTDATEN_IMAGES = f"{DATASETS_TESTDATEN}/images"
+
+    # KI Modelle
+    KI_MODELLE_TRAIN_GESAMT = f"{KI_MODELLE}/trainiert_mit_ganzem_Datensatz"
+
+    # Obst und Gemüse Datensätze
+    DATA_OBST_GEMUESE = f"{DATA}/ObstGemuese"
+    DATA_OBST_GEMUESE_NEU_1_TRAIN = f"{DATA_OBST_GEMUESE}/Neu_1/TRAIN"
+    DATA_OBST_GEMUESE_NEU_2_TEST = f"{DATA_OBST_GEMUESE}/Neu_2/TEST"
+    DATA_OBST_GEMUESE_NEU_3_VALIDATE = f"{DATA_OBST_GEMUESE}/Neu_3/VALIDATE"
+
+    # Obst und Gemüse Trainingsdaten
+    DATA_OBST_GEMUESE_NEU_1_TRAIN_TOMATE = f"{DATA_OBST_GEMUESE_NEU_1_TRAIN}/Tomate"
+    DATA_OBST_GEMUESE_NEU_1_TRAIN_PAPRIKA = f"{DATA_OBST_GEMUESE_NEU_1_TRAIN}/Paprika"
+    DATA_OBST_GEMUESE_NEU_1_TRAIN_ORANGE = f"{DATA_OBST_GEMUESE_NEU_1_TRAIN}/Orange"
+    DATA_OBST_GEMUESE_NEU_1_TRAIN_KAKI = f"{DATA_OBST_GEMUESE_NEU_1_TRAIN}/Kaki"
+    DATA_OBST_GEMUESE_NEU_1_TRAIN_AUBERGINE = f"{DATA_OBST_GEMUESE_NEU_1_TRAIN}/Aubergine"
+    DATA_OBST_GEMUESE_NEU_1_TRAIN_APFEL = f"{DATA_OBST_GEMUESE_NEU_1_TRAIN}/Apfel"
+
+    # Obst und Gemüse Testdaten
+    DATA_OBST_GEMUESE_NEU_2_TEST_TOMATE = f"{DATA_OBST_GEMUESE_NEU_2_TEST}/Tomate"
+    DATA_OBST_GEMUESE_NEU_2_TEST_PAPRIKA = f"{DATA_OBST_GEMUESE_NEU_2_TEST}/Paprika"
+    DATA_OBST_GEMUESE_NEU_2_TEST_ORANGE = f"{DATA_OBST_GEMUESE_NEU_2_TEST}/Orange"
+    DATA_OBST_GEMUESE_NEU_2_TEST_KAKI = f"{DATA_OBST_GEMUESE_NEU_2_TEST}/Kaki"
+    DATA_OBST_GEMUESE_NEU_2_TEST_AUBERGINE = f"{DATA_OBST_GEMUESE_NEU_2_TEST}/Aubergine"
+    DATA_OBST_GEMUESE_NEU_2_TEST_APFEL = f"{DATA_OBST_GEMUESE_NEU_2_TEST}/Apfel"
+
+    # Obst und Gemüse Validierungsdaten
+    DATA_OBST_GEMUESE_NEU_3_VALIDATE_TOMATE = f"{DATA_OBST_GEMUESE_NEU_3_VALIDATE}/Tomate"
+    DATA_OBST_GEMUESE_NEU_3_VALIDATE_PAPRIKA = f"{DATA_OBST_GEMUESE_NEU_3_VALIDATE}/Paprika"
+    DATA_OBST_GEMUESE_NEU_3_VALIDATE_ORANGE = f"{DATA_OBST_GEMUESE_NEU_3_VALIDATE}/Orange"
+    DATA_OBST_GEMUESE_NEU_3_VALIDATE_KAKI = f"{DATA_OBST_GEMUESE_NEU_3_VALIDATE}/Kaki"
+    DATA_OBST_GEMUESE_NEU_3_VALIDATE_AUBERGINE = f"{DATA_OBST_GEMUESE_NEU_3_VALIDATE}/Aubergine"
+    DATA_OBST_GEMUESE_NEU_3_VALIDATE_APFEL = f"{DATA_OBST_GEMUESE_NEU_3_VALIDATE}/Apfel"

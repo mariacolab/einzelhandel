@@ -50,6 +50,11 @@ services:
       context: ./backend/administrative-service
       target: production
     container_name: admin-service
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -58,8 +63,10 @@ services:
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /app
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      GOOGLE_DRIVE_PATH: /mnt/gdrive
     depends_on:
       - rabbitmq
+      - rclone
     ports:
       - "5002:5000"
     secrets:
@@ -67,8 +74,8 @@ services:
     volumes:
       - ./secrets:/app/common/secrets
       - ./common:/app/common
-      - shared_uploads:/shared/uploads
-    command: ["python3", "subscriber.py"]
+      - ./secrets/davfs_secrets:/etc/davfs2/secrets:rw
+    #command: ["python3", "subscriber.py"]
 
   user-management:
     build:
@@ -105,17 +112,19 @@ services:
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /app
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      GOOGLE_DRIVE_PATH: /app/gdrive
     ports:
       - "5004:5000"
     depends_on:
       - rabbitmq
+      - rclone
     secrets:
       - github_credentials
     volumes:
       - ./backend/qr-code-generator:/app
       - ./secrets:/app/common/secrets
       - ./common:/app/common
-      - ./class.json:/class.json
+      #- ./class.json:/class.json
     command: ["python3", "subscriber.py"]
 
   eventing-service:
@@ -124,6 +133,11 @@ services:
       context: ./backend/eventing
       dockerfile: Dockerfile
     container_name: eventing_service
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -132,18 +146,20 @@ services:
       PYTHONPATH: /app
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
+      GOOGLE_DRIVE_PATH: /mnt/gdrive
     ports:
       - "5005:5000"
     depends_on:
       - database-management
       - rabbitmq
       - user-management
+      - rclone
     secrets:
       - github_credentials
     volumes:
       - ./secrets:/app/common/secrets
       - ./common:/app/common
-      - shared_uploads:/shared/uploads
+      - ./secrets/davfs_secrets:/etc/davfs2/secrets:rw
 
   ki:
     build:
@@ -153,6 +169,11 @@ services:
       args:
         - DOCKER_BUILDKIT=1
     container_name: ki
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -163,8 +184,10 @@ services:
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
       NVIDIA_VISIBLE_DEVICES: all
       COMPOSE_HTTP_TIMEOUT: 1500
+      GOOGLE_DRIVE_PATH: /mnt/gdrive
     depends_on:
       - rabbitmq
+      - rclone
     ports:
       - "5006:5000"
     secrets:
@@ -172,8 +195,8 @@ services:
     volumes:
       - ./secrets:/workspace/common/secrets
       - ./common:/workspace/common
-      - shared_uploads:/shared/uploads
-    command: ["python3", "subscriber.py"]
+      - ./secrets/davfs_secrets:/etc/davfs2/secrets:rw
+    #command: ["python3", "subscriber.py"]
     deploy:
       resources:
         reservations:
@@ -199,10 +222,29 @@ services:
     secrets:
       - github_credentials
     volumes:
-      - shared_uploads:/shared/uploads
       - ./secrets:/app/common/secrets
       - ./common:/app/common
     command: [ "python3", "webhook.py" ]
+
+  rclone:
+    image: rclone/rclone
+    container_name: rclone_webdav
+    restart: unless-stopped
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
+    command: [ "serve", "webdav", "gdrive:", "--addr", ":8081", "--config", "/config/rclone.conf", "--vfs-cache-mode", "writes" ]
+    environment:
+      - RCLONE_CONFIG=/config/rclone.conf
+    volumes:
+      - ./secrets/rclone.conf:/config/rclone.conf:ro
+      - ./secrets/fapra-ki-einzelhandel-555f5e4a0722.json:/config/fapra-ki-einzelhandel-555f5e4a0722.json:ro
+    ports:
+      - "8081:8081"
 
   frontend:
     build:
@@ -235,6 +277,11 @@ services:
     build:
       context: ./backend/webhook-subscriber
     container_name: webhook-subscriber
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -243,17 +290,19 @@ services:
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /app
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      GOOGLE_DRIVE_PATH: /mnt/gdrive
     ports:
       - "5009:5000"
     depends_on:
       - rabbitmq
+      - rclone
     secrets:
       - github_credentials
     volumes:
-      - shared_uploads:/shared/uploads
       - ./secrets:/app/common/secrets
       - ./common:/app/common
-    command: [ "python3", "/app/subscriber.py" ]
+      - ./secrets/davfs_secrets:/etc/davfs2/secrets:rw
+    #command: ["python3", "subscriber.py"]
 
   nginx:
     image: nginx:latest
@@ -285,7 +334,7 @@ volumes:
   nginx_conf:
   db_data:
   redis_data:
-  shared_uploads:
+
 
 secrets:
   github_credentials:

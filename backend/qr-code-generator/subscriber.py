@@ -4,6 +4,8 @@ import aio_pika
 import asyncio
 from cryptography.fernet import Fernet
 import requests
+
+from common.product_data import load_json, get_item_by_class_name, get_product_with_data
 from qrcode import save_qr_code_in_database
 from common.utils import load_secrets
 import logging
@@ -71,18 +73,19 @@ async def on_message(message: aio_pika.IncomingMessage):
                 # Fall 1 er ist nicht vorhanden
                 if body == expected_json:
 
-                    json_data = load_json("class.json")
-                    logging.info(f"json_data: {json_data}")
-                    item = get_item_by_class_name(json_data, event_result)
-                    logging.info(f"item: {item}")
-                    data = {
-                        "Produkt": item["class_name"],
-                        "Informationen": item.get("info"),
-                        "Regal": item.get("regal"),
-                        "Preis_pro_stueck": item["preis"].get("pro_stueck"),
-                        "Preis_pro_kg": item["preis"].get("pro_kg")
-                    }
-                    logging.info(f"item_data: {data}")
+                    # json_data = load_json("class.json")
+                    # logging.info(f"json_data: {json_data}")
+                    # item = get_item_by_class_name(json_data, event_result)
+                    # logging.info(f"item: {item}")
+                    # data = {
+                    #     "Produkt": item["class_name"],
+                    #     "Informationen": item.get("info"),
+                    #     "Regal": item.get("regal"),
+                    #     "Preis_pro_stueck": item["preis"].get("pro_stueck"),
+                    #     "Preis_pro_kg": item["preis"].get("pro_kg")
+                    # }
+                    # logging.info(f"item_data: {data}")
+                    data = get_product_with_data(event_result)
 
                     data_to_encrypt = json.dumps(data)
 
@@ -177,20 +180,7 @@ async def on_message(message: aio_pika.IncomingMessage):
             logging.error(f"Error processing message: {e}")
 
 
-def load_json(filename):
-    with open(filename, "r", encoding="utf-8") as file:
-        return json.load(file)
 
-
-# Werte anhand des class_name auslesen
-def get_item_by_class_name(json_data, class_name):
-    for item in json_data:
-        logging.info(f"curenet item: {item}")
-        logging.info(f'curenet item: {item["class_name"].lower()} compare to {class_name.lower()}')
-        if item["class_name"].lower() == class_name.lower():
-
-            return item
-    return None
 
 
 async def main():

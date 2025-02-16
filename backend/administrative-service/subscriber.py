@@ -1,15 +1,8 @@
 import json
 import os
-import tempfile
-
 import aio_pika
 import asyncio
-
 import requests
-from flask import session
-
-from common.DriveFolders import DriveFolders
-from common.google_drive import google_uploade_file_to_folder, google_download_file
 from common.utils import load_secrets
 import logging
 from process_uploads import process_files
@@ -54,45 +47,35 @@ async def on_message(message: aio_pika.IncomingMessage, ):
 
             event_type = event.get("type", "")
             event_filename = event.get("filename", "")
-            event_fileid = event.get("fileid", "")
-            event_model = event.get("model", "")
+            event_filepath = event.get("filepath", "")
             event_cookie = event.get("cookie", "")
             logging.info(f"Event type: {event_type}")
             logging.info(f"Event filename: {event_filename}")
-            logging.info(f"Event file_id: {event_fileid}")
-            logging.info(f"Event model: {event_model}")
             logging.info(f"Event cookie: {event_cookie}")
 
             if "ProcessFiles" in event_type:
                 logging.info("Processing files after ImageUploaded event.")
-                process_files(event_filename, event_fileid)
+                file_path = process_files(event_filename)
 
-                # Download file from Google Drive
-                with tempfile.TemporaryDirectory() as temp_dir:
-                    local_file_path = google_download_file(event_fileid, temp_dir)
+                url = " http://nginx-proxy/eventing-service/publish/ImageValidated"
 
-                    url = " http://nginx-proxy/eventing-service/publish/ImageValidated"
+                headers = {
+                    "Cookie": f"{event_cookie}",
+                }
 
-                    headers = {
-                        "Cookie": f"{event_cookie}",
+                logging.debug(f"Request Headers: {headers}")
+
+                with open(file_path, "rb") as file:
+                    files = {
+                        "type": (None, "ValidatedFiles"),
+                        "file": (file.name, file, "application/octet-stream"),
                     }
-
                     logging.debug(f"Request Headers: {headers}")
-
-                    with open(local_file_path, "rb") as file:
-                        files = {
-                            "type": (None, "ValidatedFiles"),
-                            "model": (None, event_model),
-                            "fileid": (None, event_fileid),
-                            "file": (file.name, file, "application/octet-stream"),
-                        }
-                        logging.debug(f"Request Headers: {headers}")
-                        response = requests.post(url, headers=headers, files=files)
-                        logging.info(f"Response: {response}")
+                    response = requests.post(url, headers=headers, files=files)
+                    logging.info(f"Response: {response}")
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")
-
 
 async def main():
     try:

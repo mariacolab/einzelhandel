@@ -74,7 +74,7 @@ def register_routes(app):
         logging.debug(f"token: {token}")
         logging.debug(f"refresh_token: {refresh_token}")
         logging.debug(f"Session Data After Login: {dict(session)}")
-        return jsonify({'token': token, 'role': role_name}), 200
+        return jsonify({'role': role_name}), 200
 
     @app.route('/check-session', methods=['GET'])
     def check_session():

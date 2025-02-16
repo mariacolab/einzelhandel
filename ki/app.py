@@ -7,17 +7,6 @@ from common.middleware import token_required, role_required
 from ki.rh_TF_Update import update_model_TF, prepare_Data
 
 app = Flask(__name__)
-# app.config['DEBUG'] = True
-# logging.basicConfig(level=logging.DEBUG)
-# redis_password = os.getenv("REDIS_PASSWORD", None)
-#
-# redis_client = redis.StrictRedis(
-#     host='redis',
-#     port=6379,
-#     db=0,
-#     decode_responses=True,
-#     password=redis_password  # Passwort setzen
-# )
 app.config.from_object(Config)  # Lade zentrale Config
 
 # Initialisiere Flask-Session

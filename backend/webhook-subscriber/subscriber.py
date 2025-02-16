@@ -1,15 +1,13 @@
 import base64
 import json
 import os
-
 import requests
 from PIL import Image
 import io
 import aio_pika
 import asyncio
-
 from common.DriveFolders import DriveFolders
-from common.google_drive import google_get_file_stream
+from common.google_drive import google_get_file
 from common.utils import load_secrets
 import logging
 
@@ -67,20 +65,18 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event Data: {event_classification}")
                 event_filename = event.get("filename", "")
                 logging.info(f"Event Filename: {event_filename}")
-                event_model = event.get("model", "")
-                logging.info(f"Event Filename: {event_model}")
-                event_fileid = event.get("fileid", "")
-                logging.info(f"Event Path: {event_fileid}")
+                event_role = event.get("role", "")
+                logging.info(f"Event Role: {event_role}")
+                event_product_data = event.get("product_data", "")
+                logging.info(f"Event Product: {event_product_data}")
                 # TODO Load the Image into a Viwer and submit if the classification is corect
                 logging.info("Processing files after MisclassifiedFiles event.")
-                file_stream = google_get_file_stream(folder_id=DriveFolders.UPLOAD.value, file_id=event_fileid)
-                if file_stream is None:
-                    logging.error("Error: File stream is empty!")
-                    return "Fehler: Datei nicht gefunden oder leer."
+
+                file = google_get_file(f"{DriveFolders.UPLOAD.value}/{event_filename}")
 
                 try:
                     # Read file content and encode in Base64
-                    file_data = file_stream.read()
+                    file_data = file.read()
                     base64_encoded = base64.b64encode(file_data).decode("utf-8")
                 except Exception as e:
                     logging.error(f"Error processing file: {e}")
@@ -91,7 +87,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                 response = requests.post(WEBHOOK_URL, json={"type": "MisclassifiedFiles",
                                                             "classification": event_classification,
                                                             "filename": filename,
-                                                            "model": event_model,
+                                                            "role": event_role,
+                                                            "product_data": event_product_data,
                                                             "file": base64_encoded})
                 logging.info(f"Webhook response: {response.status_code}, {response.text}")
 
@@ -104,8 +101,6 @@ async def on_message(message: aio_pika.IncomingMessage):
                     "classification": (None, event_classification),
                     "is_classification_correct": (None, True),
                     "filename": event_filename,
-                    "model": event_model,
-                    "fileid": event_fileid
                 }
                 response = requests.post(url, headers=headers, files=files)
                 logging.info(f"Response: {response}")

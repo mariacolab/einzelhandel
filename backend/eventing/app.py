@@ -1,19 +1,13 @@
-import json
 import logging
 import os
-import tempfile
-from threading import Thread
 from flask import Flask, jsonify, request, session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-import redis
 from flask_session import Session
-from common import JSONSerializer
 from common.DriveFolders import DriveFolders
 from common.config import Config
-from common.google_drive import google_uploade_file_to_folder, google_upload_file_to_drive
+from common.google_drive import google_uploade_file_to_folder, google_upload_file_to_drive, google_save_file_in_folder
 from common.middleware import token_required, role_required, get_user_role_from_token
-from common.utils import load_secrets
 from producer import send_message
 import asyncio
 
@@ -92,17 +86,15 @@ def publish_event(event):
                 logging.debug(f"Invalid file format: {file.filename}")
                 return jsonify({"error": "Only JPG and PNG files are allowed"}), 400
 
-            fileid = google_upload_file_to_drive(DriveFolders.UPLOAD.value, file)
+            google_save_file_in_folder(DriveFolders.UPLOAD.value, file)
+
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
-            model = request.form.get('model', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
                 "filename": file.filename,
-                "fileid": fileid,
-                "model": model,
                 "cookie": cookie,
             }
             logging.debug(f"Message ImageUploaded: {message}")
@@ -132,15 +124,11 @@ def publish_event(event):
 
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
-            model = request.form.get('model', '')
-            fileid = request.form.get('fileid', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
                 "file": file.filename,
-                "fileid": fileid,
-                "model": model,
                 "role": user_role,
                 "cookie": cookie
             }
@@ -199,18 +187,18 @@ def publish_event(event):
 
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
-            fileid = request.form.get('fileid', '')
             filename = request.form.get('filename', '')
-            model = request.form.get('model', '')
+            product_data = request.form.get('product_data', '')
+            role = request.form.get('role', '')
             classification = request.form.get('classification', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
                 "filename": filename,
-                "fileid": fileid,
-                "model": model,
                 "classification": classification,
+                "product_data": product_data,
+                "role": role,
                 "cookie": cookie
             }
             logging.debug(f"Message MisclassificationReported: {message}")
@@ -225,7 +213,31 @@ def publish_event(event):
 
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
-            model = request.form.get('model', '')
+            classification = request.form.get('classification', '')
+            filename = request.form.get('filename', '')
+            class_correct = request.form.get('is_classification_correct', '')
+            logging.debug(f"Type {message_type}")
+            # Nachricht senden
+            message = {
+                "type": message_type,
+                "is_classification_correct": class_correct,
+                "classification": classification,
+                "filename": filename,
+                "cookie": cookie
+            }
+            logging.debug(f"Message CorrectedClassification: {message}")
+            # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
+            asyncio.run(send_message(message))
+
+            logging.debug(f"Event {event} published successfully")
+            return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
+
+        elif event == "Training":
+            logging.debug(f"Headers: {request.headers}")
+            logging.debug(f"Form: {request.form}")
+
+            cookie = request.headers.get('Cookie', '')
+            message_type = request.form.get('type', '')
             classification = request.form.get('classification', '')
             filename = request.form.get('filename', '')
             fileid = request.form.get('fileid', '')
@@ -237,7 +249,6 @@ def publish_event(event):
                 "is_classification_correct": class_correct,
                 "classification": classification,
                 "filename": filename,
-                "model": model,
                 "fileid": fileid,
                 "cookie": cookie
             }
