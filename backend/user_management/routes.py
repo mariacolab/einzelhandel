@@ -104,7 +104,7 @@ def register_routes(app):
         session.pop('role', None)
         session.pop('token', None)
         session.clear()
-        return jsonify({"message": "Logged out successfully"}), 200
+        return jsonify({'token': token, 'refresh_token': refresh_token, 'role_name': role_name}), 200
 
     @app.route('/auth/token/verify', methods=['POST'])
     def verify_token():
