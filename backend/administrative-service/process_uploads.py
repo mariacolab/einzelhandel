@@ -5,7 +5,7 @@ import uuid
 from pathlib import Path
 
 from common.DriveFolders import DriveFolders
-from common.google_drive import google_uploade_file_to_folder, google_download_file, google_rename_file
+from common.google_drive import google_rename_file
 
 MAGIC_BYTES = {
     b'\xFF\xD8\xFF': 'JPEG image',

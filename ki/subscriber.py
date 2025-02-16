@@ -1,7 +1,7 @@
 import aio_pika
 import asyncio
 from common.DriveFolders import DriveFolders
-from common.google_drive import google_move_to_another_folder, google_copy_file_to_folder
+from common.google_drive import google_copy_file_to_folder
 import requests
 import json
 import logging
