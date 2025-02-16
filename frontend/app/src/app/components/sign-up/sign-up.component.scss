@@ -1,0 +1,24 @@
+.container {
+    /* height: 100vh; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+form {
+    /* height: 100vh; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+mat-form-field {
+    width: 80vw;
+    /* display: block; */
+}
+
+button {
+    width: 80vw;
+}

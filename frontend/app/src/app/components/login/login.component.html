@@ -1,0 +1,28 @@
+<!-- <p>login works!</p> -->
+
+<div class="container">
+    <div>
+        <form [formGroup]="loginForm">
+            <mat-form-field appearance="outline">
+                <mat-label>Username</mat-label>
+                <input matInput formControlName="username">
+                @if (loginForm.get('username')?.hasError('required')) {
+                <mat-error>Username is required</mat-error>
+                }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label>Password</mat-label>
+                <input type="password" matInput formControlName="password">
+                @if (loginForm.get('password')?.hasError('required')) {
+                <mat-error>Password is required</mat-error>
+                }
+            </mat-form-field>
+        </form>
+    </div>
+    <div>
+        <button mat-flat-button (click)="login();">Login</button>
+    </div>
+    <div>
+        <span>Don't have an account? <a routerLink="/signup">Sign up.</a></span>
+    </div>
+</div>
