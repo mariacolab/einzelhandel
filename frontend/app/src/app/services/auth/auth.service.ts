@@ -25,7 +25,7 @@ export class AuthService {
     return this.httpClient.post(`${this.baseUrl}/login`, data)
       .pipe(tap((result) => {
         localStorage.setItem('authUser', JSON.stringify(result));
-        console.log(result);
+        // console.log(result);
         // console.log(JSON.stringify(result));
         this.dataService.setToken(JSON.stringify(result));
       }));
@@ -37,5 +37,13 @@ export class AuthService {
 
   isLoggedIn() {
     return localStorage.getItem('authUser') !== null;
+  }
+
+  isLoggedInAsCustomer() {
+    return ((localStorage.getItem('authUser') !== null) && (JSON.parse(localStorage.getItem('authUser')!).role_name == 'Kunde'));  // FIXME avoid non-null assertion operator?
+  }
+
+  isLoggedInAsEmployee() {
+    return ((localStorage.getItem('authUser') !== null) && (JSON.parse(localStorage.getItem('authUser')!).role_name == 'Mitarbeiter')); // FIXME non-null assertion operator?
   }
 }

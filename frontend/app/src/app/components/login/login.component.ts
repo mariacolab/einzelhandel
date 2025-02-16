@@ -40,13 +40,18 @@ export class LoginComponent {
 
   login() {
     if (this.loginForm.valid) {
-      console.log(this.loginForm.value);
+      // console.log(this.loginForm.value);
       this.authService.login(this.loginForm.value)
         .subscribe({
           next: (data: any) => {
-            if (this.authService.isLoggedIn()) {
-              // this.router.navigate(['/admin']);
+            // if (this.authService.isLoggedIn()) {
+            //   // this.router.navigate(['/admin']);
+            //   this.router.navigate(['/customer']);
+            // }
+            if (this.authService.isLoggedInAsCustomer()) {
               this.router.navigate(['/customer']);
+            } else if (this.authService.isLoggedInAsEmployee()) {
+              this.router.navigate(['/employee']);
             }
           },
           error: (err: any) => {
