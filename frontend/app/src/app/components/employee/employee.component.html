@@ -1,1 +1,65 @@
-<p>employee works!</p>
+<!-- <p>employee works!</p> -->
+
+<mat-list>
+  <!-- <h3 matSubheader>Folders</h3> -->
+  @for (imageCard of imageCards; track imageCard) {
+  <mat-list-item>
+    <!-- <mat-icon matListIcon>folder</mat-icon>
+        <h4 matListItemTitle>{{imageCard.avatar}}</h4>
+        <p matListItemLine class="demo-2"> {{imageCard.class}} </p> -->
+    <div>
+      {{ imageCard.avatar }}
+    </div>
+    <div>
+      <mat-form-field>
+        <mat-label>Select an option</mat-label>
+        <mat-select [(value)]="selected">
+          <mat-option>None</mat-option>
+          <mat-option value="option1">Option 1</mat-option>
+          <mat-option value="option2">Option 2</mat-option>
+          <mat-option value="option3">Option 3</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </mat-list-item>
+  }
+</mat-list>
+
+<mat-list>
+  @for (imageCard of imageCards; track imageCard) {
+  <mat-list-item>
+    <mat-card class="example-card" appearance="outlined">
+      <mat-card-content>
+        <mat-card-title-group>
+          <mat-card-title>Shiba Inu</mat-card-title>
+          <mat-card-subtitle>Small</mat-card-subtitle>
+          <img mat-card-sm-image
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/661px-Red_Apple.jpg?20151001144956">
+          {{ imageCard.avatar }}
+        </mat-card-title-group>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button>LIKE</button>
+        <button mat-button>SHARE</button>
+      </mat-card-actions>
+    </mat-card>
+  </mat-list-item>
+  }
+</mat-list>
+
+<mat-grid-list cols="1" rowHeight="100px">
+  @for (imageCard of imageCards; track imageCard) {
+  <mat-grid-tile>
+    <img mat-card-sm-image
+      src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/661px-Red_Apple.jpg?20151001144956">
+    <mat-form-field appearance="outline">
+      <mat-label>Select an option</mat-label>
+      <mat-select>
+        @for (objectClass of objectClasses; track objectClass) {
+         <mat-option [value]="objectClass">{{objectClass}}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </mat-grid-tile>
+  }
+</mat-grid-list>

@@ -1,0 +1,61 @@
+// https://stackoverflow.com/questions/3678378/is-there-a-way-to-specify-a-max-height-or-width-for-an-image
+// https://github.com/zxing-js/ngx-scanner/wiki/Advanced-Usage#preview-elements-size
+
+.container {
+  /* height: 100vh; */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+// .container {
+//   max-height: 70vh;
+//   width: 100vw;
+//   object-fit: contain;
+// }
+
+.frame {
+  /* position: relative; */
+  background-color: black;
+  height: 256px;
+  width: 80vw;
+  // width: 256px;
+  // border: 10px solid red;
+  white-space: nowrap;
+  text-align: center;
+  // margin: 1em 0;
+  border-radius: 10px;
+}
+
+.helper {
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+
+zxing-scanner {
+  // position: absolute;
+  background: black;
+  vertical-align: middle;
+  max-height: 256px;
+  max-width: 256px;
+  // translate: 10px 10px;
+}
+
+img {
+  background: white;
+  vertical-align: middle;
+  max-height: 256px;
+  max-width: 256px;
+}
+
+// .example-full-width {
+//     width: 100%;
+// }
+
+button {
+  width: 40vw;
+  /* padding: 10%; */
+  margin: 10px;
+}

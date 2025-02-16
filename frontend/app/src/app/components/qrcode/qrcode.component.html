@@ -1,1 +1,25 @@
-<p>qrcode works!</p>
+<!-- <p>qrcode works!</p> -->
+
+<div class="container">
+  <!-- <div class="frame"> -->
+    <!-- <span class="helper"></span> -->
+    <zxing-scanner [enable]="scannerEnabled" (scanSuccess)="scanSuccessHandler($event)"
+      (scanError)="scanErrorHandler($event)" (scanFailure)="scanFailureHandler($event)"
+      (scanComplete)="scanCompleteHandler($event)"></zxing-scanner>
+  <!-- </div> -->
+  <!-- <div *ngIf="showImage"> -->
+  <div>
+    <button mat-flat-button (click)="scannerEnabled = !scannerEnabled;">
+      <mat-icon>qr_code_scanner</mat-icon>
+      Toggle scanner
+    </button>
+  </div>
+  <!-- <div *ngIf="webcamImage">
+    <button mat-flat-button (click)="showProductDetails = !showProductDetails;">
+      Show product details
+    </button>
+  </div>
+  <div>
+    <button mat-flat-button routerLink="/product-details">Show product details on new page</button>
+  </div> -->
+</div>
