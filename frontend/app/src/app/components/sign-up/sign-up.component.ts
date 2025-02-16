@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -9,7 +10,7 @@ import { AuthService } from '../../services/auth/auth.service';
 
 @Component({
   selector: 'app-sign-up',
-  imports: [RouterModule, ReactiveFormsModule, MatInputModule, MatButtonModule, MatSelectModule],
+  imports: [RouterModule, ReactiveFormsModule, MatInputModule, MatButtonModule, MatSelectModule, MatIconModule],
   templateUrl: './sign-up.component.html',
   styleUrl: './sign-up.component.scss'
 })
@@ -24,6 +25,15 @@ export class SignUpComponent {
     password: new FormControl('', [Validators.required]),
     role: new FormControl('', [Validators.required])
   })
+
+  hide = signal(true);
+  clickEvent(event: MouseEvent) {
+    this.hide.set(!this.hide());
+    event.stopPropagation();
+  }
+
+  // signUpButtonisDisabled = true;
+  // formFieldContent = '';
 
   signUp() {
     if (this.loginForm.valid) {

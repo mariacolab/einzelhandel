@@ -7,14 +7,19 @@
         <mat-label>Username</mat-label>
         <input matInput formControlName="username">
         @if (loginForm.get('username')?.hasError('required')) {
-        <mat-error>Username is required</mat-error>
+          <mat-error>Username is required</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
         <mat-label>Password</mat-label>
-        <input type="password" matInput formControlName="password">
+        <!-- <input type="password" matInput formControlName="password"> -->
+        <input matInput [type]="hide() ? 'password' : 'text'" formControlName="password" />
+        <button mat-icon-button matSuffix (click)="clickEvent($event)" [attr.aria-label]="'Hide password'"
+          [attr.aria-pressed]="hide()">
+          <mat-icon>{{hide() ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
         @if (loginForm.get('password')?.hasError('required')) {
-        <mat-error>Password is required</mat-error>
+          <mat-error>Password is required</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
@@ -24,7 +29,7 @@
           <mat-option value="Mitarbeiter">Employee</mat-option>
         </mat-select>
         @if (loginForm.get('role')?.hasError('required')) {
-        <mat-error>Role is required</mat-error>
+          <mat-error>Role is required</mat-error>
         }
       </mat-form-field>
     </form>
