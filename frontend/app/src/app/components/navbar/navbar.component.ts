@@ -14,8 +14,17 @@ import { AuthService } from '../../services/auth/auth.service';
 export class NavbarComponent {
   authService = inject(AuthService);
   router = inject(Router);
+  
   public logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  public navigateToCustomer() {
+    this.router.navigate(['/customer']);
+  }
+
+  public navigateToEmployee() {
+    this.router.navigate(['/employee']);
   }
 }
