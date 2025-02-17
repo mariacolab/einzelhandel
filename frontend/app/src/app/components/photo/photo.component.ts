@@ -1,4 +1,5 @@
-import { NgIf } from '@angular/common';
+import { animate, state, style, transition, trigger } from '@angular/animations';
+import { NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -8,15 +9,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { RouterLink } from '@angular/router';
 import { WebcamImage, WebcamInitError, WebcamModule, WebcamUtil } from 'ngx-webcam';
 import { Observable, Subject } from 'rxjs';
 import { DataService } from '../../services/data/data.service';
 import { ProductDetailsComponent } from '../product-details/product-details.component';
-import { Router, RouterLink } from '@angular/router';
-
-import { trigger, state, style, animate, transition } from '@angular/animations';
-import { NgSwitch, NgSwitchCase } from '@angular/common';
-
 
 @Component({
   selector: 'app-photo',
@@ -50,7 +47,7 @@ import { NgSwitch, NgSwitchCase } from '@angular/common';
       state('fadeIn', style({
         opacity: '1',
         // transform: 'translateY(50%)'
-        })
+      })
       ),
       transition('void => *', [style({ opacity: '0' }), animate('500ms')])
     ])
