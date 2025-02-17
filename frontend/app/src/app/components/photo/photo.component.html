@@ -2,14 +2,14 @@
 
 <div class="container">
     <div class="frame" *ngIf="showWebcam">
-        <span class="helper"></span>
+        <!-- <span class="helper"></span> -->
         <webcam [height]="256" [width]="256" [trigger]="triggerObservable" (imageCapture)="handleImage($event)"
             [allowCameraSwitch]="allowCameraSwitch" [switchCamera]="nextWebcamObservable" [videoOptions]="videoOptions"
             [imageQuality]="1" (cameraSwitched)="cameraWasSwitched($event)" (initError)="handleInitError($event)">
         </webcam>
     </div>
     <div class="frame" *ngIf="showImage">
-        <span class="helper"></span>
+        <!-- <span class="helper"></span> -->
         <img [src]="webcamImage.imageAsDataUrl" />
     </div>
     <div *ngIf="showWebcam">

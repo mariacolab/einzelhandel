@@ -29,9 +29,9 @@ export class QrcodeComponent {
   // }
   scanSuccessHandler(event: string) {
     this.scannedString = event;
-    this.scannerEnabled = false;
-    console.log(this.scannedString)
-    this._snackBar.open(this.scannedString);
+    // this.scannerEnabled = false;
+    // console.log(this.scannedString)
+    // this._snackBar.open(this.scannedString);
   }
   scanErrorHandler(event: any) {
 
@@ -40,7 +40,7 @@ export class QrcodeComponent {
 
   }
   scanCompleteHandler(event: any) {
-    console.log('scanCompleteHandler()');
+    // console.log('scanCompleteHandler()');
     // this._snackBar.open(this.scannedString);
   }
 }
