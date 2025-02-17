@@ -20,7 +20,6 @@ def google_save_file_in_folder(folder, file):
         file.save(save_path)
         logging.debug(f"File {file.filename} saved to {save_path}")
 
-
 def google_rename_file(old_filename, new_filename, folder):
     """
     Benennt eine Datei im gemounteten Verzeichnis um.
@@ -32,15 +31,19 @@ def google_rename_file(old_filename, new_filename, folder):
     new_path = os.path.join(folder, new_filename)
     old_path = os.path.join(folder, old_filename)
     try:
-        logging.info(f"Versuche Datei zu kopieren: {old_path} -> {new_path}")
-        shutil.copy2(old_path, new_path)  # Kopiere mit Metadaten
-        logging.info(f"Kopiert. Jetzt wird die Originaldatei gelöscht: {old_path}")
-        shutil.move(old_path, new_path)  # Statt rename, nutze move
+        logging.info(f"Prüfe, ob Datei existiert: {old_path}")
+        if not os.path.exists(old_path) or os.path.getsize(old_path) == 0:
+            logging.error(f"Fehler: Datei nicht gefunden oder leer: {old_path}")
+            return None
+
+        logging.info(f"Versuche Datei umzubenennen: {old_path} -> {new_path}")
+        shutil.move(old_path, new_path)
         logging.info(f"Datei erfolgreich umbenannt: {old_path} -> {new_path}")
+
         return new_path
     except Exception as e:
         logging.error(f"Fehler beim Umbenennen: {e}")
-        return None
+        return new_path
 
 def wait_for_file(folder, filename, timeout=60, interval=2):
     """
@@ -52,17 +55,22 @@ def wait_for_file(folder, filename, timeout=60, interval=2):
     :param interval: Zeit zwischen den Prüfungen in Sekunden (Standard: 2)
     :return: True, wenn die Datei gefunden wurde, sonst False
     """
-    file_path = os.path.join(folder, filename)
+    logging.info(f"filename: {filename}")
+    logging.info(f"folder: {folder}")
+    if folder in filename:
+        file_path = filename
+    else:
+        file_path = f"{folder}/{filename}"
     start_time = time.time()
 
     while time.time() - start_time < timeout:
         if os.path.exists(file_path):
-            print(f" Datei gefunden: {file_path}")
+            logging.info(f" Datei gefunden: {file_path}")
             return True
-        print(f"Warten auf Datei: {filename} im Verzeichnis {folder}...")
+        logging.info(f"Warten auf Datei: {filename} im Verzeichnis {folder}...")
         time.sleep(interval)
 
-    print(f"Timeout! Datei {filename} wurde nicht innerhalb von {timeout} Sekunden gefunden.")
+    logging.info(f"Timeout! Datei {filename} wurde nicht innerhalb von {timeout} Sekunden gefunden.")
     return False
 
 

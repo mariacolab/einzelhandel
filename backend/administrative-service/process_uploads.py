@@ -5,7 +5,7 @@ import uuid
 from pathlib import Path
 
 from common.DriveFolders import DriveFolders
-from common.google_drive import google_rename_file
+from common.google_drive import google_rename_file, wait_for_file
 
 MAGIC_BYTES = {
     b'\xFF\xD8\xFF': 'JPEG image',
@@ -27,7 +27,7 @@ def validate_file_magic(file_path):
                 if file_header.startswith(magic):
                     return f"File type: {file_type}"
     except Exception as e:
-        return f"Error: {e}"
+        return f"Error validate_file_magic: {e}"
 
 
 def rename_file(filename):
@@ -39,6 +39,7 @@ def rename_file(filename):
     new_name = f"{uuid.uuid4()}{extension}"
     logging.info(f"Dateiendung: {extension}")
     logging.info(f"Datei: {new_name}")
+    wait_for_file(DriveFolders.UPLOAD.value, filename, 10, 1)
     new_path = google_rename_file(filename, new_name, DriveFolders.UPLOAD.value)
     return new_path
 

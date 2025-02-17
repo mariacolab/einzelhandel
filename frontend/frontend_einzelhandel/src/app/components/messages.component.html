@@ -10,5 +10,7 @@
   <p><strong>Dateiname:</strong> {{ misclassifiedFile.filename }}</p>
   <p><strong>Modell:</strong> {{ misclassifiedFile.model }}</p>
   <p><strong>Klassifikation:</strong> {{ misclassifiedFile.classification }}</p>
+  <p><strong>Produktdaten:</strong> {{ misclassifiedFile.product_data }}</p>
+  <p><strong>Nutzerrolle:</strong> {{ misclassifiedFile.role }}</p>
   <img [src]="'data:image/png;base64,' + misclassifiedFile.file" alt="Fehlklassifiziertes Bild">
 </div>

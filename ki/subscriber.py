@@ -1,11 +1,13 @@
+import os.path
+
 import aio_pika
 import asyncio
 from common.DriveFolders import DriveFolders
-from common.google_drive import google_copy_file_to_folder
+from common.google_drive import google_copy_file_to_folder, wait_for_file
 import requests
 import json
 import logging
-from PIL import Image
+import cv2
 from common.product_data import get_product_with_data
 from detectYOLO11 import detect
 from common.utils import load_secrets
@@ -39,12 +41,10 @@ async def on_message(message: aio_pika.IncomingMessage):
             logging.debug(f"Parsed event: {event}")
 
             event_type = event.get("type", "")
-            event_filepath = event.get("filepath", "")
             event_cookie = event.get("cookie", "")
             event_role = event.get("role", "")
 
             logging.info(f"Event type: {event_type}")
-            logging.info(f"Event filepath: {event_filepath}")
             logging.info(f"Event cookie: {event_cookie}")
             logging.info(f"Event role: {event_role}")
 
@@ -58,11 +58,26 @@ async def on_message(message: aio_pika.IncomingMessage):
                                'Granatapfel', 'Kaki', 'Kartoffel', 'Kiwi',
                                'Mandarine', 'Orange', 'Pampelmuse', 'Paprika',
                                'Tomate', 'Zitrone', 'Zucchini', 'Zwiebel']
-                image = Image.open(f"{DriveFolders.UPLOAD.value}/{event_filename}")
 
-                result = detect(image, event_filename)
+                if not os.path.exists(event_filename):
+                    logging.info("Datei existiert nicht!")
+                elif os.path.getsize(event_filename) == 0:
+                    logging.info("Datei ist leer!")
+                else:
+                    logging.info("Datei scheint in Ordnung zu sein.")
+
+                image = cv2.imread(event_filename)
+
+                if image is None:
+                    logging.info("Fehler: OpenCV konnte das Bild nicht laden!")
+                else:
+                    logging.info("OpenCV hat das Bild erfolgreich geladen.")
+
+                filename = os.path.basename(event_filename)
+
+                result = detect(image, filename)
                 if result in class_names:
-                    result = predict_object_TF(event_filepath, event_filename)
+                    result = predict_object_TF(image)
 
                 logging.info(f"result from image: {result}")
 

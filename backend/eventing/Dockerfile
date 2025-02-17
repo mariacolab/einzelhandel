@@ -35,18 +35,17 @@ CMD ["pytest", "tests/"]
 FROM base AS production
 
 # Anwendung kopieren
-COPY . .
 COPY . /app
 
 # Startscript erstellen, um WebDAV zu mounten und die App zu starten
-RUN echo '#!/bin/sh' > /start.sh && \
-    echo 'echo "Fixing /etc/davfs2/secrets permissions..."' >> /start.sh && \
-    echo 'chmod 600 /etc/davfs2/secrets' >> /start.sh && \
-    echo 'echo "Trying to mount WebDAV..."' >> /start.sh && \
-    echo 'mount -t davfs http://host.docker.internal:8081 /mnt/gdrive -o rw,dir_mode=0755,file_mode=0777 || echo "Mount failed!"' >> /start.sh && \
-    echo 'ls -lah /mnt/gdrive' >> /start.sh && \
-    echo 'exec gunicorn --bind 0.0.0.0:5005 app:app' >> /start.sh && \
-    chmod +x /start.sh
+#RUN echo '#!/bin/sh' > /start.sh && \
+#    echo 'echo "Fixing /etc/davfs2/secrets permissions..."' >> /start.sh && \
+#    echo 'chmod 600 /etc/davfs2/secrets' >> /start.sh && \
+#    echo 'echo "Trying to mount WebDAV..."' >> /start.sh && \
+#    echo 'mount -t davfs http://host.docker.internal:8081 /mnt/gdrive -o rw,allow-other,gid=1000,dir_mode=0777,file_mode=0777 || echo "Mount failed!"' >> /start.sh && \
+#    echo 'ls -lah /mnt/gdrive' >> /start.sh && \
+#    echo 'exec gunicorn --bind 0.0.0.0:5005 app:app' >> /start.sh && \
+#    chmod +x /start.sh
 
 # Standardbefehl für Produktion
-CMD ["/bin/sh", "/start.sh"]
+CMD ["/bin/sh", "/app/start.sh"]

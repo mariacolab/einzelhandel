@@ -26,16 +26,17 @@ export class WebsocketService {
 
         if (msg.type === "QRCodeGenerated") {
           console.log("QR-Code generiert:", msg.image);
-          observer.next({ eventType: "QRCodeGenerated", data: msg.image });
+          observer.next({ eventType: msg.type, data: msg.image });
         }
         else if (msg.type === "MisclassifiedFiles") {
           console.log("Falsch klassifizierte Datei erhalten:", msg);
           observer.next({
-            eventType: "MisclassifiedFiles",
+            eventType: msg.type,
             classification: msg.classification,
-            filename: msg.filename,
-            model: msg.model,
-            file: msg.file // Base64-kodierte Datei
+            filename: msg.file.filename,
+            role: msg.role,
+            file: msg.file,
+            product_data: msg.product_data
           });
         }
       });
