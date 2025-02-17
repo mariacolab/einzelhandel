@@ -31,3 +31,11 @@ body { font-family: Roboto, "Helvetica Neue", sans-serif; }
 //   width: 100vw;
 //   object-fit: contain;
 // }
+
+// .denser-form-field {
+//   @include mat.button-density(-1);
+// }
+
+// .denser-form-field {
+//   @include mat.all-component-densities(-6);
+// }
