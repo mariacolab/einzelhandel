@@ -1,13 +1,15 @@
+import os
+
 import aio_pika
 import asyncio
 from common.DriveFolders import DriveFolders
-from common.google_drive import google_copy_file_to_folder
+from common.google_drive import google_copy_file_to_folder, wait_for_file
 import requests
 import json
 import logging
 from PIL import Image
 from common.product_data import get_product_with_data
-from detectYOLO11 import detect
+from detectYOLO11 import detect, pfad_zerlegen, retrain
 from common.utils import load_secrets
 from rh_TF_Predict import predict_object_TF
 
@@ -49,23 +51,29 @@ async def on_message(message: aio_pika.IncomingMessage):
             logging.info(f"Event role: {event_role}")
 
             if "ValidatedFiles" in event_type:
+                wait_for_file(DriveFolders.UPLOAD.value, event_filepath, 10, 1)
                 logging.info("Processing files after ImageUploaded event.")
                 event_filename = event.get("file", "")
+                path,file_without_path =  event_filename.rsplit('/',1)
                 logging.info(f"Event filename: {event_filename}")
+                logging.info(f"Event filename without path is : {file_without_path}")
 
                 #aufruf der KI
                 class_names = ['Apfel', 'Aubergine', 'Avocado', 'Birne',
                                'Granatapfel', 'Kaki', 'Kartoffel', 'Kiwi',
                                'Mandarine', 'Orange', 'Pampelmuse', 'Paprika',
                                'Tomate', 'Zitrone', 'Zucchini', 'Zwiebel']
-                image = Image.open(f"{DriveFolders.UPLOAD.value}/{event_filename}")
-
-                result = detect(image, event_filename)
-                if result in class_names:
-                    result = predict_object_TF(event_filepath, event_filename)
-
+                image = Image.open(f"{DriveFolders.UPLOAD.value}/{file_without_path}")
+                result1, yolo_result  = detect(image, event_filename) # großes Modell
+                retrain()
+                if result1 in class_names:
+                    result2 = predict_object_TF(event_filepath, event_filename) #kleines Modell
+                else:
+                    result2=None
+                if not result2 or result1==result2:
+                        result = result1
                 logging.info(f"result from image: {result}")
-
+                #TODO wenn verschiedene Ergebnisse
                 if event_role == "Kunde":
                     """
                         - Bild wird in traningsordner verschoben
@@ -118,9 +126,26 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event path: {event_class_correct}")
                 logging.info(f"Event path: {event_filename}")
                 if event_class_correct:
-                    google_copy_file_to_folder(DriveFolders.UPLOAD.value,
-                                               DriveFolders.TRAININGSSATZ.value,
-                                               event_filename)
+
+                    # (Sonja Schwabe) Für Yolo-Modell Bild und Label in den Trainingsordner legen
+                    #TODO bei else noch was tun?
+                    if not os.path.exists(f"{DriveFolders.DATASETS_TESTDATEN_IMAGES.value}/{file_without_path}"):
+                        to_resize = Image.open(f"{DriveFolders.UPLOAD.value}/{file_without_path}")
+                        resized = to_resize.resize((224, 224))
+                        resized.save(f"{DriveFolders.DATASETS_TESTDATEN_IMAGES.value}/{file_without_path}")
+                    else:
+                        logging.info("FEHLER: Bilddatei mit diesem Namen bereits vorhanden")
+                    pfad, label_name, endung = pfad_zerlegen(event_filename)
+                    if not os.path.exists(f"{DriveFolders.DATASETS_TESTDATEN_LABELS.value}/{label_name}.txt"):
+                        yolo_result.save_txt(f"{DriveFolders.DATASETS_TESTDATEN_LABELS.value}/{label_name}.txt")
+                    else:
+                        logging.info("FEHLER: Labeldatei mit diesem Namen bereits vorhanden")
+
+                    #TODO Falls erkannte Klasse zu Ralfs Modell passt Bild für Nachtraining speichern
+                    #google_copy_file_to_folder(DriveFolders.UPLOAD.value,
+                    #                           DriveFolders.TRAININGSSATZ.value,
+                    #                           event_filename)
+
                     url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                     headers = {
                         "Cookie": f"{event_cookie}",

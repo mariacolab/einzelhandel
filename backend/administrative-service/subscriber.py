@@ -7,6 +7,7 @@ from common.utils import load_secrets
 import logging
 from process_uploads import process_files
 import redis
+from common.DriveFolders import DriveFolders
 
 # Lade das Redis-Passwort aus der Umgebung
 redis_password = os.getenv("REDIS_PASSWORD", None)
@@ -55,7 +56,7 @@ async def on_message(message: aio_pika.IncomingMessage, ):
 
             if "ProcessFiles" in event_type:
                 logging.info("Processing files after ImageUploaded event.")
-                file_path = process_files(event_filename)
+                file_path = os.path.join(DriveFolders.UPLOAD.value, event_filename)
 
                 url = " http://nginx-proxy/eventing-service/publish/ImageValidated"
 

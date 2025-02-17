@@ -4,6 +4,7 @@ from flask_session import Session
 
 from common.config import Config
 from common.middleware import token_required, role_required
+from detectYOLO11 import retrain
 from rh_TF_Update import update_model_TF, prepare_Data
 
 app = Flask(__name__)
@@ -32,9 +33,12 @@ def start_ai_task():
     files = {'images': request.files.getlist('images')}
 
     # TODO start des Nachtest aufrufen
-
-    #prepare_Data(input_Directory, output_Directory)
-    update_model_TF()
+    welches = "groß"
+    if welches == "groß":
+           retrain()
+    if welches != "groß":
+        #prepare_Data(input_Directory, output_Directory)
+        update_model_TF()
 
     if len(files) >= 1:
         return jsonify({"status": "KI-Lauf gestartet"}), 202
