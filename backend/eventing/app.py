@@ -4,10 +4,10 @@ from flask import Flask, jsonify, request, session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_session import Session
-from common.DriveFolders import DriveFolders
+from common.SharedFolders import SharedFolders
 from common.config import Config
-from common.google_drive import google_save_file_in_folder, wait_for_file
 from common.middleware import token_required, role_required, get_user_role_from_token
+from common.shared_drive import save_file_in_folder
 from producer import send_message
 import asyncio
 
@@ -86,7 +86,7 @@ def publish_event(event):
                 logging.debug(f"Invalid file format: {file.filename}")
                 return jsonify({"error": "Only JPG and PNG files are allowed"}), 400
 
-            google_save_file_in_folder(DriveFolders.UPLOAD.value, file)
+            save_file_in_folder(SharedFolders.UPLOAD.value, file)
 
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
@@ -122,7 +122,7 @@ def publish_event(event):
 
             user_role = get_user_role_from_token()
 
-            wait_for_file(DriveFolders.UPLOAD.value, file.filename, timeout=10, interval=1)
+            wait_for_file(SharedFolders.UPLOAD.value, file.filename, timeout=10, interval=1)
 
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')

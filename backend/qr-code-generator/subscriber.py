@@ -5,8 +5,8 @@ import asyncio
 from cryptography.fernet import Fernet
 import requests
 
-from common.product_data import load_json, get_item_by_class_name, get_product_with_data
-from qrcode import save_qr_code_in_database
+from common.product_data import get_product_with_data
+
 from common.utils import load_secrets
 import logging
 

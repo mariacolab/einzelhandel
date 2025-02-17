@@ -6,8 +6,7 @@ from PIL import Image
 import io
 import aio_pika
 import asyncio
-from common.DriveFolders import DriveFolders
-from common.google_drive import google_get_file
+from common.SharedFolders import SharedFolders
 from common.utils import load_secrets
 import logging
 
@@ -72,7 +71,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 # TODO Load the Image into a Viwer and submit if the classification is corect
                 logging.info("Processing files after MisclassifiedFiles event.")
 
-                file = google_get_file(f"{DriveFolders.UPLOAD.value}/{event_filename}")
+                file = google_get_file(f"{SharedFolders.UPLOAD.value}/{event_filename}")
 
                 try:
                     # Read file content and encode in Base64

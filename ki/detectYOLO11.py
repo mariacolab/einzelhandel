@@ -8,8 +8,7 @@ import cv2
 import torch
 
 from ultralytics import YOLO
-
-from common.DriveFolders import DriveFolders
+from common.SharedFolders import SharedFolders
 
 
 logging.info(f"torch available: {torch.cuda.is_available()}")
@@ -46,7 +45,7 @@ def detect(bild, filename):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logging.info(f"device: {device}")
 
-    model_path = f"{DriveFolders.KIModelle_trainiert_mit_ganzem_Datensatz.value}/bestTrain40.pt"
+    model_path = f"{SharedFolders.KIModelle_trainiert_mit_ganzem_Datensatz.value}/bestTrain40.pt"
     model = YOLO(model_path).to(device)
 
     if model is None:
@@ -82,11 +81,11 @@ def detect(bild, filename):
         logging.info("Filename is " + filename)
         dateiname = name_extrahieren(filename)
         logging.info("Filename is " + dateiname)
-        best_result.save_txt(DriveFolders.DATASETS_TESTDATEN_LABELS.value + dateiname + ".txt")
+        best_result.save_txt(SharedFolders.DATASETS_TESTDATEN_LABELS.value + dateiname + ".txt")
         logging.info("Resultlabel saved.")
         #TODO resize
         bild2 = cv2.imread(bild)
-        cv2.imwrite(DriveFolders.DATASETS_TESTDATEN_IMAGES.value + dateiname + ".jpg",bild2)
+        cv2.imwrite(SharedFolders.DATASETS_TESTDATEN_IMAGES.value + dateiname + ".jpg",bild2)
     #TODO was wenn nicht richtig?
 
     return obj_name

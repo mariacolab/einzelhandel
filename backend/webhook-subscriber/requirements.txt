@@ -4,12 +4,6 @@ gunicorn
 Pillow
 requests
 qrcode[pil]
-pydrive
-oauth2client
-google-auth
-google-auth-oauthlib
-google-auth-httplib2
-google-api-python-client
 redis
 flask_session
 websockets

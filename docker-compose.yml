@@ -18,6 +18,7 @@ services:
       - db_data:/var/lib/postgresql/data
       - ./backend/database-management/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./update_pg_hba.sh:/docker-entrypoint-initdb.d/update_pg_hba.sh
+      - shared_uploads:/shared/uploads
     secrets:
       - github_credentials
 
@@ -44,6 +45,7 @@ services:
       - ./backend/database-management:/app
       - ./secrets:/app/common/secrets
       - ./common:/app/common
+      - shared_uploads:/shared/uploads
 
   admin-service:
     build:
@@ -66,7 +68,6 @@ services:
       GOOGLE_DRIVE_PATH: /mnt/gdrive
     depends_on:
       - rabbitmq
-      - rclone
     ports:
       - "5002:5000"
     secrets:
@@ -74,9 +75,8 @@ services:
     volumes:
       - ./secrets:/app/common/secrets
       - ./common:/app/common
-      - ./secrets/davfs_secrets:/etc/davfs2/secrets:rw
-      - ./secrets/rclone.conf:/config/rclone.conf:ro
-    #command: ["python3", "subscriber.py"]
+      - shared_uploads:/shared/uploads
+    command: ["python3", "subscriber.py"]
 
   user-management:
     build:
@@ -99,6 +99,7 @@ services:
       - ./backend/user_management:/app
       - ./secrets:/app/common/secrets
       - ./common:/app/common
+      - shared_uploads:/shared/uploads
 
   qr-service:
     build:
@@ -118,14 +119,13 @@ services:
       - "5004:5000"
     depends_on:
       - rabbitmq
-      - rclone
     secrets:
       - github_credentials
     volumes:
       - ./backend/qr-code-generator:/app
       - ./secrets:/app/common/secrets
       - ./common:/app/common
-      #- ./class.json:/class.json
+      - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
 
   eventing-service:
@@ -154,14 +154,12 @@ services:
       - database-management
       - rabbitmq
       - user-management
-      - rclone
     secrets:
       - github_credentials
     volumes:
       - ./secrets:/app/common/secrets
       - ./common:/app/common
-      - ./secrets/davfs_secrets:/etc/davfs2/secrets:rw
-      - ./secrets/rclone.conf:/config/rclone.conf:ro
+      - shared_uploads:/shared/uploads
 
   ki:
     build:
@@ -189,7 +187,6 @@ services:
       GOOGLE_DRIVE_PATH: /mnt/gdrive
     depends_on:
       - rabbitmq
-      - rclone
     ports:
       - "5006:5000"
     secrets:
@@ -197,9 +194,8 @@ services:
     volumes:
       - ./secrets:/workspace/common/secrets
       - ./common:/workspace/common
-      - ./secrets/davfs_secrets:/etc/davfs2/secrets:rw
-      - ./secrets/rclone.conf:/config/rclone.conf:ro
-    #command: ["python3", "subscriber.py"]
+      - shared_uploads:/shared/uploads
+    command: ["python3", "subscriber.py"]
     deploy:
       resources:
         reservations:
@@ -227,46 +223,8 @@ services:
     volumes:
       - ./secrets:/app/common/secrets
       - ./common:/app/common
+      - shared_uploads:/shared/uploads
     command: [ "python3", "webhook.py" ]
-
-  rclone:
-    image: rclone/rclone
-    container_name: rclone_webdav
-    restart: unless-stopped
-    privileged: true
-    cap_add:
-      - SYS_ADMIN
-    devices:
-      - /dev/fuse
-    security_opt:
-      - apparmor:unconfined
-    command: [
-      "serve", "webdav", "gdrive:",
-      "--addr", ":8081",
-      "--config", "/config/rclone.conf",
-      "--vfs-cache-mode", "full",
-      "--vfs-cache-max-size", "100G",
-      "--vfs-write-back", "10s",
-      "--dir-cache-time", "10s",
-      "--vfs-cache-poll-interval", "2s",
-      "--uid", "1000",
-      "--gid", "1000",
-      "--file-perms", "0777",
-      "--dir-perms", "0777",
-      "--transfers", "8",
-      "--checkers", "8",
-      "--low-level-retries", "20",
-      "--tpslimit", "10",
-      "--tpslimit-burst", "10",
-      "--log-level", "ERROR"
-    ]
-    environment:
-      - RCLONE_CONFIG=/config/rclone.conf
-    volumes:
-      - ./secrets/rclone.conf:/config/rclone.conf:ro
-      - ./secrets/fapra-ki-einzelhandel-555f5e4a0722.json:/config/fapra-ki-einzelhandel-555f5e4a0722.json:ro
-    ports:
-      - "8081:8081"
 
 
   frontend:
@@ -318,15 +276,13 @@ services:
       - "5009:5000"
     depends_on:
       - rabbitmq
-      - rclone
     secrets:
       - github_credentials
     volumes:
       - ./secrets:/app/common/secrets
       - ./common:/app/common
-      - ./secrets/davfs_secrets:/etc/davfs2/secrets:rw
-      - ./secrets/rclone.conf:/config/rclone.conf:ro
-    #command: ["python3", "subscriber.py"]
+      - shared_uploads:/shared/uploads
+    command: ["python3", "subscriber.py"]
 
   nginx:
     image: nginx:latest
@@ -358,6 +314,12 @@ volumes:
   nginx_conf:
   db_data:
   redis_data:
+  shared_uploads:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      devices: "/mnt/shared"
 
 
 secrets:

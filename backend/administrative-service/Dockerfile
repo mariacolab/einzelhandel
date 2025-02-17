@@ -12,14 +12,6 @@ RUN apt-get update && apt-get install -y libmagic1 file
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Davfs2 und WebDAV-Setup direkt in den Container einbauen
-RUN apt update && \
-    DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends davfs2 && \
-    mkdir -p /mnt/gdrive && \
-    touch /etc/davfs2/secrets && \
-    echo "http://host.docker.internal:8081 webdav_user 1okivI54avrEC0DQv5trz42w9u5kgEZD7vPssLW" > /etc/davfs2/secrets && \
-    chmod 600 /etc/davfs2/secrets && \
-    chown root:root /etc/davfs2/secrets
 
 # ---- Build für Tests ----
 FROM base AS test
@@ -42,5 +34,5 @@ FROM base AS production
 COPY . /app
 
 # Standardbefehl für Produktion
-CMD ["/bin/sh", "/app/start.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5002", "app:app"]
 

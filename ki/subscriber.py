@@ -2,13 +2,13 @@ import os.path
 
 import aio_pika
 import asyncio
-from common.DriveFolders import DriveFolders
-from common.google_drive import google_copy_file_to_folder, wait_for_file
+from common.SharedFolders import SharedFolders
 import requests
 import json
 import logging
-import cv2
+import matplotlib.pyplot as plt
 from common.product_data import get_product_with_data
+from common.shared_drive import copy_file_to_folder
 from detectYOLO11 import detect
 from common.utils import load_secrets
 from rh_TF_Predict import predict_object_TF
@@ -59,23 +59,9 @@ async def on_message(message: aio_pika.IncomingMessage):
                                'Mandarine', 'Orange', 'Pampelmuse', 'Paprika',
                                'Tomate', 'Zitrone', 'Zucchini', 'Zwiebel']
 
-                if not os.path.exists(event_filename):
-                    logging.info("Datei existiert nicht!")
-                elif os.path.getsize(event_filename) == 0:
-                    logging.info("Datei ist leer!")
-                else:
-                    logging.info("Datei scheint in Ordnung zu sein.")
+                image = plt.imread(event_filename)  # Lädt das Bild als NumPy-Array
 
-                image = cv2.imread(event_filename)
-
-                if image is None:
-                    logging.info("Fehler: OpenCV konnte das Bild nicht laden!")
-                else:
-                    logging.info("OpenCV hat das Bild erfolgreich geladen.")
-
-                filename = os.path.basename(event_filename)
-
-                result = detect(image, filename)
+                result = detect(image, event_filename)
                 if result in class_names:
                     result = predict_object_TF(image)
 
@@ -88,8 +74,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                     """
                     product_data = get_product_with_data(result)
                     #TODO Bild in Trainingsordner für Kundenbilder kopieren
-                    google_copy_file_to_folder(DriveFolders.UPLOAD.value,
-                                               DriveFolders.TRAININGSSATZ.value,
+                    copy_file_to_folder(SharedFolders.UPLOAD.value,
+                                               SharedFolders.TRAININGSSATZ.value,
                                                event_filename)
 
                     url = " http://nginx-proxy/eventing-service/publish/MisclassificationReported"
@@ -133,8 +119,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event path: {event_class_correct}")
                 logging.info(f"Event path: {event_filename}")
                 if event_class_correct:
-                    google_copy_file_to_folder(DriveFolders.UPLOAD.value,
-                                               DriveFolders.TRAININGSSATZ.value,
+                    copy_file_to_folder(SharedFolders.UPLOAD.value,
+                                               SharedFolders.TRAININGSSATZ.value,
                                                event_filename)
                     url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                     headers = {

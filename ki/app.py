@@ -22,7 +22,7 @@ def health_check():
     return jsonify({"status": "ok"}), 200
 
 
-@app.route('/ai/start-task', methods=['POST'])
+@app.route('/ai/tensorflow', methods=['POST'])
 @token_required
 @role_required('Admin')
 def start_ai_task():
@@ -30,16 +30,25 @@ def start_ai_task():
         return jsonify({"error": "Keine Bilder hochgeladen"}), 400
 
     files = {'images': request.files.getlist('images')}
-
+    labels =request.files.getlist('labels')
     # TODO start des Nachtest aufrufen
 
     #prepare_Data(input_Directory, output_Directory)
     update_model_TF()
 
     if len(files) >= 1:
-        return jsonify({"status": "KI-Lauf gestartet"}), 202
+        return jsonify({"status": "KI-Lauf Tensorflow gestartet"}), 202
     return jsonify({"error": "Fehler beim Starten des KI-Laufs"}), 404
 
+@app.route('/ai/yolo', methods=['POST'])
+@token_required
+@role_required('Admin')
+def start_ai_task():
+
+    # TODO start des Nachtest aufrufen
+
+
+    return jsonify({"status": "KI-Lauf Yolo gestartet"}), 202
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5006)

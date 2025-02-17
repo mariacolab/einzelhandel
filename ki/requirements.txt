@@ -12,12 +12,6 @@ PyJWT
 ultralytics
 numpy
 matplotlib
-pydrive
-oauth2client
-google-auth
-google-auth-oauthlib
-google-auth-httplib2
-google-api-python-client
 flask_session
 torch
 scipy

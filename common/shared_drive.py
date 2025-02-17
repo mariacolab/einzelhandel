@@ -7,7 +7,7 @@ import time
 logging.basicConfig(level=logging.DEBUG)
 
 
-def google_save_file_in_folder(folder, file):
+def save_file_in_folder(folder, file):
     """
     Benennt eine Datei im gemounteten Verzeichnis um.
 
@@ -20,7 +20,7 @@ def google_save_file_in_folder(folder, file):
         file.save(save_path)
         logging.debug(f"File {file.filename} saved to {save_path}")
 
-def google_rename_file(old_filename, new_filename, folder):
+def rename_file(old_filename, new_filename, folder):
     """
     Benennt eine Datei im gemounteten Verzeichnis um.
 
@@ -45,57 +45,25 @@ def google_rename_file(old_filename, new_filename, folder):
         logging.error(f"Fehler beim Umbenennen: {e}")
         return new_path
 
-def wait_for_file(folder, filename, timeout=60, interval=2):
-    """
-    Überprüft, ob eine Datei im gemounteten Verzeichnis existiert und wartet darauf.
 
-    :param folder: Pfad des gemounteten Verzeichnisses (z.B. "/mnt/gdrive/UPLOAD")
-    :param filename: Name der Datei, die überprüft werden soll
-    :param timeout: Maximale Wartezeit in Sekunden (Standard: 60)
-    :param interval: Zeit zwischen den Prüfungen in Sekunden (Standard: 2)
-    :return: True, wenn die Datei gefunden wurde, sonst False
-    """
-    logging.info(f"filename: {filename}")
-    logging.info(f"folder: {folder}")
-    if folder in filename:
-        file_path = filename
-    else:
-        file_path = f"{folder}/{filename}"
-    start_time = time.time()
-
-    while time.time() - start_time < timeout:
-        if os.path.exists(file_path):
-            logging.info(f" Datei gefunden: {file_path}")
-            return True
-        logging.info(f"Warten auf Datei: {filename} im Verzeichnis {folder}...")
-        time.sleep(interval)
-
-    logging.info(f"Timeout! Datei {filename} wurde nicht innerhalb von {timeout} Sekunden gefunden.")
-    return False
-
-
-def google_copy_file_to_folder(old_folder, new_folder, filename):
+def copy_file_to_folder(source_folder, new_folder, filename):
     """
     Kopiert eine Datei im gemounteten Verzeichnis in ein anderes Verzeichnis.
 
-    :param old_folder: Pfad des gemounteten Verzeichnisses (z.B. "/mnt/gdrive/UPLOAD")
+    :param source_folder: Pfad des gemounteten Verzeichnisses (z.B. "/mnt/gdrive/UPLOAD")
     :param new_folder: Pfad des gemounteten Verzeichnisses in dass die Datei verschoben werden soll
     :param filename: Datei, die in das gemountete Verzeichnis gespeichert werden soll
     """
     os.makedirs(new_folder, exist_ok=True)
 
-    quelle_datei = os.path.join(old_folder, filename)
-    logging.info(f"Datei old {quelle_datei}")
-    ziel_datei = os.path.join(new_folder, filename)
-    logging.info(f"Datei old {ziel_datei}")
+    source_datei = os.path.join(source_folder, filename)
+    logging.info(f"Datei old {source_datei}")
+    os.makedirs(new_folder, source_folder)
 
-    # Prüft, ob Datei existiert
-    if os.path.exists(quelle_datei):
-        shutil.copy2(quelle_datei, ziel_datei)
-        logging.info(f"Datei {filename} wurde in das Verzeichnis {new_folder} kopiert.")
+    shutil.copy2(source_datei, new_folder)
 
 
-def google_get_file(filepath):
+def get_file(filepath):
     """
     Lädt die Datei in ein Image.
 
@@ -107,7 +75,7 @@ def google_get_file(filepath):
     else:
         logging.info(f"Datei {filepath} existiert nicht!")
 
-def google_del_file(filepath):
+def del_file(filepath):
     """
     Löscht die Datei im gemounteten Verzeichnis.
 

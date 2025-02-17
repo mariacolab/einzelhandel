@@ -1,11 +1,11 @@
 import logging
 import os
-import tempfile
 import uuid
 from pathlib import Path
 
-from common.DriveFolders import DriveFolders
-from common.google_drive import google_rename_file, wait_for_file
+from common.SharedFolders import SharedFolders
+
+UPLOADS_DIR = "/shared/uploads"
 
 MAGIC_BYTES = {
     b'\xFF\xD8\xFF': 'JPEG image',
@@ -30,17 +30,18 @@ def validate_file_magic(file_path):
         return f"Error validate_file_magic: {e}"
 
 
-def rename_file(filename):
+def rename_file(filename, file_path):
     """
     Benennt eine Datei in einen generischen Namen um.
     """
     logging.info("rename_file")
     extension = Path(filename).suffix
-    new_name = f"{uuid.uuid4()}{extension}"
+    new_name = f"{uuid.uuid4()}.{extension}"
     logging.info(f"Dateiendung: {extension}")
     logging.info(f"Datei: {new_name}")
-    wait_for_file(DriveFolders.UPLOAD.value, filename, 10, 1)
-    new_path = google_rename_file(filename, new_name, DriveFolders.UPLOAD.value)
+    new_path = os.path.join(file_path, new_name)
+    os.rename(file_path, new_path)
+    logging.info(f"Datei umbenannt: {file_path} -> {new_path}")
     return new_path
 
 
@@ -48,12 +49,11 @@ def process_files(filename):
     """
     Sucht Dateien im Uploads-Ordner, überprüft den Typ und benennt sie um.
     """
-    if not os.path.exists(DriveFolders.UPLOAD.value):
-        logging.error(f"Uploads-Verzeichnis existiert nicht: {DriveFolders.UPLOAD.value}")
+    if not os.path.exists(SharedFolders.UPLOAD.value):
+        logging.error(f"Uploads-Verzeichnis existiert nicht: {SharedFolders.UPLOAD.value}")
         return
 
-    file_path = os.path.join(DriveFolders.UPLOAD.value, filename)
-
+    file_path = os.path.join(SharedFolders.UPLOAD.value, filename)
 
     logging.info(f"Verarbeite Datei: {file_path}")
 
@@ -62,11 +62,11 @@ def process_files(filename):
         logging.warning(f"Ungültiger Dateityp: {file_path}. Datei wird übersprungen.")
 
         # Benenne die Datei in einen generischen Namen um
-    file = rename_file(filename)
+    file = rename_file(filename, SharedFolders.UPLOAD.value)
     logging.info(f"Datei umbenannt: {file}")
     return file
 
 
 if __name__ == "__main__":
-    filename=""
+    filename = ""
     process_files(filename)

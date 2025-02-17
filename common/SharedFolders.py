@@ -1,7 +1,7 @@
 import enum
 
-class DriveFolders(enum.Enum):
-    BASE = "/mnt/gdrive"
+class SharedFolders(enum.Enum):
+    BASE = "/shared/uploads"
 
     # Hauptordner
     MODELS = f"{BASE}/MODELS"

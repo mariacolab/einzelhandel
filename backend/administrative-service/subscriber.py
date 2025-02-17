@@ -4,8 +4,6 @@ import aio_pika
 import asyncio
 import requests
 
-from common.DriveFolders import DriveFolders
-from common.google_drive import wait_for_file
 from common.utils import load_secrets
 import logging
 from process_uploads import process_files
@@ -50,7 +48,6 @@ async def on_message(message: aio_pika.IncomingMessage, ):
 
             event_type = event.get("type", "")
             event_filename = event.get("filename", "")
-            event_filepath = event.get("filepath", "")
             event_cookie = event.get("cookie", "")
             logging.info(f"Event type: {event_type}")
             logging.info(f"Event filename: {event_filename}")
@@ -58,11 +55,10 @@ async def on_message(message: aio_pika.IncomingMessage, ):
 
             if "ProcessFiles" in event_type:
                 logging.info("Processing files after ImageUploaded event.")
-                wait_for_file(DriveFolders.UPLOAD.value, event_filename, 60, 1)
+
                 file_path = process_files(event_filename)
 
-
-                url = " http://nginx-proxy/eventing-service/publish/ImageValidated"
+                url = "http://nginx-proxy/eventing-service/publish/ImageValidated"
 
                 headers = {
                     "Cookie": f"{event_cookie}",
