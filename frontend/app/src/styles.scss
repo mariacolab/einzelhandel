@@ -21,10 +21,10 @@ html {
 html, body { height: 100%; }
 body { font-family: Roboto, "Helvetica Neue", sans-serif; }
 
-// @include mat.toolbar-overrides((
-//     container-background-color: var(--mat-sys-primary),
-//     container-text-color: --mat-sys-on-primary,
-//   ));
+@include mat.toolbar-overrides((
+    container-background-color: var(--mat-sys-primary),
+    container-text-color: var(--mat-sys-on-primary),
+  ));
 
 // zxing-scanner {
 //   max-height: 70vh;
