@@ -35,7 +35,7 @@
     </form>
   </div>
   <div>
-    <button mat-flat-button (click)="signUp();">Sign up</button>
+    <button mat-flat-button (click)="signUp();" [disabled]="loginForm.invalid">Sign up</button>
   </div>
   <div>
     <span>Already have an account? <a routerLink="/login">Login.</a></span>
