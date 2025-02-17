@@ -32,8 +32,6 @@ def start_ai_task():
     files = {'images': request.files.getlist('images')}
     labels =request.files.getlist('labels')
     # TODO start des Nachtest aufrufen
-
-    #prepare_Data(input_Directory, output_Directory)
     update_model_TF()
 
     if len(files) >= 1:

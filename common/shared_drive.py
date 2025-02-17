@@ -46,21 +46,21 @@ def rename_file(old_filename, new_filename, folder):
         return new_path
 
 
-def copy_file_to_folder(source_folder, new_folder, filename):
+def copy_file_to_folder(source_file, new_folder, filename):
     """
     Kopiert eine Datei im gemounteten Verzeichnis in ein anderes Verzeichnis.
 
-    :param source_folder: Pfad des gemounteten Verzeichnisses (z.B. "/mnt/gdrive/UPLOAD")
+    :param source_file: zu speicherndes Bild
     :param new_folder: Pfad des gemounteten Verzeichnisses in dass die Datei verschoben werden soll
     :param filename: Datei, die in das gemountete Verzeichnis gespeichert werden soll
     """
     os.makedirs(new_folder, exist_ok=True)
 
-    source_datei = os.path.join(source_folder, filename)
-    logging.info(f"Datei old {source_datei}")
-    os.makedirs(new_folder, source_folder)
+    #source_datei = os.path.join(source_folder, filename)
+    #logging.info(f"Datei old {source_datei}")
+    #os.makedirs(new_folder, source_folder)
 
-    shutil.copy2(source_datei, new_folder)
+    shutil.copy2(source_file, new_folder)
 
 
 def get_file(filepath):
