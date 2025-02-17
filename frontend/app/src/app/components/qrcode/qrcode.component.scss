@@ -13,11 +13,12 @@
   height: 256px;
   width: 256px;
   // width: 256px;
-  border: 10px solid red;
+  border: 2px dashed grey;
   // white-space: nowrap;
   // text-align: center;
   // margin: 1em 0;
   border-radius: 10px;
+  margin-bottom: 10px;
 }
 
 zxing-scanner {
@@ -29,4 +30,9 @@ zxing-scanner {
   max-width: 256px;
   max-height: 256px;
   // object-fit: contain;
+}
+
+button {
+  width: 40vw;
+  margin: 10px;
 }
