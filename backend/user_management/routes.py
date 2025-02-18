@@ -76,9 +76,16 @@ def register_routes(app):
         logging.debug(f"Session Data After Login: {dict(session)}")
         return jsonify({'role': role_name}), 200
 
+<<<<<<< HEAD
     @app.route('/check-session', methods=['GET'])
     def check_session():
         return jsonify(dict(session))
+=======
+        return jsonify({'token': token, 'refresh_token': refresh_token, 'role_name': role_name}), 200
+        #'refresh_token': refresh_token}
+        # access_token = create_access_token(identity=user['id'])
+        # return jsonify({"token": access_token}), 200
+>>>>>>> frontend-philip
 
     @app.route('/auth/logout', methods=['POST'])
     @token_required

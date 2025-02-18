@@ -1,0 +1,32 @@
+<!-- <p>navbar works!</p> -->
+
+<mat-toolbar>
+  @if (authService.isLoggedInAsCustomer()) {
+    <!-- <button mat-icon-button routerLink="/customer" aria-label="Example icon-button with menu icon"> -->
+    <button mat-button (click)="navigateToCustomer()" aria-label="Example icon-button with menu icon">
+      <mat-icon>storefront</mat-icon>
+      App
+    </button>
+    <span class="spacer"></span>
+    <button mat-button aria-label="Example icon-button with share icon" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Logout
+    </button>
+  } @else if (authService.isLoggedInAsEmployee()) {
+    <!-- <button mat-icon-button routerLink="/employee" aria-label="Example icon-button with menu icon"> -->
+      <button mat-button (click)="navigateToEmployee()" aria-label="Example icon-button with menu icon">
+      <mat-icon>storefront</mat-icon>
+      App
+    </button>
+    <span class="spacer"></span>
+    <button mat-button aria-label="Example icon-button with share icon" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Logout
+    </button>
+  } @else {
+    <button mat-button routerLink="/login" aria-label="Example icon-button with menu icon">
+        <mat-icon>storefront</mat-icon>
+        App
+    </button>
+  }
+</mat-toolbar>

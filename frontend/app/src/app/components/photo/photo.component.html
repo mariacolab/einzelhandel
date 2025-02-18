@@ -1,0 +1,42 @@
+<!-- <p>photo works!</p> -->
+
+<div class="container">
+  <div class="frame" [ngSwitch]="showWebcam">
+    <webcam *ngSwitchCase="true" [height]="256" [width]="256" [trigger]="triggerObservable" (imageCapture)="handleImage($event)"
+      [allowCameraSwitch]="allowCameraSwitch" [switchCamera]="nextWebcamObservable" [videoOptions]="videoOptions"
+      [imageQuality]="1" (cameraSwitched)="cameraWasSwitched($event)" (initError)="handleInitError($event)">
+    </webcam>
+    <img *ngSwitchCase="false" [@enterTrigger]="'fadeIn'" [src]="webcamImage.imageAsDataUrl" />
+  </div>
+
+  <div [ngSwitch]="showWebcam">
+    <button *ngSwitchCase="true" mat-flat-button (click)="triggerSnapshot();">
+      <mat-icon>photo_camera</mat-icon>
+      Take photo
+    </button>
+    <button *ngSwitchCase="false" mat-flat-button (click)="triggerSnapshot();">
+      <mat-icon>videocam</mat-icon>
+      Take another photo
+    </button>
+  </div>
+
+  <div *ngIf="webcamImage">
+    <button mat-flat-button (click)="handleCapturedImage(webcamImage);">
+      Handle captured image
+    </button>
+  </div>
+
+  <div *ngIf="webcamImage">
+    <button mat-flat-button (click)="showProductDetails = !showProductDetails;">
+      Show product details
+    </button>
+  </div>
+
+  <div>
+    <button mat-flat-button routerLink="/product-details">Show product details on new page</button>
+  </div>
+</div>
+
+<div *ngIf="showProductDetails">
+  <app-product-details />
+</div>

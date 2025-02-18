@@ -196,4 +196,8 @@ paths:
         '404':
           description: Fehler beim starten des KI laufs
       x-rate-limit:
+<<<<<<< HEAD
         limit: 10
+=======
+        limit: 10
+>>>>>>> frontend-philip
