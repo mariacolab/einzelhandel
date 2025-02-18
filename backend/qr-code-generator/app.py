@@ -1,9 +1,29 @@
+import os
+
+import requests
 from flask import Flask, jsonify, request
-from qrcode import save_qr_code_in_database
+import redis
+
+from common.config import Config
 from common.middleware import token_required
+from flask_session import Session
 
 app = Flask(__name__)
+# redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
+# redis_password = os.getenv("REDIS_PASSWORD", None)
+#
+# redis_client = redis.StrictRedis(
+#     host='redis',
+#     port=6379,
+#     db=0,
+#     decode_responses=True,
+#     password=redis_password  # Passwort setzen
+# )
 
+app.config.from_object(Config)  # Lade zentrale Config
+
+# Initialisiere Flask-Session
+Session(app)
 
 @app.route("/")
 def home():
@@ -14,17 +34,21 @@ def home():
 def health_check():
     return jsonify({"status": "ok"}), 200
 
-@app.route('/qrcode', methods=['POST'])
-@token_required
-def add_product():
-    data = request.json
-    token = data.get("token")
-    image_blob = data.get("image_blob")
-    encrypted_data = data.get("encrypted_data")
-    qrcode = save_qr_code_in_database(token, image_blob, encrypted_data)
-    if qrcode:
-        return jsonify({"id": qrcode.id}), 201
-    return jsonify({"error": "Product could not be created"}), 400
+DATABASE_API_URL = "http://database-management-service:5001"
+
+@app.route('/qrcode/scan/result', methods=['GET'])
+def qrcode_scan_result():
+    response = requests.get(f"{DATABASE_API_URL}/qrcodes")
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    return jsonify({"error": "QR-Codes nicht gefunden"}), 404
+
+@app.route('/qrcode/information/<int:qrcode_id>', methods=['GET'])
+def qrcode_information(qrcode_id):
+    response = requests.get(f"{DATABASE_API_URL}/qrcodes/{qrcode_id}")
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    return jsonify({"error": "QR-Code nicht gefunden"}), 404
 
 
 if __name__ == "__main__":

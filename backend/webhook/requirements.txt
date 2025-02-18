@@ -1,0 +1,4 @@
+flask
+flask-socketio
+aio_pika
+eventlet

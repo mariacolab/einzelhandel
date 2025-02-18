@@ -3,3 +3,5 @@ aio-pika
 gunicorn
 requests
 cryptography
+redis
+flask_session

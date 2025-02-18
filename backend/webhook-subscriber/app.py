@@ -1,11 +1,16 @@
 import logging
-
+import os
+import redis
 from flask import Flask, jsonify
+from flask_session import Session
+
+from common.config import Config
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
-logging.basicConfig(level=logging.DEBUG)
+app.config.from_object(Config)  # Lade zentrale Config
 
+# Initialisiere Flask-Session
+Session(app)
 
 @app.route("/")
 def home():

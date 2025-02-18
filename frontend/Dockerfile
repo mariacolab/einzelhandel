@@ -1,36 +1,34 @@
-# Basis-Image auswählen
-FROM python:3.10-slim AS base
+# Use Node.js as the base image
+FROM node:18
 
-# Arbeitsverzeichnis setzen
+ENV PATH="$PATH:/root/.npm-global/bin"
+# Set the working directory inside the container
 WORKDIR /app
 
-# Allgemeine Abhängigkeiten installieren
-RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
-RUN apt-get update && apt-get install -y libmagic1 file
-# Anforderungen installieren
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Kopiere package.json und package-lock.json aus `frontend_einzelhandel`
+COPY frontend_einzelhandel/package.json frontend_einzelhandel/package-lock.json ./
 
-# ---- Build für Tests ----
-FROM base AS test
+# Install Angular CLI und die notwendigen Pakete
+RUN npm install -g @angular/cli
 
-# Zusätzliche Abhängigkeiten für Tests installieren
-RUN pip install pytest pytest-flask
+# Install dependencies
+RUN npm install
+RUN npm install ngx-cookie-service
+RUN npm install --legacy-peer-deps ngx-file-drop
+RUN npm install --legacy-peer-deps \
+    @angular/material @angular/cdk @angular/animations \
+    ngx-webcam @zxing/ngx-scanner @zxing/browser @zxing/library
 
-# Anwendung und Testdateien kopieren
-COPY . .
 
-COPY tests /app/tests
 
-# Standardbefehl für Tests
-CMD ["pytest", "tests/"]
+# Kopiere den gesamten Code ins Arbeitsverzeichnis
+COPY frontend_einzelhandel/. .
 
-# ---- Build für normale Ausführung ----
-FROM base AS production
+# Build the Angular application
+RUN npm run build
 
-# Anwendung kopieren
-COPY . .
-COPY . /app
+# Install and use http-server to serve the built Angular app
+RUN npm install -g http-server
 
-# Standardbefehl für Produktion
-CMD ["gunicorn", "--bind", "0.0.0.0:5007", "app:app"]
+# Serve the Angular app
+CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "4200"]

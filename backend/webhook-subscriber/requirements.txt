@@ -1,0 +1,9 @@
+filetype
+aio-pika
+gunicorn
+requests
+qrcode[pil]
+redis
+flask_session
+websockets
+Pillow

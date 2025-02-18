@@ -44,6 +44,16 @@
       "name": "process_classified_queue",
       "vhost": "/",
       "durable": true
+    },
+    {
+      "name": "process_misclassified_queue",
+      "vhost": "/",
+      "durable": true
+    },
+    {
+      "name": "process_corrected_classified_queue",
+      "vhost": "/",
+      "durable": true
     }
   ],
   "exchanges": [
@@ -82,6 +92,20 @@
       "destination": "process_classified_queue",
       "destination_type": "queue",
       "routing_key": "ClassFiles"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "process_misclassified_queue",
+      "destination_type": "queue",
+      "routing_key": "MisclassifiedFiles"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "process_corrected_classified_queue",
+      "destination_type": "queue",
+      "routing_key": "CorrectedFiles"
     }
   ]
 }

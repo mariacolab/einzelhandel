@@ -1,7 +1,10 @@
+import json
 import logging
+import os
 from datetime import datetime, timedelta
 from flask import request, jsonify, session
 import requests
+from flask_cors import cross_origin
 from auth import hash_password, verify_password
 from common.middleware import token_required, generate_token, generate_refresh_token, TOKEN_BLACKLIST, redis_client, \
     decode_token
@@ -9,8 +12,10 @@ from flask import Blueprint
 
 logging.basicConfig(level=logging.DEBUG)
 
+
 def register_routes(app):
     @app.route('/auth/register', methods=['POST'])
+    @cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
     def register():
         data = request.json
         hashed_password, salt = hash_password(data['password'])
@@ -40,6 +45,7 @@ def register_routes(app):
             return jsonify({"error": "Service unavailable", "details": str(e)}), 500
 
     @app.route('/auth/login', methods=['POST'])
+    @cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
     def login():
         data = request.json
         response = requests.get(f"http://database-management:5001/users/{data['username']}")
@@ -60,15 +66,7 @@ def register_routes(app):
         token = generate_token(username=user['username'], role=role_name)
         refresh_token = generate_refresh_token(username=user['username'])
 
-        # Store session information
-        # session['username'] = user['username']
-        # session['role'] = role_name
-        # session['token'] = token
-        # session['logged_in'] = True  # Set session as active
-        # session.permanent = True  # Respect PERMANENT_SESSION_LIFETIME
-        # logging.debug(f"session: {session}")
-
-        # Session speichern
+        #Session speichern
         session['logged_in'] = True
         session['username'] = user['username']
         session['role'] = role_name
@@ -78,13 +76,17 @@ def register_routes(app):
 
         logging.debug(f"token: {token}")
         logging.debug(f"refresh_token: {refresh_token}")
+        logging.debug(f"Session Data After Login: {dict(session)}")
+        return jsonify({'role': role_name}), 200
 
-        return jsonify({'token': token, 'refresh_token': refresh_token}), 200
-        #'refresh_token': refresh_token}
-        # access_token = create_access_token(identity=user['id'])
-        # return jsonify({"token": access_token}), 200
+
+    @app.route('/check-session', methods=['GET'])
+    def check_session():
+        return jsonify(dict(session))
+
 
     @app.route('/auth/logout', methods=['POST'])
+    @cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
     @token_required
     def logout():
         token = session.get('token')
@@ -95,7 +97,7 @@ def register_routes(app):
             exp_time = datetime.utcnow() + timedelta(hours=3)
             # Berechnung der TTL in Sekunden
             ttl = int((exp_time - datetime.utcnow()).total_seconds())
-            print(f"Time-to-Live (TTL) in Sekunden: {ttl}") # Berechne TTL in Sekunden
+            logging.info(f"Time-to-Live (TTL) in Sekunden: {ttl}")  # Berechne TTL in Sekunden
             redis_client.setex(f"blacklist:{token}", ttl, "revoked")
             logging.debug(f"Token {token} has been added to Redis blacklist with TTL {ttl} seconds")
 

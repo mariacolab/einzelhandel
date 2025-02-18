@@ -7,9 +7,11 @@ WORKDIR /app
 # Allgemeine Abhängigkeiten installieren
 RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -y libmagic1 file
+
 # Anforderungen installieren
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
 
 # ---- Build für Tests ----
 FROM base AS test
@@ -29,8 +31,8 @@ CMD ["pytest", "tests/"]
 FROM base AS production
 
 # Anwendung kopieren
-COPY . .
 COPY . /app
 
 # Standardbefehl für Produktion
 CMD ["gunicorn", "--bind", "0.0.0.0:5002", "app:app"]
+

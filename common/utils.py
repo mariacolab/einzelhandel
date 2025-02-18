@@ -2,7 +2,7 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-SECRET_FILE = os.path.join(BASE_DIR, "../secrets", "github_credentials.txt")
+SECRET_FILE = os.path.join(BASE_DIR, "../common/secrets", "github_credentials.txt")
 
 def load_secrets():
     """Lädt alle Secrets aus der Datei."""

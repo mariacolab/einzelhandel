@@ -1,19 +1,23 @@
-import json
 import logging
 import os
-from threading import Thread
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-
-from common.middleware import token_required, role_required
+from flask_session import Session
+from common.SharedFolders import SharedFolders
+from common.config import Config
+from common.middleware import token_required, role_required, get_user_role_from_token
+from common.shared_drive import save_file_in_folder
 from producer import send_message
+from flask_cors import cross_origin
 import asyncio
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
-logging.basicConfig(level=logging.DEBUG)
+app.config.from_object(Config)  # Lade zentrale Config
 
+
+# Initialisiere Flask-Session
+Session(app)
 
 @app.route("/")
 def home():
@@ -38,8 +42,8 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"]
 )
 
-
 @app.route('/publish/<event>', methods=['POST'])
+@cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
 @token_required
 @role_required('Admin', 'Mitarbeiter', 'Kunde')
 @limiter.limit("60 per minute",
@@ -56,11 +60,12 @@ def publish_event(event):
         logging.debug(f"Processing event: {event}")
 
         # Event-Typen
-        if event not in ["ImageUploaded", "ImageValidated", "ClassificationCompleted", "QRCodeGenerated"]:
+        if event not in ["ImageUploaded", "ImageValidated", "ClassificationCompleted",
+                         "QRCodeGenerated", "CorrectedClassification", "MisclassificationReported"]:
             logging.debug("Event not recognized")
             return jsonify({"error": "Event not recognized"}), 400
 
-        if event == "ImageUploaded":
+        elif event == "ImageUploaded":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
             logging.debug(f"Files: {request.files}")
@@ -83,33 +88,24 @@ def publish_event(event):
                 logging.debug(f"Invalid file format: {file.filename}")
                 return jsonify({"error": "Only JPG and PNG files are allowed"}), 400
 
-            # Speichern der Datei
-            save_path = f"/shared/uploads/{file.filename}"
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)  # Sicherstellen, dass das Verzeichnis existiert
-            file.save(save_path)
-            logging.debug(f"File {file.filename} saved to {save_path}")
+            save_file_in_folder(SharedFolders.UPLOAD.value, file)
 
-            token = request.headers.get('Authorization', '')
-            logging.debug(f"Authorization {token}")
+            cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
                 "filename": file.filename,
-                "path": save_path,
-                "token": token
+                "cookie": cookie,
             }
             logging.debug(f"Message ImageUploaded: {message}")
-
-            asyncio.run(send_message(message))
-
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            # asyncio.run(send_message({"type": "ProcessFiles", "data": {}}))
+            asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
 
-        if event == "ImageValidated":
+        elif event == "ImageValidated":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
             logging.debug(f"Files: {request.files}")
@@ -126,102 +122,179 @@ def publish_event(event):
                 logging.debug("No file selected.")
                 return jsonify({"error": "No selected file"}), 400
 
-            # Validieren des Dateiformats
-            allowed_extensions = {'.jpg', '.jpeg', '.png'}
-            if not any(file.filename.lower().endswith(ext) for ext in allowed_extensions):
-                logging.debug(f"Invalid file format: {file.filename}")
-                return jsonify({"error": "Only JPG and PNG files are allowed"}), 400
+            user_role = get_user_role_from_token()
 
-            # Speichern der Datei
-            # save_path = f"/downloads/{file.filename}"
-            # os.makedirs(os.path.dirname(save_path), exist_ok=True)  # Sicherstellen, dass das Verzeichnis existiert
-            # file.save(save_path)
-            # logging.debug(f"File {file.filename} saved to {save_path}")
-
-            token = request.headers.get('Authorization', '')
-            logging.debug(f"Authorization {token}")
+            cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
                 "file": file.filename,
-                "path": "/shared/uploads/",
-                "token": token
+                "role": user_role,
+                "cookie": cookie
             }
             logging.debug(f"Message ImageValidated: {message}")
-
-            asyncio.run(send_message(message))
-
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            # asyncio.run(send_message({"type": "ValidatedFiles", "data": {}}))
+            asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
 
-        if event == "ClassificationCompleted":
+        elif event == "ClassificationCompleted":
             logging.debug(f"Headers: {request.headers}")
-            body = request.get_data(as_text=True)  # Retrieve raw body data as text
-            logging.debug(f"Body: {body}")
+            logging.debug(f"Form: {request.form}")
 
-            parsed_body = json.loads(body)
-            token = request.headers.get('Authorization', '')
-            logging.debug(f"Authorization {token}")
-            message_type = parsed_body.get("type")
-            event_data = parsed_body.get("data", {})
-            data = event_data.get("result")
-            logging.debug(f"event_data {event_data}")
-            logging.debug(f"data {data}")
+            cookie = request.headers.get('Cookie', '')
+            message_type = request.form.get('type', '')
+            result = request.form.get('result', '')
+            logging.debug(f"result {result}")
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
-                "data": data,
-                "token": token
+                "result": result,
+                "cookie": cookie
             }
             logging.debug(f"Message ClassificationCompleted: {message}")
-
-            asyncio.run(send_message(message))
-
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            # asyncio.run(send_message({"type": "ClassFiles", "data": {}}))
+            asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
-            return jsonify({"status": f"Body {body} uploaded successfully."}), 200
+            return jsonify({"status": f"Result {result} uploaded successfully."}), 200
 
-        if event == "QRCodeGenerated":
+        elif event == "QRCodeGenerated":
             logging.debug(f"Headers: {request.headers}")
-            body = request.get_data(as_text=True)  # Retrieve raw body data as text
-            logging.debug(f"Body: {body}")
+            logging.debug(f"Form: {request.form}")
+            logging.debug(f"Files: {request.files}")
 
-            parsed_body = json.loads(body)
-            token = request.headers.get('Authorization', '')
-            logging.debug(f"Authorization {token}")
-            message_type = parsed_body.get("type")
-            event_data = parsed_body.get("data", {})
-            data = event_data.get("code")
-            kind = event_data.get("kind")
-            logging.debug(f"event_data {event_data}")
-            logging.debug(f"data {data}")
+            cookie = request.headers.get('Cookie', '')
+            message_type = request.form.get('type', '')
+            image_blob = request.form.get('image_blob', '')
+            logging.debug(f"data {image_blob}")
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
                 "type": message_type,
-                "data": data,
-                "kind": kind,
-                "token": token
+                "image_blob": image_blob,
+                "cookie": cookie
             }
-            logging.debug(f"Message QRCodeGenerated: {message}")
+            logging.debug(f"Message Encoded: {message}")
+            # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
+            asyncio.run(send_message(message))
+            logging.debug(f"Event {event} published successfully")
+            return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
 
+        elif event == "MisclassificationReported":
+            logging.debug(f"Headers: {request.headers}")
+            logging.debug(f"Form: {request.form}")
+
+            cookie = request.headers.get('Cookie', '')
+            message_type = request.form.get('type', '')
+            filename = request.form.get('filename', '')
+            product = request.form.get('product', '')
+            info = request.form.get('info', '')
+            shelf = request.form.get('shelf', '')
+            price_piece = request.form.get('price_piece', '')
+            price_kg = request.form.get('price_kg', '')
+            role = request.form.get('role', '')
+            classification = request.form.get('classification', '')
+            logging.debug(f"Type {message_type}")
+            # Nachricht senden
+            message = {
+                "type": message_type,
+                "filename": filename,
+                "classification": classification,
+                "product": product,
+                "info": info,
+                "shelf": shelf,
+                "price_piece": price_piece,
+                "price_kg": price_kg,
+                "role": role,
+                "cookie": cookie
+            }
+            logging.debug(f"Message MisclassificationReported: {message}")
+            # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
+            asyncio.run(send_message(message))
+            logging.debug(f"Event {event} published successfully")
+            return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
+
+        elif event == "CorrectedClassification":
+            logging.debug(f"Headers: {request.headers}")
+            logging.debug(f"Form: {request.form}")
+
+            cookie = request.headers.get('Cookie', '')
+            message_type = request.form.get('type', '')
+            classification = request.form.get('classification', '')
+            filename = request.form.get('filename', '')
+            class_correct = request.form.get('is_classification_correct', '')
+            logging.debug(f"Type {message_type}")
+            # Nachricht senden
+            message = {
+                "type": message_type,
+                "is_classification_correct": class_correct,
+                "classification": classification,
+                "filename": filename,
+                "cookie": cookie
+            }
+            logging.debug(f"Message CorrectedClassification: {message}")
+            # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
             asyncio.run(send_message(message))
 
-            # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
-            # asyncio.run(send_message({"type": "ProcessQrcode", "data": {}}))
             logging.debug(f"Event {event} published successfully")
-            return jsonify({"status": f"Body {body} uploaded successfully."}), 200
+            return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
 
     except Exception as e:
         logging.debug(f"Error in publish_event: {e}")
         return jsonify({"message": "Internal server error", "details": str(e)}), 500
 
+
+@app.route('/publish/Trainingsdata', methods=['POST'])
+def publish_trainingsdata(event):
+    # Map event types to messages
+    try:
+        if event == "Training":
+            logging.debug(f"Headers: {request.headers}")
+            logging.debug(f"Form: {request.form}")
+
+            cookie = request.headers.get("Cookie", "")
+            message_type = request.form.get("type", "")
+            labels = request.form.get("labels", "")
+
+            # Dateien richtig abrufen
+            files = request.files.getlist("files[]")  # Holt alle Dateien aus dem `files[]` Feld
+
+            if not files:
+                return jsonify({"error": "Keine Dateien hochgeladen!"}), 400
+
+            saved_files = []
+            for file in files:
+                file_path = os.path.join(SharedFolders.TRAININGSSATZ.value, file.filename)
+                file.save(file_path)  # Datei speichern
+                saved_files.append(file_path)
+
+            logging.debug(f"Gespeicherte Dateien: {saved_files}")
+
+            message = {
+                "type": message_type,
+                "files": saved_files,
+                "cookie": cookie,
+            }
+
+            logging.debug(f"Message Training Event: {message}")
+
+            # RabbitMQ Nachricht senden
+            asyncio.run(send_message(message))
+
+            logging.debug(f"Event {event} published successfully")
+            return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
+
+        return jsonify({"error": "Ungültiges Event"}), 400
+    except Exception as e:
+        logging.debug(f"Error in publish_event: {e}")
+        return jsonify({"message": "Internal server error", "details": str(e)}), 500
+
+@app.route('/debug/session', methods=['GET'])
+def debug_session():
+    return jsonify(dict(session))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5005)

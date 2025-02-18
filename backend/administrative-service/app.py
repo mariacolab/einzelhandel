@@ -1,11 +1,22 @@
 import logging
+import os
 
-from flask import Flask, jsonify
+import redis
+from flask import Flask, jsonify, session
+from flask_session import Session
+from common.config import Config
 from process_uploads import process_files
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
-logging.basicConfig(level=logging.DEBUG)
+app.config.from_object(Config)  # Lade zentrale Config
+
+# Initialisiere Flask-Session
+Session(app)
+
+
+@app.route("/debug/session", methods=["GET"])
+def debug_session():
+    return jsonify(dict(session))
 
 
 @app.route("/")

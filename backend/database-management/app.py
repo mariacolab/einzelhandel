@@ -1,7 +1,12 @@
+import base64
+import os
+
 from flask import Flask, jsonify, request, session
+import redis
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-
+from flask_session import Session
+from common.config import Config
 from common.middleware import token_required, role_required
 from common.utils import load_secrets
 from models import db
@@ -17,6 +22,10 @@ from crud import (
 
 # Flask application initialization
 app = Flask(__name__)
+app.config.from_object(Config)  # Lade zentrale Config
+
+# Initialisiere Flask-Session
+Session(app)
 
 # Database configuration
 secrets = load_secrets()
@@ -144,7 +153,9 @@ def add_product():
     products = create_product(db.session, **data)
     if products:
         return jsonify({"id": products.id, "name": products.name,
-                        "description": products.description, "price": products.price}), 201
+                        "description": products.description, "shelf": products.shelf,
+                        "price_piece": products.price_piece, "price_kg": products.price_kg,
+                        "qr_code_id": products.qr_code_id}), 201
     return jsonify({"error": "Product could not be created"}), 400
 
 
@@ -155,7 +166,8 @@ def add_product_without_qr():
     products = create_product_without_qr(db.session, **data)
     if products:
         return jsonify({"id": products.id, "name": products.name,
-                        "description": products.description, "price": products.price}), 201
+                        "description": products.description, "shelf": products.shelf,
+                        "price_piece": products.price_piece, "price_kg": products.price_kg}), 201
     return jsonify({"error": "Product could not be created"}), 400
 
 
@@ -165,7 +177,8 @@ def get_product_by_name(name):
     products = read_products_by_name(db.session, name=name)
     if products:
         return jsonify({"id": products.id, "name": products.name,
-                        "description": products.description, "price": products.price,
+                        "description": products.description, "shelf": products.shelf,
+                        "price_piece": products.price_piece, "price_kg": products.price_kg,
                         "qr_code_id": products.qr_code_id}), 200
     return jsonify({"error": "Product not found"}), 404
 
@@ -175,7 +188,10 @@ def get_product_by_name(name):
 def get_product(product_id):
     products = read_product(db.session, product_id=product_id)
     if products:
-        return jsonify({"id": products.id, "name": products.name}), 200
+        return jsonify({"id": products.id, "name": products.name,
+                        "description": products.description, "shelf": products.shelf,
+                        "price_piece": products.price_piece, "price_kg": products.price_kg,
+                        "qr_code_id": products.qr_code_id}), 200
     return jsonify({"error": "Product not found"}), 404
 
 
@@ -185,7 +201,10 @@ def update_product_info(product_id):
     data = request.json
     products = update_product(db.session, product_id=product_id, **data)
     if products:
-        return jsonify({"id": products.id, "name": products.name}), 200
+        return jsonify({"id": products.id, "name": products.name,
+                        "description": products.description, "shelf": products.shelf,
+                        "price_piece": products.price_piece, "price_kg": products.price_kg,
+                        "qr_code_id": products.qr_code_id}), 200
     return jsonify({"error": "Product not found"}), 404
 
 
@@ -198,24 +217,27 @@ def delete_product_info(product_id):
         return jsonify({"status": "Product deleted"}), 200
     return jsonify({"error": "Product not found"}), 404
 
-
 # --- QRCode Routen ---
 @app.route('/qrcodes', methods=['POST'])
 @token_required
 def add_qrcode():
     data = request.json
-    qrcodes = create_qrcode(db.session, **data)
+    image_blob = base64.b64decode(data['data'])
+    qrcodes = create_qrcode(db.session, image_blob)
     if qrcodes:
-        return jsonify({"id": qrcodes.id, "code": qrcodes.code}), 201
+        return jsonify({"id": qrcodes.id}), 201
     return jsonify({"error": "QRCode could not be created"}), 400
 
 
 @app.route('/qrcodes/<int:qrcode_id>', methods=['GET'])
 @token_required
 def get_qrcode(qrcode_id):
-    qrcodes = read_qrcode(db.session, qrcode_id=qrcode_id)
+    qrcodes = read_qrcode(db.session, qr_code_id=qrcode_id)
     if qrcodes:
-        return jsonify({"id": qrcodes.id, "code": qrcodes.code}), 200
+        return jsonify({
+            "id": qrcodes.id,
+            "data": base64.b64encode(qrcodes.data).decode()  # Konvertiere in Base64 für die API
+        }), 200
     return jsonify({"error": "QRCode not found"}), 404
 
 
@@ -223,7 +245,7 @@ def get_qrcode(qrcode_id):
 @token_required
 @role_required('Admin')
 def delete_qrcode_info(qrcode_id):
-    qrcodes = delete_qrcode(db.session, qrcode_id=qrcode_id)
+    qrcodes = delete_qrcode(db.session, qr_code_id=qrcode_id)
     if qrcodes:
         return jsonify({"status": "QRCode deleted"}), 200
     return jsonify({"error": "QRCode not found"}), 404

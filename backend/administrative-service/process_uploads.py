@@ -1,9 +1,10 @@
+import logging
 import os
 import uuid
-import filetype
-import logging
+from pathlib import Path
+import shutil
+from common.SharedFolders import SharedFolders
 
-# Pfad zu shared_uploads
 UPLOADS_DIR = "/shared/uploads"
 
 MAGIC_BYTES = {
@@ -16,59 +17,63 @@ logging.basicConfig(level=logging.DEBUG)
 
 def validate_file_magic(file_path):
     try:
+        logging.info("validate_file_magic")
         with open(file_path, 'rb') as file:
-            # Read the first few bytes of the file
-            file_header = file.read(8)  # Read enough bytes for all known signatures
+            # liest die ersten Bytes der Datei
+            file_header = file.read(8)
 
-            # Compare with known magic bytes
+            # vergleicht sie mit bekannten magic bytes
             for magic, file_type in MAGIC_BYTES.items():
                 if file_header.startswith(magic):
                     return f"File type: {file_type}"
-
-        return "Unknown file type"
     except Exception as e:
-        return f"Error: {e}"
+        return f"Error validate_file_magic: {e}"
 
-def rename_file(file_path, uploads_dir):
+
+def rename_file(filename, file_path):
     """
     Benennt eine Datei in einen generischen Namen um.
     """
-    file, extension = file_path.split(".", 1)
-    new_name = f"{uuid.uuid4()}.{extension}"
+    logging.info("rename_file")
+    extension = Path(filename).suffix
+    new_name = f"{uuid.uuid4()}{extension}"
     logging.info(f"Dateiendung: {extension}")
     logging.info(f"Datei: {new_name}")
-    new_path = os.path.join(uploads_dir, new_name)
-    os.rename(file_path, new_path)
-    logging.info(f"Datei umbenannt: {file_path} -> {new_path}")
+
+    new_path = os.path.join(file_path, new_name)
+    old__path = os.path.join(file_path, filename)
+    try:
+        shutil.move(old__path, new_path)  # Ersetzt os.rename()
+        logging.info(f"Datei umbenannt: {old__path} -> {new_path}")
+    except Exception as e:
+        logging.error(f"Fehler beim Umbenennen: {e}")
+
     return new_path
 
 
-def process_files():
+
+def process_files(filename):
     """
     Sucht Dateien im Uploads-Ordner, überprüft den Typ und benennt sie um.
     """
-    if not os.path.exists(UPLOADS_DIR):
-        logging.error(f"Uploads-Verzeichnis existiert nicht: {UPLOADS_DIR}")
+    if not os.path.exists(SharedFolders.UPLOAD.value):
+        logging.error(f"Uploads-Verzeichnis existiert nicht: {SharedFolders.UPLOAD.value}")
         return
 
-    for filename in os.listdir(UPLOADS_DIR):
-        file_path = os.path.join(UPLOADS_DIR, filename)
+    file_path = os.path.join(SharedFolders.UPLOAD.value, filename)
 
-        if not os.path.isfile(file_path):
-            continue  # Überspringe, falls es kein regulärer Dateityp ist
+    logging.info(f"Verarbeite Datei: {file_path}")
 
-        logging.info(f"Verarbeite Datei: {file_path}")
-
-        # Überprüfe Magic Bytes
-        if not validate_file_magic(file_path):
-            logging.warning(f"Ungültiger Dateityp: {file_path}. Datei wird übersprungen.")
-            continue
+    # Überprüfe Magic Bytes
+    if not validate_file_magic(file_path):
+        logging.warning(f"Ungültiger Dateityp: {file_path}. Datei wird übersprungen.")
 
         # Benenne die Datei in einen generischen Namen um
-        file = rename_file(file_path, UPLOADS_DIR)
-        logging.info(f"Datei umbenannt: {file}")
-        return file
+    file = rename_file(filename, SharedFolders.UPLOAD.value)
+    logging.info(f"Datei umbenannt: {file}")
+    return file
 
 
 if __name__ == "__main__":
-    process_files()
+    filename = ""
+    process_files(filename)

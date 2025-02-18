@@ -11,3 +11,4 @@ pytest-flask
 PyJWT
 redis
 gunicorn
+flask_cors
