@@ -4,6 +4,7 @@ from flask_session import Session
 
 from common.config import Config
 from common.middleware import token_required, role_required
+from detectYOLO11 import retrain
 from rh_TF_Update import update_model_TF, prepare_Data
 
 app = Flask(__name__)
@@ -44,8 +45,7 @@ def start_ai_task():
 def start_ai_task():
 
     # TODO start des Nachtest aufrufen
-
-
+    retrain()
     return jsonify({"status": "KI-Lauf Yolo gestartet"}), 202
 
 if __name__ == "__main__":

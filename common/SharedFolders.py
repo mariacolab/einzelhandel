@@ -6,12 +6,11 @@ class SharedFolders(enum.Enum):
 
     # Hauptordner
     MODELS = f"{BASE}/MODELS"
-    DATASETS = f"{BASE}/Datasets"
     TRAININGSSATZ = f"{BASE}/TRAININGSSATZ"
     DATA = f"{BASE}/DATA"
 
     # Datasets-Unterordner
-    DATASETS_FFv3 = f"{DATASETS}/FFv1"
+    DATASETS_FFv3 = f"{DATA}/FFv3"
     DATASETS_FFv3_TRAIN = f"{DATASETS_FFv3}/train"
     DATASETS_FFv3_TEST = f"{DATASETS_FFv3}/test"
     DATASETS_FFv3_VALID = f"{DATASETS_FFv3}/valid"
@@ -22,12 +21,12 @@ class SharedFolders(enum.Enum):
     DATASETS_FFv3_TRAIN_LABELS = f"{DATASETS_FFv3_TRAIN}/labels"
     DATASETS_FFv3_TRAIN_IMAGES = f"{DATASETS_FFv3_TRAIN}/images"
 
-    DATASETS_TESTDATEN = f"{DATASETS}/TestDaten"
-    DATASETS_TESTDATEN_LABELS = f"{DATASETS_TESTDATEN}/labels"
-    DATASETS_TESTDATEN_IMAGES = f"{DATASETS_TESTDATEN}/images"
-
     # KI Modelle
+    KI_MODELLE_KLEIN = f"{MODELS}/old"
     KI_MODELLE_TRAIN_GESAMT = f"{MODELS}/trainiert_mit_ganzem_Datensatz"
+    KI_MODELLE_GESAMT_BEST = f"{KI_MODELLE_TRAIN_GESAMT}/bestModel"
+    KI_MODELLE_GESAMT_NEW = f"{KI_MODELLE_TRAIN_GESAMT}/newModel"
+    KI_MODELLE_GESAMT_BEST_GEWICHT = f"{KI_MODELLE_GESAMT_BEST}/weights"
 
     # Obst und Gemüse Datensätze
     DATA_OBST_GEMUESE = f"{DATA}/ObstGemuese"
