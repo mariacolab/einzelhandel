@@ -18,7 +18,7 @@ services:
       - db_data:/var/lib/postgresql/data
       - ./backend/database-management/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./update_pg_hba.sh:/docker-entrypoint-initdb.d/update_pg_hba.sh
-      - shared_uploads:/shared/uploads
+      - ./secrets:/app/secrets
     secrets:
       - github_credentials
 
@@ -45,7 +45,6 @@ services:
       - ./backend/database-management:/app
       - ./secrets:/app/common/secrets
       - ./common:/app/common
-      - shared_uploads:/shared/uploads
 
   admin-service:
     build:
@@ -65,7 +64,6 @@ services:
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /app
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
-      GOOGLE_DRIVE_PATH: /mnt/gdrive
     depends_on:
       - rabbitmq
     ports:
@@ -75,6 +73,7 @@ services:
     volumes:
       - ./secrets:/app/common/secrets
       - ./common:/app/common
+      - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
 
@@ -125,6 +124,7 @@ services:
       - ./backend/qr-code-generator:/app
       - ./secrets:/app/common/secrets
       - ./common:/app/common
+      - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
 
@@ -159,6 +159,7 @@ services:
     volumes:
       - ./secrets:/app/common/secrets
       - ./common:/app/common
+      - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
 
   ki:
@@ -194,6 +195,7 @@ services:
     volumes:
       - ./secrets:/workspace/common/secrets
       - ./common:/workspace/common
+      - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
     deploy:
@@ -223,7 +225,7 @@ services:
     volumes:
       - ./secrets:/app/common/secrets
       - ./common:/app/common
-      - shared_uploads:/shared/uploads
+      - ./secrets:/app/secrets
     command: [ "python3", "webhook.py" ]
 
 
@@ -254,6 +256,7 @@ services:
       - ./secrets:/app/common/secrets
       - ./rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
 
+
   webhook-subscriber:
     build:
       context: ./backend/webhook-subscriber
@@ -281,6 +284,7 @@ services:
     volumes:
       - ./secrets:/app/common/secrets
       - ./common:/app/common
+      - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
 
@@ -309,18 +313,11 @@ services:
     volumes:
       - redis_data:/data
 
-
 volumes:
   nginx_conf:
   db_data:
   redis_data:
   shared_uploads:
-    driver: local
-    driver_opts:
-      type: "none"
-      o: "bind"
-      devices: "/mnt/shared"
-
 
 secrets:
   github_credentials:

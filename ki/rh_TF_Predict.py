@@ -15,7 +15,7 @@ def predict_object_TF(img):
                    'Mandarine', 'Orange', 'Pampelmuse', 'Paprika',
                    'Tomate', 'Zitrone', 'Zucchini', 'Zwiebel']
 
-    model_path = f"{SharedFolders.MODELS}/obst_gemuese_TF_100.h5"
+    model_path = f"{SharedFolders.MODELS.value}/obst_gemuese_TF_100.h5"
     model = tf.keras.models.load_model(model_path)
 
     # Bereitet ein Bild für das Modell vor.

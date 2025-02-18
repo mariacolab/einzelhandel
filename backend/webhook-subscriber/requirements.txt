@@ -1,9 +1,9 @@
 filetype
 aio-pika
 gunicorn
-Pillow
 requests
 qrcode[pil]
 redis
 flask_session
 websockets
+Pillow

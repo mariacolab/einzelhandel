@@ -2,7 +2,7 @@ import logging
 import os
 import uuid
 from pathlib import Path
-
+import shutil
 from common.SharedFolders import SharedFolders
 
 UPLOADS_DIR = "/shared/uploads"
@@ -36,13 +36,20 @@ def rename_file(filename, file_path):
     """
     logging.info("rename_file")
     extension = Path(filename).suffix
-    new_name = f"{uuid.uuid4()}.{extension}"
+    new_name = f"{uuid.uuid4()}{extension}"
     logging.info(f"Dateiendung: {extension}")
     logging.info(f"Datei: {new_name}")
+
     new_path = os.path.join(file_path, new_name)
-    os.rename(file_path, new_path)
-    logging.info(f"Datei umbenannt: {file_path} -> {new_path}")
+    old__path = os.path.join(file_path, filename)
+    try:
+        shutil.move(old__path, new_path)  # Ersetzt os.rename()
+        logging.info(f"Datei umbenannt: {old__path} -> {new_path}")
+    except Exception as e:
+        logging.error(f"Fehler beim Umbenennen: {e}")
+
     return new_path
+
 
 
 def process_files(filename):

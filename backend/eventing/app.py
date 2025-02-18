@@ -122,8 +122,6 @@ def publish_event(event):
 
             user_role = get_user_role_from_token()
 
-            wait_for_file(SharedFolders.UPLOAD.value, file.filename, timeout=10, interval=1)
-
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             logging.debug(f"Type {message_type}")
@@ -190,7 +188,11 @@ def publish_event(event):
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             filename = request.form.get('filename', '')
-            product_data = request.form.get('product_data', '')
+            product = request.form.get('product', '')
+            info = request.form.get('info', '')
+            shelf = request.form.get('shelf', '')
+            price_piece = request.form.get('price_piece', '')
+            price_kg = request.form.get('price_kg', '')
             role = request.form.get('role', '')
             classification = request.form.get('classification', '')
             logging.debug(f"Type {message_type}")
@@ -199,7 +201,11 @@ def publish_event(event):
                 "type": message_type,
                 "filename": filename,
                 "classification": classification,
-                "product_data": product_data,
+                "product": product,
+                "info": info,
+                "shelf": shelf,
+                "price_piece": price_piece,
+                "price_kg": price_kg,
                 "role": role,
                 "cookie": cookie
             }
@@ -234,33 +240,52 @@ def publish_event(event):
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
 
-        elif event == "Training":
+    except Exception as e:
+        logging.debug(f"Error in publish_event: {e}")
+        return jsonify({"message": "Internal server error", "details": str(e)}), 500
+
+
+@app.route('/publish/Trainingsdata', methods=['POST'])
+def publish_trainingsdata(event):
+    # Map event types to messages
+    try:
+        if event == "Training":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
 
-            cookie = request.headers.get('Cookie', '')
-            message_type = request.form.get('type', '')
-            classification = request.form.get('classification', '')
-            filename = request.form.get('filename', '')
-            fileid = request.form.get('fileid', '')
-            class_correct = request.form.get('is_classification_correct', '')
-            logging.debug(f"Type {message_type}")
-            # Nachricht senden
+            cookie = request.headers.get("Cookie", "")
+            message_type = request.form.get("type", "")
+            labels = request.form.get("labels", "")
+
+            # Dateien richtig abrufen
+            files = request.files.getlist("files[]")  # Holt alle Dateien aus dem `files[]` Feld
+
+            if not files:
+                return jsonify({"error": "Keine Dateien hochgeladen!"}), 400
+
+            saved_files = []
+            for file in files:
+                file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+                file.save(file_path)  # Datei speichern
+                saved_files.append(file_path)
+
+            logging.debug(f"Gespeicherte Dateien: {saved_files}")
+
             message = {
                 "type": message_type,
-                "is_classification_correct": class_correct,
-                "classification": classification,
-                "filename": filename,
-                "fileid": fileid,
-                "cookie": cookie
+                "files": saved_files,
+                "cookie": cookie,
             }
-            logging.debug(f"Message CorrectedClassification: {message}")
-            # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
+
+            logging.debug(f"Message Training Event: {message}")
+
+            # RabbitMQ Nachricht senden
             asyncio.run(send_message(message))
 
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
 
+        return jsonify({"error": "Ungültiges Event"}), 400
     except Exception as e:
         logging.debug(f"Error in publish_event: {e}")
         return jsonify({"message": "Internal server error", "details": str(e)}), 500

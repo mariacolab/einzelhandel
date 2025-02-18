@@ -1,13 +1,12 @@
 import enum
 
 class SharedFolders(enum.Enum):
-    BASE = "/shared/uploads"
+    UPLOAD = "/shared/uploads"
+    BASE = "/workspace/shared"
 
     # Hauptordner
     MODELS = f"{BASE}/MODELS"
-    KI_MODELLE = f"{BASE}/KIModelle"
     DATASETS = f"{BASE}/Datasets"
-    UPLOAD = f"{BASE}/UPLOAD"
     TRAININGSSATZ = f"{BASE}/TRAININGSSATZ"
     DATA = f"{BASE}/DATA"
 
@@ -28,7 +27,7 @@ class SharedFolders(enum.Enum):
     DATASETS_TESTDATEN_IMAGES = f"{DATASETS_TESTDATEN}/images"
 
     # KI Modelle
-    KI_MODELLE_TRAIN_GESAMT = f"{KI_MODELLE}/trainiert_mit_ganzem_Datensatz"
+    KI_MODELLE_TRAIN_GESAMT = f"{MODELS}/trainiert_mit_ganzem_Datensatz"
 
     # Obst und Gemüse Datensätze
     DATA_OBST_GEMUESE = f"{DATA}/ObstGemuese"

@@ -45,7 +45,7 @@ def detect(bild, filename):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logging.info(f"device: {device}")
 
-    model_path = f"{SharedFolders.KIModelle_trainiert_mit_ganzem_Datensatz.value}/bestTrain40.pt"
+    model_path = f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}/bestTrain40.pt"
     model = YOLO(model_path).to(device)
 
     if model is None:
@@ -83,9 +83,9 @@ def detect(bild, filename):
         logging.info("Filename is " + dateiname)
         best_result.save_txt(SharedFolders.DATASETS_TESTDATEN_LABELS.value + dateiname + ".txt")
         logging.info("Resultlabel saved.")
-        #TODO resize
-        bild2 = cv2.imread(bild)
-        cv2.imwrite(SharedFolders.DATASETS_TESTDATEN_IMAGES.value + dateiname + ".jpg",bild2)
+        #TODO resize [@Sonja Der Part hat bei mir noch nicht funktioniert, deswegen hab ich es für testzwecke auskommentiert, der zweite rückgabe wert fehlt noch]
+        #bild2 = cv2.imread(bild)
+        #cv2.imwrite(SharedFolders.DATASETS_TESTDATEN_IMAGES.value + dateiname + ".jpg",bild2)
     #TODO was wenn nicht richtig?
 
-    return obj_name
+    return obj_name, ""

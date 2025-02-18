@@ -66,28 +66,40 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event Filename: {event_filename}")
                 event_role = event.get("role", "")
                 logging.info(f"Event Role: {event_role}")
-                event_product_data = event.get("product_data", "")
-                logging.info(f"Event Product: {event_product_data}")
+                event_product = event.get("product", "")
+                logging.info(f"Event Product: {event_product}")
+                event_product_info = event.get("info", "")
+                logging.info(f"Event Product: {event_product_info}")
+                event_product_shelf = event.get("shelf", "")
+                logging.info(f"Event Product: {event_product_shelf}")
+                event_price_piece = event.get("price_piece", "")
+                logging.info(f"Event Product: {event_price_piece}")
+                event_price_kg = event.get("price_kg", "")
+                logging.info(f"Event Product: {event_price_kg}")
                 # TODO Load the Image into a Viwer and submit if the classification is corect
                 logging.info("Processing files after MisclassifiedFiles event.")
 
-                file = google_get_file(f"{SharedFolders.UPLOAD.value}/{event_filename}")
-
                 try:
-                    # Read file content and encode in Base64
-                    file_data = file.read()
-                    base64_encoded = base64.b64encode(file_data).decode("utf-8")
+                    with open(event_filename, "rb") as file:
+                        file_data = file.read()
+                        base64_encoded = base64.b64encode(file_data).decode("utf-8")
+                    logging.info("Datei erfolgreich in Base64 umgewandelt")
                 except Exception as e:
                     logging.error(f"Error processing file: {e}")
-                    return f"Fehler: Datei konnte nicht verarbeitet werden. {str(e)}"
+                    logging.info(f"Fehler: Datei konnte nicht verarbeitet werden. {str(e)}")
 
                 filename = os.path.basename(event_filename)
+                logging.info(f"filename: {filename}")
 
                 response = requests.post(WEBHOOK_URL, json={"type": "MisclassifiedFiles",
                                                             "classification": event_classification,
                                                             "filename": filename,
                                                             "role": event_role,
-                                                            "product_data": event_product_data,
+                                                            "product": event_product,
+                                                            "info": event_product_info,
+                                                            "shelf": event_product_shelf,
+                                                            "price_piece": event_price_piece,
+                                                            "price_kg": event_price_kg,
                                                             "file": base64_encoded})
                 logging.info(f"Webhook response: {response.status_code}, {response.text}")
 

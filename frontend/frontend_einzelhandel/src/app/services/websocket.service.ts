@@ -36,7 +36,11 @@ export class WebsocketService {
             filename: msg.file.filename,
             role: msg.role,
             file: msg.file,
-            product_data: msg.product_data
+            product: msg.product,
+            info: msg.info,
+            shelf: msg.shelf,
+            price_piece: msg.price_piece,
+            price_kg: msg.price_kg
           });
         }
       });
