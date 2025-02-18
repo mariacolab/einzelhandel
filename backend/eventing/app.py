@@ -9,6 +9,7 @@ from common.config import Config
 from common.middleware import token_required, role_required, get_user_role_from_token
 from common.shared_drive import save_file_in_folder
 from producer import send_message
+from flask_cors import cross_origin
 import asyncio
 
 app = Flask(__name__)
@@ -42,6 +43,7 @@ limiter = Limiter(
 )
 
 @app.route('/publish/<event>', methods=['POST'])
+@cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
 @token_required
 @role_required('Admin', 'Mitarbeiter', 'Kunde')
 @limiter.limit("60 per minute",

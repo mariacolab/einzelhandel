@@ -234,6 +234,7 @@ services:
       - webhook-service
     command: ["npx", "http-server", "dist/frontend_einzelhandel/browser", "-p", "4200"]
 
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq

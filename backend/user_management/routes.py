@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timedelta
 from flask import request, jsonify, session
 import requests
+from flask_cors import cross_origin
 from auth import hash_password, verify_password
 from common.middleware import token_required, generate_token, generate_refresh_token, TOKEN_BLACKLIST, redis_client, \
     decode_token
@@ -14,6 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 def register_routes(app):
     @app.route('/auth/register', methods=['POST'])
+    @cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
     def register():
         data = request.json
         hashed_password, salt = hash_password(data['password'])
@@ -43,6 +45,7 @@ def register_routes(app):
             return jsonify({"error": "Service unavailable", "details": str(e)}), 500
 
     @app.route('/auth/login', methods=['POST'])
+    @cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
     def login():
         data = request.json
         response = requests.get(f"http://database-management:5001/users/{data['username']}")
@@ -76,18 +79,14 @@ def register_routes(app):
         logging.debug(f"Session Data After Login: {dict(session)}")
         return jsonify({'role': role_name}), 200
 
-<<<<<<< HEAD
+
     @app.route('/check-session', methods=['GET'])
     def check_session():
         return jsonify(dict(session))
-=======
-        return jsonify({'token': token, 'refresh_token': refresh_token, 'role_name': role_name}), 200
-        #'refresh_token': refresh_token}
-        # access_token = create_access_token(identity=user['id'])
-        # return jsonify({"token": access_token}), 200
->>>>>>> frontend-philip
+
 
     @app.route('/auth/logout', methods=['POST'])
+    @cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
     @token_required
     def logout():
         token = session.get('token')
