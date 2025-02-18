@@ -52,14 +52,21 @@ export class LoginComponent {
       this.authService.login(this.loginForm.value)
         .subscribe({
           next: (data: any) => {
+            console.log("Login erfolgreich!", data);
+            console.log("Lokale Speicherung:", localStorage.getItem('authUser'));
+
             // if (this.authService.isLoggedIn()) {
             //   // this.router.navigate(['/admin']);
             //   this.router.navigate(['/customer']);
             // }
             if (this.authService.isLoggedInAsCustomer()) {
+              console.log("Navigiere zu: /customer");
               this.router.navigate(['/customer']);
             } else if (this.authService.isLoggedInAsEmployee()) {
+              console.log("Navigiere zu: /employee");
               this.router.navigate(['/employee']);
+            } else {
+              console.log("Keine gültige Rolle gefunden.");
             }
           },
           error: (err: any) => {

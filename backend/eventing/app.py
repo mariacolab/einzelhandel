@@ -267,7 +267,7 @@ def publish_trainingsdata(event):
 
             saved_files = []
             for file in files:
-                file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+                file_path = os.path.join(SharedFolders.TRAININGSSATZ.value, file.filename)
                 file.save(file_path)  # Datei speichern
                 saved_files.append(file_path)
 

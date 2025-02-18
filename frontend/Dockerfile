@@ -13,9 +13,12 @@ RUN npm install -g @angular/cli
 
 # Install dependencies
 RUN npm install
+RUN npm install ngx-cookie-service
+RUN npm install --legacy-peer-deps ngx-file-drop
 RUN npm install --legacy-peer-deps \
     @angular/material @angular/cdk @angular/animations \
     ngx-webcam @zxing/ngx-scanner @zxing/browser @zxing/library
+
 
 
 # Kopiere den gesamten Code ins Arbeitsverzeichnis

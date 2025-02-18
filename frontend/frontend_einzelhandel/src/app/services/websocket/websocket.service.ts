@@ -43,6 +43,12 @@ export class WebsocketService {
             file: msg.file,
           });
         }
+        else if (msg.type === "Training") {
+          console.log("Falsch klassifizierte Datei erhalten:", msg);
+          observer.next({
+            file: msg.files,
+          });
+        }
       });
 
       // Cleanup-Funktion bei Observable-Abbruch

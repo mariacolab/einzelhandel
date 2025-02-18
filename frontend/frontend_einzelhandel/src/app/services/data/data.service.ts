@@ -33,7 +33,7 @@ export class DataService {
   }
 
   postformData(img: File): Observable<any> {
-    const url = 'http://localhost:8080/eventing-service/publish/ImageUploaded';
+    const url = 'http://localhost/eventing-service/publish/ImageUploaded';
     const formData = new FormData();
     formData.append('type', 'ProcessFiles');
     // formData.append('filename', file, file.name);

@@ -115,6 +115,24 @@ async def on_message(message: aio_pika.IncomingMessage):
                 }
                 response = requests.post(url, headers=headers, files=files)
                 logging.info(f"Response: {response}")
+            elif "Training" == event_type:
+                event_files = event.get("files", "")
+                #logging.info(f"Event Data: {event_data}")
+                logging.info("Processing files after ProcessQrcode event.")
+
+                base64_encoded = []
+                for file in event_files:
+                    try:
+                        with open(file, "rb") as file:
+                            file_data = file.read()
+                            base64_encoded.append(base64.b64encode(file_data).decode("utf-8"))
+                        logging.info("Datei erfolgreich in Base64 umgewandelt")
+                    except Exception as e:
+                        logging.error(f"Error processing file: {e}")
+                        logging.info(f"Fehler: Datei konnte nicht verarbeitet werden. {str(e)}")
+                response = requests.post(WEBHOOK_URL, json={"type": "MisclassifiedFiles",
+                                                            "files": base64_encoded})
+                logging.info(f"Webhook response: {response.status_code}, {response.text}")
             else:
                 logging.debug("if fehlgeschalgen")
         except Exception as e:

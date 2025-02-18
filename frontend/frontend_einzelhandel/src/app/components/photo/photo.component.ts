@@ -12,12 +12,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 import { WebcamImage, WebcamInitError, WebcamModule, WebcamUtil } from 'ngx-webcam';
 import { Observable, Subject } from 'rxjs';
+import { NgxFileDropModule, NgxFileDropEntry } from 'ngx-file-drop';
 import { DataService } from '../../services/data/data.service';
+import { ImageUploadComponent } from '../image_upload/image-upload.component';
 import { ProductDetailsComponent } from '../product-details/product-details.component';
 
 @Component({
   selector: 'app-photo',
-  imports: [MatIconModule, WebcamModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, MatInputModule, ProductDetailsComponent, RouterLink, NgSwitch, NgSwitchCase],
+  imports: [MatIconModule, WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, ImageUploadComponent, MatInputModule, ProductDetailsComponent, RouterLink, NgSwitch, NgSwitchCase],
   templateUrl: './photo.component.html',
   styleUrl: './photo.component.scss',
   animations: [

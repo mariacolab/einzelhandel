@@ -196,7 +196,7 @@ services:
       - ./common:/workspace/common
       - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
-    command: ["python3", "subscriber.py"]
+    #command: ["python3", "subscriber.py"]
 
   webhook-service:
     build:

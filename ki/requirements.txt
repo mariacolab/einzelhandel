@@ -16,3 +16,4 @@ flask_session
 torch
 scipy
 opencv-python
+watchdog

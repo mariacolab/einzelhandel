@@ -1,0 +1,28 @@
+<h1> Nachrichten</h1>
+
+<div *ngIf="qrCodeImage">
+  <h2>Generierter QR-Code</h2>
+  <img [src]="qrCodeImage" alt="QR Code">
+</div>
+
+<div *ngIf="misclassifiedFile">
+  <h2>klassifizierte Datei</h2>
+  <p><strong>Dateiname:</strong> {{ misclassifiedFile.filename }}</p>
+  <p><strong>Klassifikation:</strong> {{ misclassifiedFile.classification }}</p>
+  <p><strong>Produkt:</strong> {{ misclassifiedFile.event_product }}</p>
+  <p><strong>Infos:</strong> {{ misclassifiedFile.event_product_info }}</p>
+  <p><strong>Regal:</strong> {{ misclassifiedFile.event_product_shelf }}</p>
+  <p><strong>Preis pro Stück:</strong> {{ misclassifiedFile.event_price_piece }}</p>
+  <p><strong>Preis pro Kg:</strong> {{ misclassifiedFile.event_price_kg }}</p>
+  <p><strong>Nutzerrolle:</strong> {{ misclassifiedFile.role }}</p>
+  <img [src]="'data:image/png;base64,' + misclassifiedFile.file" alt="Fehlklassifiziertes Bild">
+</div>
+
+<div *ngIf="trainingFile">
+  <h2>klassifizierte Datei</h2>
+  <ul>
+    <li *ngFor="let file of {{training.files}}; let i = index">
+      <img [src]="'data:image/png;base64,' + file" alt="Training Bild">
+    </li>
+  </ul>
+</div>
