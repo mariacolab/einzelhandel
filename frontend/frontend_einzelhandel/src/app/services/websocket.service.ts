@@ -39,7 +39,7 @@ export class WebsocketService {
             info: msg.info,
             shelf: msg.shelf,
             price_piece: msg.price_piece,
-            price_kg: msg.price_kg
+            price_kg: msg.price_kg,
             file: msg.file,
           });
         }
