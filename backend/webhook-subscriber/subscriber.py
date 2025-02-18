@@ -60,6 +60,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 response = requests.post(WEBHOOK_URL, json={"type": "QRCodeGenerated", "image": event_data})
                 logging.info(f"Webhook response: {response.status_code}, {response.text}")
             elif "MisclassifiedFiles" == event_type:
+                mixed_results = event.get("mixed_results","")
                 event_classification = event.get("classification", "")
                 logging.info(f"Event Data: {event_classification}")
                 event_filename = event.get("filename", "")
@@ -76,7 +77,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event Product: {event_price_piece}")
                 event_price_kg = event.get("price_kg", "")
                 logging.info(f"Event Product: {event_price_kg}")
-                # TODO Load the Image into a Viwer and submit if the classification is corect
+                # TODO Load the Image into a Viewer and submit if the classification is correct
                 logging.info("Processing files after MisclassifiedFiles event.")
 
                 try:
@@ -111,12 +112,13 @@ async def on_message(message: aio_pika.IncomingMessage):
                     "type": (None, "CorrectedFiles"),
                     "classification": (None, event_classification),
                     "is_classification_correct": (None, True),
-                    "filename": event_filename,
+                    "filename": (None,event_filename),
+                    "mixed_results": (None, mixed_results)
                 }
                 response = requests.post(url, headers=headers, files=files)
                 logging.info(f"Response: {response}")
             else:
-                logging.debug("if fehlgeschalgen")
+                logging.debug("if fehlgeschlagen")
         except Exception as e:
             logging.error(f"Error processing message: {e}")
 

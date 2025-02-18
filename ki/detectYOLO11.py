@@ -52,9 +52,10 @@ def detect(bild, filename):
     pfad,name,endung=pfad_zerlegen(filename)
     img_small.save(f"{SharedFolders.TRAININGSSATZ.value}/{name}{endung}")
 
-    #TODO Falls kein Objekt erkannt wurde
     if best_result is None:
         logging.info("please make a better picture and ensure the object is clearly visible")
+        if not os.path.exists(f"{SharedFolders.TRAININGSSATZ.value}/YoloErgebnisse/"):
+            os.makedirs(f"{SharedFolders.TRAININGSSATZ.value}/YoloErgebnisse/")
         results[0].save(f"{SharedFolders.TRAININGSSATZ.value}/YoloErgebnisse/{name}{endung}")
         results[0].save_txt(f"{SharedFolders.TRAININGSSATZ.value}/{name}.txt")
         return "NONE"
@@ -63,6 +64,8 @@ def detect(bild, filename):
     names= model.names
     obj_id = best_result.boxes.cls
     obj_name =names[int(obj_id)]
+    if not os.path.exists(f"{SharedFolders.TRAININGSSATZ.value}/YoloErgebnisse/"):
+        os.makedirs(f"{SharedFolders.TRAININGSSATZ.value}/YoloErgebnisse/")
     best_result.save(f"{SharedFolders.TRAININGSSATZ.value}/YoloErgebnisse/{name}{endung}")
     best_result.save_txt(f"{SharedFolders.TRAININGSSATZ.value}/{name}.txt")
     return obj_name
@@ -75,15 +78,18 @@ def retrain():
     model_path = f"{SharedFolders.KI_MODELLE_GESAMT_BEST_GEWICHT.value}/best.pt"
     model = YOLO(model_path)
     logging.info(f"TEST1")
-    metrics_old = model.val(data=f"{SharedFolders.DATASETS_FFv3.value}/data.yaml")
+    metrics_old = model.val(data=f"{SharedFolders.DATASETS_FFv3.value}/data.yaml", project=f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}", name="oldVal")
     logging.info(f"TEST2")
     map50_old = metrics_old.box.map50
     save_path= f"{SharedFolders.KI_MODELLE_GESAMT_NEW.value}"
     logging.info(f"TEST3")
-    model.train(data=f"{SharedFolders.DATASETS_FFv3.value}/data.yaml", save_dir=save_path, device=0, workers=0, epochs=1, imgsz=224, batch=32)
+    model.train(data=f"{SharedFolders.DATASETS_FFv3.value}/data.yaml", project=save_path, device=0, workers=0, save_period=1, epochs=2, imgsz=224, batch=32)
     logging.info(f"TEST4")
-    metrics_new = model.val()
+    metrics_new = model.val(project=f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}", name="newVal")
     map50_new = metrics_new.box.map50
     logging.info("old map50 is " + str(map50_old) + " and new map50 is " + str(map50_new))
     if map50_new>map50_old:
-        io
+        logging.info("new is better")
+    else:
+        logging.info("old is better")
+    return

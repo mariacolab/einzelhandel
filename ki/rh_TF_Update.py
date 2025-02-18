@@ -5,6 +5,8 @@ import os
 import logging
 import cv2
 
+from common.SharedFolders import SharedFolders
+
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -25,13 +27,13 @@ def prepare_Data(input_Directory, output_Directory):
 def update_model_TF():
     logging.info("Beginn Funktion.")
     # Vorhandenes Modell laden
-    model_path = './MODELS/obst_gemuese_TF_100.h5'
+    model_path = f'{SharedFolders.MODELS.value}/obst_gemuese_TF_100.h5'
     model = load_model(model_path)
 
     logging.info("Modell geladen.")
 
     # Verzeichnisse mit neuen Bildern
-    base_dir = "./DATA/ObstGemuese_Neu/"
+    base_dir = f'{SharedFolders.DATA_OBST_GEMUESE.value}'
     train_dir = os.path.join(base_dir, '1_TRAIN')
     test_dir = os.path.join(base_dir, '2_TEST')
 
@@ -86,7 +88,7 @@ def update_model_TF():
     logging.info(f"Update durchgeführt!")
 
     # Aktualisiertes Modell speichern
-    updated_model_path = './MODELS/obst_gemuese_TF_100.h5'
+    updated_model_path = f'{SharedFolders.MODELS.value}/obst_gemuese_TF_100.h5'
     model.save(updated_model_path)
 
     logging.info(f"Modell gespeichert {updated_model_path}.")

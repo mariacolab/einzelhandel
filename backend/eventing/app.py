@@ -195,6 +195,7 @@ def publish_event(event):
             price_kg = request.form.get('price_kg', '')
             role = request.form.get('role', '')
             classification = request.form.get('classification', '')
+            mixed_results = request.form.get('mixed_results', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
@@ -207,7 +208,8 @@ def publish_event(event):
                 "price_piece": price_piece,
                 "price_kg": price_kg,
                 "role": role,
-                "cookie": cookie
+                "cookie": cookie,
+                "mixed_results" : mixed_results
             }
             logging.debug(f"Message MisclassificationReported: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
@@ -224,6 +226,7 @@ def publish_event(event):
             classification = request.form.get('classification', '')
             filename = request.form.get('filename', '')
             class_correct = request.form.get('is_classification_correct', '')
+            mixed_results =request.form.get('mixed_results', '')
             logging.debug(f"Type {message_type}")
             # Nachricht senden
             message = {
@@ -231,7 +234,8 @@ def publish_event(event):
                 "is_classification_correct": class_correct,
                 "classification": classification,
                 "filename": filename,
-                "cookie": cookie
+                "cookie": cookie,
+                "mixed_results": mixed_results
             }
             logging.debug(f"Message CorrectedClassification: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
