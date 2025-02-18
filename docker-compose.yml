@@ -183,7 +183,6 @@ services:
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /workspace
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
-      NVIDIA_VISIBLE_DEVICES: all
       COMPOSE_HTTP_TIMEOUT: 1500
       GOOGLE_DRIVE_PATH: /mnt/gdrive
     depends_on:
@@ -198,11 +197,6 @@ services:
       - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [ gpu ]
 
   webhook-service:
     build:

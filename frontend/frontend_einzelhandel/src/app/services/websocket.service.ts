@@ -33,14 +33,14 @@ export class WebsocketService {
           observer.next({
             eventType: msg.type,
             classification: msg.classification,
-            filename: msg.file.filename,
             role: msg.role,
-            file: msg.file,
+            filename: msg.file.filename,
             product: msg.product,
             info: msg.info,
             shelf: msg.shelf,
             price_piece: msg.price_piece,
             price_kg: msg.price_kg
+            file: msg.file,
           });
         }
       });
