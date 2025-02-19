@@ -14,6 +14,7 @@ from common.product_data import get_product_with_data
 from common.shared_drive import copy_file_to_folder
 from detectYOLO11 import detect, pfad_zerlegen, retrain
 from common.utils import load_secrets
+from rh_TF_Update import update_model_TF
 from rh_TF_Predict import predict_object_TF
 
 # Setup logging
@@ -79,26 +80,25 @@ async def on_message(message: aio_pika.IncomingMessage):
                     mixed_results="False"
                     result = result1
                 logging.info(f"result from image: {result}")
+                product_data = get_product_with_data(result) or {}
+
+                produkt = product_data['Produkt']
+                info = product_data['Informationen']
+                regal = product_data['Regal']
+                preis_pro_stueck = product_data['Preis_pro_stueck']
+                preis_pro_kg = product_data['Preis_pro_kg']
+
+                logging.info(f"Produkt: {produkt}")
+                logging.info(f"Informationen: {info}")
+                logging.info(f"Regal: {regal}")
+                logging.info(f"Preis pro Stück: {preis_pro_stueck} €")
+                logging.info(f"Preis pro kg: {preis_pro_kg} €")
 
                 if event_role == "Kunde":
                     """
                         - Bild wird in traningsordner verschoben
                         - Klassifizierung weitergegeben
                     """
-
-                    product_data = get_product_with_data(result) or {}
-                   
-                    produkt = product_data['Produkt']
-                    info = product_data['Informationen']
-                    regal = product_data['Regal']
-                    preis_pro_stueck = product_data['Preis_pro_stueck']
-                    preis_pro_kg = product_data['Preis_pro_kg']
-
-                    logging.info(f"Produkt: {produkt}")
-                    logging.info(f"Informationen: {info}")
-                    logging.info(f"Regal: {regal}")
-                    logging.info(f"Preis pro Stück: {preis_pro_stueck} €")
-                    logging.info(f"Preis pro kg: {preis_pro_kg} €")
 #Abschnitt von Sonja Schwabe - Anfang
 
                     # Bilder für kleines Modell ungelabelt ablegen
@@ -108,7 +108,6 @@ async def on_message(message: aio_pika.IncomingMessage):
                         img_small.save(f"{SharedFolders.TRAININGSSATZ.value}/kleinesModell/{name}{endung}")
 
 #Abschnitt von Sonja Schwabe - Ende
-
 
                     url = " http://nginx-proxy/eventing-service/publish/MisclassificationReported"
                     headers = {
@@ -144,11 +143,26 @@ async def on_message(message: aio_pika.IncomingMessage):
                         "type": (None, "MisclassifiedFiles"),
                         "classification": (None, result),
                         "filename": (None, event_filename),
-                        "product_data": (None, None),
+                        "product": (None, produkt),
+                        "info": (None, info),
+                        "shelf": (None, regal),
+                        "price_piece": (None, str(preis_pro_stueck)),
+                        "price_kg": (None, str(preis_pro_kg)),
                         "role": (None, event_role),
-                        "mixed_results": (None,mixed_results)
+                        "mixed_results": (None, mixed_results)
                     }
                     logging.info(f"files: {files}")
+                    response = requests.post(url, headers=headers, files=files)
+                    logging.info(f"Response: {response}")
+
+                    url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
+                    headers = {
+                        "Cookie": f"{event_cookie}",
+                    }
+                    files = {
+                        "type": (None, "ClassFiles"),
+                        "result": (None, result),
+                    }
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
 
@@ -199,7 +213,6 @@ async def on_message(message: aio_pika.IncomingMessage):
 #Abschnitt von Sonja Schwabe - Anfang
 
 
-backend_ki_integration_ralf
                     if event_classification in class_names:
                         img_small = image.resize((128, 128))
                         img_small.save(f"{SharedFolders.TRAININGSSATZ.value}/kleinesModell/{name}{endung}")  # TODO richtiger Ordner für unlabeled Data
@@ -217,13 +230,14 @@ backend_ki_integration_ralf
                 logging.info(f"Event path: {event_filename}")
                 logging.info("Fehlerhafte Klassifizierung")
             if "TrainTF" in event_type:
-                event_classification = event.get("classification", "")
-                event_class_correct = event.get("is_classification_correct ", "")
-                event_filename = event.get("filename", "")
-                logging.info(f"Event file: {event_classification}")
-                logging.info(f"Event path: {event_class_correct}")
-                logging.info(f"Event path: {event_filename}")
-                logging.info("Fehlerhafte Klassifizierung")
+                update_model_TF()
+                # event_classification = event.get("classification", "")
+                # event_class_correct = event.get("is_classification_correct ", "")
+                # event_filename = event.get("filename", "")
+                # logging.info(f"Event file: {event_classification}")
+                # logging.info(f"Event path: {event_class_correct}")
+                # logging.info(f"Event path: {event_filename}")
+                # logging.info("Fehlerhafte Klassifizierung")
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")
@@ -244,10 +258,10 @@ async def main():
             await queue_corrected.bind(exchange, routing_key="CorrectedFiles")
 
             queue_tf = await channel.declare_queue("process_tf_queue", durable=True)
-            await queue_tf.bind(exchange, routing_key="tfFiles")
+            await queue_tf.bind(exchange, routing_key="TrainTF")
 
             queue_yolo = await channel.declare_queue("process_yolo_queue", durable=True)
-            await queue_yolo.bind(exchange, routing_key="yoloFiles")
+            await queue_yolo.bind(exchange, routing_key="TrainYolo")
 
             await queue_corrected.consume(on_message)
             await queue_tf.consume(on_message)

@@ -4,8 +4,6 @@ aio-pika
 Unicorn
 gunicorn
 requests
-pydrive
-oauth2client
 python-magic
 redis
 PyJWT
@@ -16,4 +14,3 @@ flask_session
 torch
 scipy
 opencv-python
-watchdog

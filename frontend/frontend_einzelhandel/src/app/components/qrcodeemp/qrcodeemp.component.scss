@@ -21,37 +21,18 @@
   margin-bottom: 10px;
 }
 
-webcam {
+zxing-scanner {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  // width: 256px;
+  width: 256px;
   max-width: 256px;
   max-height: 256px;
   // object-fit: contain;
 }
 
-img {
-  position: absolute;
-  max-width: 256px;
-  max-height: 256px;
-  top: 127px;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
 button {
   width: 40vw;
   margin: 10px;
-}
-
-img{
-  position: absolute;
-  max-width: 256px;
-  max-height: 256px;
-  top: 127px;
-  left: 50%;
-  margin-top: 75px;
-  transform: translate(-50%, -50%);
 }

@@ -1,11 +1,13 @@
 import { Routes } from '@angular/router';
 import { CustomerComponent } from './components/customer/customer.component';
 import { EmployeeComponent } from './components/employee/employee.component';
+import { PhotoEmpComponent } from './components/photo_emp/photo_emp.component';
 import { LoginComponent } from './components/login/login.component';
 import { PhotoComponent } from './components/photo/photo.component';
 import { ImageUploadComponent } from './components/image_upload/image-upload.component';
 import { ProductDetailsComponent } from './components/product-details/product-details.component';
 import { QrcodeComponent } from './components/qrcode/qrcode.component';
+import { QrcodeempComponent } from './components/qrcodeemp/qrcodeemp.component';
 import { SignUpComponent } from './components/sign-up/sign-up.component';
 import { customerAuthGuard } from './guards/customer-auth/customer-auth.guard';
 import { employeeAuthGuard } from './guards/employee-auth/employee-auth.guard';
@@ -23,5 +25,7 @@ export const routes: Routes = [
   { path: 'image_upload', component: ImageUploadComponent, canActivate: [customerAuthGuard] },
   { path: 'employee', component: EmployeeComponent, canActivate: [employeeAuthGuard] },
   { path: 'messages', component: MessagesComponent, canActivate: [employeeAuthGuard] },
+  { path: 'photo_emp', component: PhotoEmpComponent, canActivate: [employeeAuthGuard] },
+  { path: 'qrcodeemp', component: QrcodeempComponent, canActivate: [employeeAuthGuard] },
   { path: '**', redirectTo: '/login'}
 ];

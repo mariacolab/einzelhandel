@@ -113,7 +113,6 @@ services:
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /app
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
-      GOOGLE_DRIVE_PATH: /app/gdrive
     ports:
       - "5004:5000"
     depends_on:
@@ -147,7 +146,6 @@ services:
       PYTHONPATH: /app
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
-      GOOGLE_DRIVE_PATH: /mnt/gdrive
     ports:
       - "5005:5000"
     depends_on:
@@ -185,7 +183,6 @@ services:
       PYTHONPATH: /workspace
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
       COMPOSE_HTTP_TIMEOUT: 1500
-      GOOGLE_DRIVE_PATH: /mnt/gdrive
     depends_on:
       - rabbitmq
     ports:

@@ -87,6 +87,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     # logging.info(f"item_data: {data}")
                     data = get_product_with_data(event_result)
 
+
                     data_to_encrypt = json.dumps(data)
 
                     # Datensatz wird verschlüsselt

@@ -1,33 +1,20 @@
+#Ralf Hager
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import os
 import logging
-import cv2
 
 from common.SharedFolders import SharedFolders
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
 
-def prepare_Data(input_Directory, output_Directory):
-    size_txt = "128"  # input("Größe eingeben: ")
-    size = int(size_txt)
-    for root, dirs, files in os.walk(input_Directory):
-            for file in files:
-                full_path_in = os.path.join(input_Directory, file)
-                full_path_out = os.path.join(output_Directory, file)
-                img = cv2.imread(full_path_in,cv2.IMREAD_COLOR)
-                img_res = cv2.resize(img, dsize=(size, size), interpolation=cv2.INTER_CUBIC)
-                img_res = cv2.cvtColor(img_res,cv2.COLOR_BGR2RGB)
-                img_res = cv2.cvtColor(img_res,cv2.COLOR_RGB2BGR)
-                cv2.imwrite(full_path_out,img_res)
-                logging.info(f"Verarbeitetes Photo: {full_path_out}")
 
 def update_model_TF():
     logging.info("Beginn Funktion.")
     # Vorhandenes Modell laden
-    model_path = f'{SharedFolders.MODELS.value}/obst_gemuese_TF_100.h5'
+    model_path = f'{SharedFolders.MODELS.value}/obst_gemuese_TF_250.h5'
     model = load_model(model_path)
 
     logging.info("Modell geladen.")
@@ -43,7 +30,7 @@ def update_model_TF():
 
     # Datenvorbereitung mit Augmentation
     train_datagen = ImageDataGenerator(
-        rescale=1./255,
+        rescale=1. / 255,
         rotation_range=30,
         width_shift_range=0.2,
         height_shift_range=0.2,
@@ -52,7 +39,7 @@ def update_model_TF():
         horizontal_flip=True,
         fill_mode='nearest')
 
-    test_datagen = ImageDataGenerator(rescale=1./255)
+    test_datagen = ImageDataGenerator(rescale=1. / 255)
 
     train_generator = train_datagen.flow_from_directory(
         train_dir,
@@ -88,7 +75,7 @@ def update_model_TF():
     logging.info(f"Update durchgeführt!")
 
     # Aktualisiertes Modell speichern
-    updated_model_path = f'{SharedFolders.MODELS.value}/obst_gemuese_TF_100.h5'
+    updated_model_path = f'{SharedFolders.MODELS.value}/obst_gemuese_TF_250.h5'
     model.save(updated_model_path)
 
     logging.info(f"Modell gespeichert {updated_model_path}.")

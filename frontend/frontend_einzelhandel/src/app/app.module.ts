@@ -18,11 +18,13 @@ import { NgxFileDropModule } from 'ngx-file-drop';
 // Komponenten
 import { AppComponent } from './app.component';
 import { PhotoComponent } from './components/photo/photo.component';
+import { PhotoEmpComponent } from './components/photo_emp/photo_emp.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    PhotoComponent
+    PhotoComponent,
+    PhotoEmpComponent
   ],
   imports: [
     BrowserModule,

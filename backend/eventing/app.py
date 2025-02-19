@@ -364,6 +364,62 @@ def start_ai_yolo():
         logging.debug(f"Error in publish_event: {e}")
         return jsonify({"message": "Internal server error", "details": str(e)}), 500
 
+
+@app.route('/qrcode/scan/result', methods=['GET'])
+def qrcode_scan_result():
+    try:
+        logging.debug(f"Headers: {request.headers}")
+        logging.debug(f"Form: {request.form}")
+
+        event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
+        if event_type != "ReadQrCode":
+            return jsonify({"error": "Ungültiger Event-Typ"}), 400
+
+        qrdata = request.form.get("qrdata", "")
+
+        message = {
+            "type": event_type,
+            "qrdata": qrdata,
+        }
+        logging.debug(f"Message TrainYOLO Event: {message}")
+        asyncio.run(send_message(message))
+        return jsonify({"status": f"Type {event_type} uploaded successfully."}), 200
+
+    except Exception as e:
+        logging.debug(f"Error in publish_event: {e}")
+        return jsonify({"message": "Internal server error", "details": str(e)}), 500
+
+@app.route('/qrcode/send/result', methods=['GET'])
+def qrcode_send_result():
+    try:
+        logging.debug(f"Headers: {request.headers}")
+        logging.debug(f"Form: {request.form}")
+
+        event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
+        if event_type != "ReadQrCode":
+            return jsonify({"error": "Ungültiger Event-Typ"}), 400
+
+        name = request.form.get("name", "")
+        description = request.form.get("description", "")
+        shelf = request.form.get("shelf", "")
+        price_piece = request.form.get("price_piece", "")
+        price_kg = request.form.get("price_kg", "")
+
+        message = {
+            "type": event_type,
+            "name": name,
+            "description": description,
+            "shelf": shelf,
+            "price_piece": price_piece,
+            "price_kg": price_kg,
+        }
+        logging.debug(f"Message TrainYOLO Event: {message}")
+        asyncio.run(send_message(message))
+        return jsonify({"status": f"Type {event_type} uploaded successfully."}), 200
+
+    except Exception as e:
+        logging.debug(f"Error in publish_event: {e}")
+        return jsonify({"message": "Internal server error", "details": str(e)}), 500
 @app.route('/debug/session', methods=['GET'])
 def debug_session():
     return jsonify(dict(session))

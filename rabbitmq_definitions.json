@@ -134,14 +134,14 @@
       "vhost": "/",
       "destination": "process_tf_queue",
       "destination_type": "queue",
-      "routing_key": "tfFiles"
+      "routing_key": "TrainTF"
     },
     {
       "source": "events",
       "vhost": "/",
       "destination": "process_yolo_queue",
       "destination_type": "queue",
-      "routing_key": "yoloFiles"
+      "routing_key": "TrainYolo"
     }
   ]
 }

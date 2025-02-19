@@ -22,10 +22,10 @@ import { Subscription } from 'rxjs';
 
 
 @Component({
-  selector: 'app-photo',
-  imports: [CommonModule, WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, ImageUploadComponent, MatInputModule], //MatIconModule, ProductDetailsComponent, RouterLink NgSwitch, NgSwitchCase
-  templateUrl: './photo.component.html',
-  styleUrl: './photo.component.scss',
+  selector: 'app-photo_emp',
+  imports: [CommonModule, WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, ImageUploadComponent, MatInputModule], //ProductDetailsComponent, RouterLink NgSwitch, NgSwitchCase MatIconModule,
+  templateUrl: './photo_emp.component.html',
+  styleUrl: './photo_emp.component.scss',
   animations: [
     trigger('openClose', [
       // ...
@@ -59,7 +59,7 @@ import { Subscription } from 'rxjs';
     ])
   ]
 })
-export class PhotoComponent implements OnInit, OnDestroy {
+export class PhotoEmpComponent implements OnInit, OnDestroy {
 
    private subscriptions: Subscription[] = [];
       misclassifiedFile: any = null;
