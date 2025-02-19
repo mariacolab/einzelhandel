@@ -161,6 +161,7 @@ services:
       - ./common:/app/common
       - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
+      - shared_training:/mnt/shared_training
 
   ki:
     build:
@@ -183,7 +184,6 @@ services:
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /workspace
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
-      NVIDIA_VISIBLE_DEVICES: all
       COMPOSE_HTTP_TIMEOUT: 1500
       GOOGLE_DRIVE_PATH: /mnt/gdrive
     depends_on:
@@ -197,12 +197,8 @@ services:
       - ./common:/workspace/common
       - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
+      - training_data:/workspace/shared/TRAININGSSATZ
     command: ["python3", "subscriber.py"]
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [ gpu ]
 
   webhook-service:
     build:
@@ -239,6 +235,7 @@ services:
     depends_on:
       - webhook-service
     command: ["npx", "http-server", "dist/frontend_einzelhandel/browser", "-p", "4200"]
+
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -286,6 +283,7 @@ services:
       - ./common:/app/common
       - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
+      - shared_training:/mnt/shared_training
     command: ["python3", "subscriber.py"]
 
   nginx:
@@ -304,6 +302,20 @@ services:
       - frontend
       - eventing-service
 
+  watchdog:
+    build:
+      context: ./watchdog
+    container_name: watchdog
+    volumes:
+      - training_data:/watched_data
+    environment:
+      - FILE_THRESHOLD=2
+      - TARGET_URL=http://eventing-service:5005/Trainingsdata
+    depends_on:
+      - webhook-service
+    command: [ "python3", "watch_folder.py" ]
+
+
   redis:
     image: redis:latest
     container_name: redis_container
@@ -318,6 +330,8 @@ volumes:
   db_data:
   redis_data:
   shared_uploads:
+  training_data:
+  shared_training:
 
 secrets:
   github_credentials:

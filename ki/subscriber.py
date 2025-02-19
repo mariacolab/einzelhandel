@@ -85,8 +85,20 @@ async def on_message(message: aio_pika.IncomingMessage):
                         - Bild wird in traningsordner verschoben
                         - Klassifizierung weitergegeben
                     """
-                    product_data = get_product_with_data(result)
 
+                    product_data = get_product_with_data(result) or {}
+                   
+                    produkt = product_data['Produkt']
+                    info = product_data['Informationen']
+                    regal = product_data['Regal']
+                    preis_pro_stueck = product_data['Preis_pro_stueck']
+                    preis_pro_kg = product_data['Preis_pro_kg']
+
+                    logging.info(f"Produkt: {produkt}")
+                    logging.info(f"Informationen: {info}")
+                    logging.info(f"Regal: {regal}")
+                    logging.info(f"Preis pro Stück: {preis_pro_stueck} €")
+                    logging.info(f"Preis pro kg: {preis_pro_kg} €")
 #Abschnitt von Sonja Schwabe - Anfang
 
                     # Bilder für kleines Modell ungelabelt ablegen
@@ -97,6 +109,7 @@ async def on_message(message: aio_pika.IncomingMessage):
 
 #Abschnitt von Sonja Schwabe - Ende
 
+
                     url = " http://nginx-proxy/eventing-service/publish/MisclassificationReported"
                     headers = {
                         "Cookie": f"{event_cookie}",
@@ -105,13 +118,19 @@ async def on_message(message: aio_pika.IncomingMessage):
                         "type": (None, "MisclassifiedFiles"),
                         "classification": (None, result),
                         "filename": (None, event_filename),
-                        "product_data": (None, product_data),
+                         "product": (None, produkt),
+                        "info": (None, info),
+                        "shelf": (None, regal),
+                        "price_piece": (None, str(preis_pro_stueck)),
+                        "price_kg": (None, str(preis_pro_kg)),
                         "role": (None, event_role),
                         "mixed_results": (None, mixed_results)
+
                     }
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
                 else:
+
                     """
                         - prüfen ob Klassifizierung korrekt ist
                         - falls ja Klassifizierung weitergegeben
@@ -129,6 +148,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                         "role": (None, event_role),
                         "mixed_results": (None,mixed_results)
                     }
+                    logging.info(f"files: {files}")
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
 
@@ -177,20 +197,34 @@ async def on_message(message: aio_pika.IncomingMessage):
                 else:
                     logging.info(f"Event file: {event_classification}")
 #Abschnitt von Sonja Schwabe - Anfang
-                    #img_small = cv2.resize(image, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
-                    #copy_file_to_folder(img_small,
-                    #                    SharedFolders.TRAININGSSATZ.value,
-                    #                    event_filename)
 
+
+backend_ki_integration_ralf
                     if event_classification in class_names:
                         img_small = image.resize((128, 128))
                         img_small.save(f"{SharedFolders.TRAININGSSATZ.value}/kleinesModell/{name}{endung}")  # TODO richtiger Ordner für unlabeled Data
-                        #img_small = cv2.resize(image, dsize=(128, 128), interpolation=cv2.INTER_CUBIC)
-                        #copy_file_to_folder(img_small,
-                        #                    SharedFolders.TRAININGSSATZ.value,
-                        #                    event_filename)
+
 #Abschnitt von Sonja Schwabe - Ende
                     logging.info("Fehlerhafte Klassifizierung")
+
+                    
+            if "TrainYOLO" in event_type:
+                event_classification = event.get("classification", "")
+                event_class_correct = event.get("is_classification_correct ", "")
+                event_filename = event.get("filename", "")
+                logging.info(f"Event file: {event_classification}")
+                logging.info(f"Event path: {event_class_correct}")
+                logging.info(f"Event path: {event_filename}")
+                logging.info("Fehlerhafte Klassifizierung")
+            if "TrainTF" in event_type:
+                event_classification = event.get("classification", "")
+                event_class_correct = event.get("is_classification_correct ", "")
+                event_filename = event.get("filename", "")
+                logging.info(f"Event file: {event_classification}")
+                logging.info(f"Event path: {event_class_correct}")
+                logging.info(f"Event path: {event_filename}")
+                logging.info("Fehlerhafte Klassifizierung")
+
         except Exception as e:
             logging.error(f"Error processing message: {e}")
 
@@ -209,8 +243,15 @@ async def main():
             queue_corrected = await channel.declare_queue("process_corrected_classified_queue", durable=True)
             await queue_corrected.bind(exchange, routing_key="CorrectedFiles")
 
-            await queue_corrected.consume(on_message)
+            queue_tf = await channel.declare_queue("process_tf_queue", durable=True)
+            await queue_tf.bind(exchange, routing_key="tfFiles")
 
+            queue_yolo = await channel.declare_queue("process_yolo_queue", durable=True)
+            await queue_yolo.bind(exchange, routing_key="yoloFiles")
+
+            await queue_corrected.consume(on_message)
+            await queue_tf.consume(on_message)
+            await queue_yolo.consume(on_message)
             await queue_validated.consume(on_message)
             logging.info("Waiting for messages. To exit press CTRL+C.")
             await asyncio.Future()  # Blockiert, um Nachrichten zu empfangen

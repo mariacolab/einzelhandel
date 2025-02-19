@@ -12,7 +12,7 @@ from ultralytics import YOLO
 from common.SharedFolders import SharedFolders
 from testYOLO11 import yolotest
 
-logging.info(f"torch available: {torch.cuda.is_available()}")
+#logging.info(f"torch available: {torch.cuda.is_available()}")
 
 
 # gibt Dateinamen ohne Endung zurück (Bsp. "file.jpg" wird zu "file")
@@ -26,7 +26,7 @@ def detect(bild, filename):
     logging.info("Sent to AI for detection.")
 
     # "cpu" for CPU use or "cuda" for GPU
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
     logging.info(f"device: {device}")
 
     model_path = f"{SharedFolders.KI_MODELLE_GESAMT_BEST_GEWICHT.value}/best.pt"

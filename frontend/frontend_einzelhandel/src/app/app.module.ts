@@ -1,25 +1,47 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { AppComponent } from './app.component';
-import { MessagesComponent } from './components/messages.component';
-import { WebsocketService } from './services/websocket.service';
+import { CommonModule } from '@angular/common';
 
-// Importiere das Angular-Routing-Modul
-import { AppRoutingModule } from './app.routes';
+// Angular Material Module
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { WebcamModule } from 'ngx-webcam';
+import { NgxFileDropModule } from 'ngx-file-drop';
+
+// Komponenten
+import { AppComponent } from './app.component';
+import { PhotoComponent } from './components/photo/photo.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    MessagesComponent
+    PhotoComponent
   ],
   imports: [
     BrowserModule,
+    FormsModule,
     HttpClientModule,
-    CommonModule
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    MatCardModule,
+    MatGridListModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule,
+    WebcamModule,
+    NgxFileDropModule,
+    NgIf
   ],
-  providers: [WebsocketService],
+  exports: [EmployeeComponent],
+  providers: [],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {}

@@ -117,6 +117,24 @@ async def on_message(message: aio_pika.IncomingMessage):
                 }
                 response = requests.post(url, headers=headers, files=files)
                 logging.info(f"Response: {response}")
+            elif "Trainingdata" == event_type:
+                event_files = event.get("files", "")
+                #logging.info(f"Event Data: {event_data}")
+                logging.info("Processing files after Trainingdata event.")
+
+                base64_encoded = []
+                for file in event_files:
+                    try:
+                        with open(file, "rb") as file:
+                            file_data = file.read()
+                            base64_encoded.append(base64.b64encode(file_data).decode("utf-8"))
+                        logging.info("Datei erfolgreich in Base64 umgewandelt")
+                    except Exception as e:
+                        logging.error(f"Error processing file: {e}")
+                        logging.info(f"Fehler: Datei konnte nicht verarbeitet werden. {str(e)}")
+                response = requests.post(WEBHOOK_URL, json={"type": "Trainingdata",
+                                                            "files": base64_encoded})
+                logging.info(f"Webhook response: {response.status_code}, {response.text}")
             else:
                 logging.debug("if fehlgeschlagen")
         except Exception as e:
@@ -137,6 +155,10 @@ async def main():
             queue_qrcode = await channel.declare_queue("process_qrcode_queue", durable=True)
             await queue_qrcode.bind(exchange, routing_key="ProcessQrcode")
 
+            queue_trainingdata = await channel.declare_queue("process_trainingdata_queue", durable=True)
+            await queue_trainingdata.bind(exchange, routing_key="Trainingdata")
+
+            await queue_trainingdata.consume(on_message)
             await queue_mis.consume(on_message)
             await queue_qrcode.consume(on_message)
             logging.info("Waiting for messages. To exit press CTRL+C.")

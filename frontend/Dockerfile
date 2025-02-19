@@ -1,14 +1,25 @@
 # Use Node.js as the base image
 FROM node:18
 
+ENV PATH="$PATH:/root/.npm-global/bin"
 # Set the working directory inside the container
 WORKDIR /app
 
 # Kopiere package.json und package-lock.json aus `frontend_einzelhandel`
 COPY frontend_einzelhandel/package.json frontend_einzelhandel/package-lock.json ./
 
+# Install Angular CLI und die notwendigen Pakete
+RUN npm install -g @angular/cli
+
 # Install dependencies
 RUN npm install
+RUN npm install ngx-cookie-service
+RUN npm install --legacy-peer-deps ngx-file-drop
+RUN npm install --legacy-peer-deps \
+    @angular/material @angular/cdk @angular/animations \
+    ngx-webcam @zxing/ngx-scanner @zxing/browser @zxing/library
+
+
 
 # Kopiere den gesamten Code ins Arbeitsverzeichnis
 COPY frontend_einzelhandel/. .
@@ -20,4 +31,4 @@ RUN npm run build
 RUN npm install -g http-server
 
 # Serve the Angular app
-CMD ["npx", "http-server", "dist/frontend", "-p", "4200"]
+CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "4200"]
