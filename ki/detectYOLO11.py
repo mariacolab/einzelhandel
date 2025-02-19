@@ -3,13 +3,14 @@
 # Rückgabe ist Klassenname
 import logging
 import os
+import shutil
 
 import torch
 from PIL import Image
 
 from ultralytics import YOLO
 from common.SharedFolders import SharedFolders
-
+from testYOLO11 import yolotest
 
 logging.info(f"torch available: {torch.cuda.is_available()}")
 
@@ -70,26 +71,53 @@ def detect(bild, filename):
     best_result.save_txt(f"{SharedFolders.TRAININGSSATZ.value}/{name}.txt")
     return obj_name
 
-def retrain():
+def retrain(): #trainiert ein neues Modell, testet ob dieses besser ist und setzt dieses dementsprechend ggf als neues Modell
     # "cpu" for CPU use or "cuda" for GPU
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logging.info(f"device: {device}")
-    # TODO je nachdem wo alles abgelegt wird anpassen
+    # Bisheriges Modell laden
     model_path = f"{SharedFolders.KI_MODELLE_GESAMT_BEST_GEWICHT.value}/best.pt"
     model = YOLO(model_path)
-    logging.info(f"TEST1")
+    #map50 und Anzahl korrekt klassifizierter Testbilder ermitteln bei bisherigem Modell
+    correct_old = yolotest(f"{SharedFolders.KI_MODELLE_GESAMT_BEST_GEWICHT.value}/best.pt")
     metrics_old = model.val(data=f"{SharedFolders.DATASETS_FFv3.value}/data.yaml", project=f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}", name="oldVal")
-    logging.info(f"TEST2")
     map50_old = metrics_old.box.map50
+
+    #Modell neu trainieren
     save_path= f"{SharedFolders.KI_MODELLE_GESAMT_NEW.value}"
-    logging.info(f"TEST3")
-    model.train(data=f"{SharedFolders.DATASETS_FFv3.value}/data.yaml", project=save_path, device=0, workers=0, save_period=1, epochs=2, imgsz=224, batch=32)
-    logging.info(f"TEST4")
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    model.train(data=f"{SharedFolders.DATASETS_FFv3.value}/data.yaml", project=save_path, device=0, workers=0, epochs=200, imgsz=224, batch=64, patience=40, pretrained=True)
+    # map50 und Anzahl korrekt klassifizierter Testbilder ermitteln bei neuem Modell
+    correct_new = yolotest(f"{SharedFolders.KI_MODELLE_GESAMT_BEST_GEWICHT.value}/best.pt")
     metrics_new = model.val(project=f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}", name="newVal")
     map50_new = metrics_new.box.map50
-    logging.info("old map50 is " + str(map50_old) + " and new map50 is " + str(map50_new))
-    if map50_new>map50_old:
+
+    logging.info("aktuelle mAP50 ist " + str(map50_old) + " und neue mAP50 ist " + str(map50_new))
+    logging.info("aktuelles Model erkennt " + str(correct_old) + " der 105 Testbilder korrekt und das neue Modell " + str(correct_new))
+
+    betterModell=""
+    if map50_new>map50_old and ((map50_new-map50_old) > 0,2):
         logging.info("new is better")
+        betterModell = "new"
+    elif map50_new>map50_old and (correct_new >= correct_old):
+        logging.info("new is better")
+        betterModell = "new"
     else:
         logging.info("old is better")
+        betterModell = "old"
+
+    #wenn neues Modell besser dieses als neues bestes auswählen und Val-Ordner löschen
+    if betterModell == "new":
+        #um Platz zu sparen ggf bestModel Gewichte einfach löschen - so gehen die Daten aber nicht verloren
+        i = 0
+        while os.path.exists(f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}/xbestModelxi"):
+            i = i+1
+        shutil.copytree(f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}/bestModel",f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}/xbestModelxi")
+        shutil.rmtree(f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}/bestModel")
+        shutil.copytree(f"{SharedFolders.KI_MODELLE_GESAMT_NEW.value}/train",f"{SharedFolders.KI_MODELLE_GESAMT_BEST.value}")
+        shutil.rmtree(f"{SharedFolders.KI_MODELLE_GESAMT_NEW.value}/train")
+    shutil.rmtree(f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}/newVal")
+    shutil.rmtree(f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}/oldal")
+
     return

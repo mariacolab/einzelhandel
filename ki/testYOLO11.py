@@ -5,18 +5,21 @@ from ultralytics import YOLO
 import os
 import logging
 
+from common.SharedFolders import SharedFolders
+
+
 #TODO Modell übergeben
-def yolotest():
+def yolotest(modelpath):
     #Pfade setzen
-    path_img = "Datasets/FFv1/test/images"
-    path_labels = "Datasets/FFv1/test/labels"
-    model = YOLO("KIModelle/trainiert_mit_ganzem_Datensatz/bestTrain40.pt")  # Laden des trainierten Modells
-    results = model(path_img, conf=0.75, stream=False) #alle Bilder des Testordners erkennen lassen
+    path_img = f"{SharedFolders.DATASETS_FFv3_TEST_IMAGES.value}"
+    path_labels = f"{SharedFolders.DATASETS_FFv3_TEST_LABELS.value}"
+    model = YOLO(modelpath)  # Laden des trainierten Modells
+    results = model(path_img, conf=0.01, stream=False) #alle Bilder des Testordners erkennen lassen
 
     #Listen für spätere Berechnungen anlegen und initialsieren
     anzahl = list(range(47))
     correct = list(range(47))
-    for i in range (0,46):
+    for i in range (0,47):
         anzahl[i] = 0
         correct[i] = 0
 
@@ -53,6 +56,5 @@ def yolotest():
         anzahl[46] += anzahl[i]
         correct[46] += correct[i]
     print ('Gesamtergebnis: ' + str(correct[46]) + ' von ' +str(anzahl[46])+ ' sind korrekt. In Prozent: ' + str((correct[46]/anzahl[46])*100))
+    return int(correct[46])
 
-#TODO externen aufruf einfügen
-#yolotest()
