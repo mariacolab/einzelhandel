@@ -64,3 +64,33 @@ mat-form-field {
   // margin-right: 120px;
   // margin: 20px;
 }
+
+
+.image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image {
+  width: 128px;
+  height: 128px;
+  object-fit: cover; /* Sorgt dafür, dass das Bild nicht verzerrt wird */
+}
+
+.dropdown {
+  width: 100%;
+}
+
+.grid-tile {
+  display: flex;
+  justify-content: center;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+

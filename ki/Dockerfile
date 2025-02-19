@@ -26,7 +26,7 @@ RUN python3 -m pip install tensorflow-cpu==2.18.0
 RUN python3 -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
 
 # Installiere Supervisor
-RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
+#RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
 
 # Konfiguriere Supervisor
 #COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -41,8 +41,8 @@ FROM base AS production
 COPY . /workspace
 
 # Konfiguriere Supervisor
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+#COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Standardbefehl für die Produktion (hier: Gunicorn-Server)
-#CMD ["gunicorn", "--bind", "0.0.0.0:5006", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5006", "app:app"]
 # Starte Supervisor als Hauptprozess
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+#CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

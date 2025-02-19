@@ -21,30 +21,105 @@
   </mat-list-item>
   }
 </mat-list> -->
+<!--div>
+  <app-messages></app-messages>
 
-<div class="container">
+</div-->
+
+
+<!--div class="container">
 <mat-grid-list cols="2" rowHeight="180px">
   @for (imageCard of imageCards; track imageCard) {
-  <mat-grid-tile>
+  <mat-grid-tile-->
     <!-- <mat-card class="example-card" appearance="outlined"> -->
     <!-- <mat-card-content> -->
     <!-- <img mat-card-sm-image src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/661px-Red_Apple.jpg?20151001144956"> -->
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/661px-Red_Apple.jpg?20151001144956">
+    <!--img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/661px-Red_Apple.jpg?20151001144956"-->
+    <!--app-messages></app-messages>
   </mat-grid-tile>
-<mat-grid-tile>
+<mat-grid-tile-->
   <!-- <div class="text-inside-grid"> -->
-    <mat-form-field class="denser-form-field" appearance="outline">
+    <!--mat-form-field class="denser-form-field" appearance="outline">
       <mat-label>Select an option</mat-label>
       <mat-select>
         @for (objectClass of objectClasses; track objectClass) {
         <mat-option [value]="objectClass">{{objectClass}}</mat-option>
         }
       </mat-select>
-    </mat-form-field>
+    </mat-form-field-->
   <!-- </div> -->
     <!-- </mat-card-content> -->
     <!-- </mat-card> -->
-  </mat-grid-tile>
+  <!--/mat-grid-tile>
   }
 </mat-grid-list>
+</div-->
+
+<div class="container">
+  <mat-grid-list cols="2" rowHeight="180px">
+    <mat-grid-tile *ngFor="let file of training?.files; let i = index">
+      <mat-card class="example-card" appearance="outlined">
+        <mat-card-content>
+          <img *ngIf="isValidBase64Image(file)" [src]="'data:' + getMimeType(file) + ';base64,' + file" alt="Training Bild {{i}}">
+          <p *ngIf="!isValidBase64Image(file)">Ungültiges Bildformat</p>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile>
+      <mat-form-field class="denser-form-field" appearance="outline">
+        <mat-label>Select an option</mat-label>
+        <mat-select>
+          <mat-option *ngFor="let objectClass of objectClasses" [value]="objectClass">
+            {{ objectClass }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-grid-tile>
+  </mat-grid-list>
 </div>
+
+<div class="button-container">
+  <button mat-raised-button color="primary" (click)="sendData()">Daten senden</button>
+</div>
+
+
+<!-- Falls keine Daten geladen wurden, zeige eine Nachricht -->
+<p *ngIf="!training?.files || training.files.length === 0" class="error-message">
+  Keine Bilder zum Anzeigen.
+</p>
+
+<div class="container">
+  <mat-grid-list cols="1" rowHeight="auto">
+    <mat-grid-tile *ngFor="let file of training?.files; let i = index" class="grid-tile">
+
+      <mat-card class="example-card" appearance="outlined">
+        <mat-card-content class="image-container">
+          <img *ngIf="isValidBase64Image(file)"
+               [src]="'data:' + getMimeType(file) + ';base64,' + file"
+               alt="Training Bild {{i}}"
+               class="image">
+          <p *ngIf="!isValidBase64Image(file)">Ungültiges Bildformat</p>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <mat-form-field class="dropdown" appearance="outline">
+            <mat-label>Select an option</mat-label>
+            <mat-select [(ngModel)]="selectedOptions[i]">
+              <mat-option *ngFor="let objectClass of objectClasses" [value]="objectClass">
+                {{ objectClass }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </mat-card-actions>
+      </mat-card>
+
+    </mat-grid-tile>
+  </mat-grid-list>
+
+  <div class="button-container">
+    <button mat-raised-button color="primary" (click)="sendData()">Daten senden</button>
+  </div>
+</div>
+
+

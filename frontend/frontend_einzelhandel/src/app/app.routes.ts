@@ -9,6 +9,7 @@ import { QrcodeComponent } from './components/qrcode/qrcode.component';
 import { SignUpComponent } from './components/sign-up/sign-up.component';
 import { customerAuthGuard } from './guards/customer-auth/customer-auth.guard';
 import { employeeAuthGuard } from './guards/employee-auth/employee-auth.guard';
+import { MessagesComponent } from './components/messages/messages.component';
 import { notLoggedInAuthGuard } from './guards/not-logged-in-auth/not-logged-in-auth.guard';
 
 export const routes: Routes = [
@@ -21,5 +22,6 @@ export const routes: Routes = [
   { path: 'product-details', component: ProductDetailsComponent, canActivate: [customerAuthGuard] },
   { path: 'image_upload', component: ImageUploadComponent, canActivate: [customerAuthGuard] },
   { path: 'employee', component: EmployeeComponent, canActivate: [employeeAuthGuard] },
+  { path: 'messages', component: MessagesComponent, canActivate: [employeeAuthGuard] },
   { path: '**', redirectTo: '/login'}
 ];

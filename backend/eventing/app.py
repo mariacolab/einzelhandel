@@ -15,9 +15,9 @@ import asyncio
 app = Flask(__name__)
 app.config.from_object(Config)  # Lade zentrale Config
 
-
 # Initialisiere Flask-Session
 Session(app)
+
 
 @app.route("/")
 def home():
@@ -41,6 +41,7 @@ limiter = Limiter(
     # storage_uri="redis://redis:6379",
     default_limits=["200 per day", "50 per hour"]
 )
+
 
 @app.route('/publish/<event>', methods=['POST'])
 @cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
@@ -186,6 +187,7 @@ def publish_event(event):
         elif event == "MisclassificationReported":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
+            logging.debug(f"Files: {request.files}")
 
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
@@ -247,47 +249,113 @@ def publish_event(event):
         return jsonify({"message": "Internal server error", "details": str(e)}), 500
 
 
-@app.route('/publish/Trainingsdata', methods=['POST'])
-def publish_trainingsdata(event):
+@app.route('/Trainingsdata', methods=['POST'])
+def publish_trainingsdata():
     # Map event types to messages
     try:
-        if event == "Training":
-            logging.debug(f"Headers: {request.headers}")
-            logging.debug(f"Form: {request.form}")
+        logging.debug(f"Headers: {request.headers}")
+        logging.debug(f"Form: {request.form}")
 
-            cookie = request.headers.get("Cookie", "")
-            message_type = request.form.get("type", "")
-            labels = request.form.get("labels", "")
+        event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
+        if event_type != "Trainingdata":
+            return jsonify({"error": "Ungültiger Event-Typ"}), 400
 
-            # Dateien richtig abrufen
-            files = request.files.getlist("files[]")  # Holt alle Dateien aus dem `files[]` Feld
+        # Dateien abrufen
+        files = request.files.getlist("files")  # Prüfen, ob Dateien vorhanden sind
+        if not files:
+            return jsonify({"error": "Keine Dateien hochgeladen!"}), 400
 
-            if not files:
-                return jsonify({"error": "Keine Dateien hochgeladen!"}), 400
+        saved_files = []
+        for file in files:
+            file_path = os.path.join("/mnt/shared_training", file.filename)
+            file.save(file_path)
+            saved_files.append(file_path)
 
-            saved_files = []
-            for file in files:
-                file_path = os.path.join(SharedFolders.TRAININGSSATZ.value, file.filename)
-                file.save(file_path)  # Datei speichern
-                saved_files.append(file_path)
+        logging.debug(f"Gespeicherte Dateien: {saved_files}")
 
-            logging.debug(f"Gespeicherte Dateien: {saved_files}")
+        message = {
+            "type": event_type,
+            "files": saved_files,
+        }
+        logging.debug(f"Message Trainingdata Event: {message}")
+        asyncio.run(send_message(message))
+        return jsonify({"status": f"Type {event_type} uploaded successfully.", "files": saved_files}), 200
 
-            message = {
-                "type": message_type,
-                "files": saved_files,
-                "cookie": cookie,
-            }
+    except Exception as e:
+        logging.debug(f"Error in publish_event: {e}")
+        return jsonify({"message": "Internal server error", "details": str(e)}), 500
 
-            logging.debug(f"Message Training Event: {message}")
+@app.route('/ai/tensorflow', methods=['POST'])
+@token_required
+@role_required('Admin')
+def start_ai_tensorflow():
+    try:
+        logging.debug(f"Headers: {request.headers}")
+        logging.debug(f"Form: {request.form}")
 
-            # RabbitMQ Nachricht senden
-            asyncio.run(send_message(message))
+        event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
+        if event_type != "TrainTF":
+            return jsonify({"error": "Ungültiger Event-Typ"}), 400
 
-            logging.debug(f"Event {event} published successfully")
-            return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
+        # Dateien abrufen
+        files = request.files.getlist("files")  # Prüfen, ob Dateien vorhanden sind
+        if not files:
+            return jsonify({"error": "Keine Dateien hochgeladen!"}), 400
 
-        return jsonify({"error": "Ungültiges Event"}), 400
+        saved_files = []
+        for file in files:
+            file_path = os.path.join("/mnt/shared_training", file.filename)
+            file.save(file_path)
+            saved_files.append(file_path)
+
+        logging.debug(f"Gespeicherte Dateien: {saved_files}")
+
+        message = {
+            "type": event_type,
+            "files": saved_files,
+        }
+        logging.debug(f"Message TrainTF Event: {message}")
+        asyncio.run(send_message(message))
+        return jsonify({"status": f"Type {event_type} uploaded successfully.", "files": saved_files}), 200
+
+    except Exception as e:
+        logging.debug(f"Error in publish_event: {e}")
+        return jsonify({"message": "Internal server error", "details": str(e)}), 500
+
+@app.route('/ai/yolo', methods=['POST'])
+@token_required
+@role_required('Admin')
+def start_ai_yolo():
+
+    try:
+        logging.debug(f"Headers: {request.headers}")
+        logging.debug(f"Form: {request.form}")
+
+        event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
+        if event_type != "TrainYOLO":
+            return jsonify({"error": "Ungültiger Event-Typ"}), 400
+
+        # Dateien abrufen
+        files = request.files.getlist("files")  # Prüfen, ob Dateien vorhanden sind
+        if not files:
+            return jsonify({"error": "Keine Dateien hochgeladen!"}), 400
+
+        saved_files = []
+        for file in files:
+            file_path = os.path.join("/mnt/shared_training", file.filename)
+            file.save(file_path)
+            saved_files.append(file_path)
+
+        logging.debug(f"Gespeicherte Dateien: {saved_files}")
+
+        message = {
+            "type": event_type,
+            "files": saved_files,
+        }
+        logging.debug(f"Message TrainYOLO Event: {message}")
+        asyncio.run(send_message(message))
+        return jsonify({"status": f"Type {event_type} uploaded successfully.", "files": saved_files}), 200
+
     except Exception as e:
         logging.debug(f"Error in publish_event: {e}")
         return jsonify({"message": "Internal server error", "details": str(e)}), 500
@@ -295,6 +363,7 @@ def publish_trainingsdata(event):
 @app.route('/debug/session', methods=['GET'])
 def debug_session():
     return jsonify(dict(session))
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5005)
