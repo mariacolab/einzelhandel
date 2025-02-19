@@ -36,11 +36,23 @@
     <app-image-upload />
   </div>
 
-  <div>
+  <div *ngIf="misclassifiedFile">
+    <h2>Ich habe diese Klassifizierung erkannt: </h2>
+    <img [src]="'data:image/png;base64,' + misclassifiedFile.file" alt="Fehlklassifiziertes Bild">
+    <p><strong>Klassifikation:</strong> {{ misclassifiedFile.classification }}</p>
+    <p><strong>Produkt:</strong> {{ misclassifiedFile.product }}</p>
+    <p><strong>Infos:</strong> {{ misclassifiedFile.info }}</p>
+    <p><strong>Regal:</strong> {{ misclassifiedFile.shelf }}</p>
+    <p><strong>Preis pro Stück:</strong> {{ misclassifiedFile.price_piece }}</p>
+    <p><strong>Preis pro Kg:</strong> {{ misclassifiedFile.price_kg }}</p>
+
+  </div>
+
+  <!--<div>
     <button mat-flat-button routerLink="/product-details">Show product details on new page</button>
   </div>
 </div>
 
 <div *ngIf="showProductDetails">
   <app-product-details />
-</div>
+</div>-->

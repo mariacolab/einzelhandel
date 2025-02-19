@@ -54,6 +54,21 @@
       "name": "process_corrected_classified_queue",
       "vhost": "/",
       "durable": true
+    },
+    {
+      "name": "process_trainingdata_queue",
+      "vhost": "/",
+      "durable": true
+    },
+    {
+      "name": "process_tf_queue",
+      "vhost": "/",
+      "durable": true
+    },
+    {
+      "name": "process_yolo_queue",
+      "vhost": "/",
+      "durable": true
     }
   ],
   "exchanges": [
@@ -106,6 +121,27 @@
       "destination": "process_corrected_classified_queue",
       "destination_type": "queue",
       "routing_key": "CorrectedFiles"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "process_trainingdata_queue",
+      "destination_type": "queue",
+      "routing_key": "Trainingdata"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "process_tf_queue",
+      "destination_type": "queue",
+      "routing_key": "tfFiles"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "process_yolo_queue",
+      "destination_type": "queue",
+      "routing_key": "yoloFiles"
     }
   ]
 }

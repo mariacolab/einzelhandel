@@ -1,6 +1,7 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
-import { Component, inject } from '@angular/core';
+//import { NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { NgIf, CommonModule } from '@angular/common';
+import { Component, inject, OnInit, OnDestroy  } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,17 +10,20 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { RouterLink } from '@angular/router';
+//import { RouterLink } from '@angular/router';
 import { WebcamImage, WebcamInitError, WebcamModule, WebcamUtil } from 'ngx-webcam';
 import { Observable, Subject } from 'rxjs';
 import { NgxFileDropModule, NgxFileDropEntry } from 'ngx-file-drop';
 import { DataService } from '../../services/data/data.service';
 import { ImageUploadComponent } from '../image_upload/image-upload.component';
-import { ProductDetailsComponent } from '../product-details/product-details.component';
+//import { ProductDetailsComponent } from '../product-details/product-details.component';
+import { WebsocketService } from '../../services/websocket/websocket.service';
+import { Subscription } from 'rxjs';
+
 
 @Component({
   selector: 'app-photo',
-  imports: [MatIconModule, WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, ImageUploadComponent, MatInputModule, ProductDetailsComponent, RouterLink, NgSwitch, NgSwitchCase],
+  imports: [CommonModule, MatIconModule, WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, ImageUploadComponent, MatInputModule], //ProductDetailsComponent, RouterLink NgSwitch, NgSwitchCase
   templateUrl: './photo.component.html',
   styleUrl: './photo.component.scss',
   animations: [
@@ -55,7 +59,28 @@ import { ProductDetailsComponent } from '../product-details/product-details.comp
     ])
   ]
 })
-export class PhotoComponent {
+export class PhotoComponent implements OnInit, OnDestroy {
+
+   private subscriptions: Subscription[] = [];
+      misclassifiedFile: any = null;
+
+      constructor(private dataService: DataService, private websocketService: WebsocketService) {}
+
+      ngOnInit() {
+        this.subscriptions.push(
+          this.websocketService.getMisclassifiedFiles().subscribe(file => this.misclassifiedFile = file)
+        );
+
+        WebcamUtil.getAvailableVideoInputs()
+              .then((mediaDevices: MediaDeviceInfo[]) => {
+                this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
+              });
+      }
+      ngOnDestroy() {
+        this.subscriptions.forEach(sub => sub.unsubscribe());
+      }
+
+
   // toggle webcam on/off
   public showWebcam = true;
   public allowCameraSwitch = true;
@@ -77,12 +102,12 @@ export class PhotoComponent {
   // switch to next / previous / specific webcam; true/false: forward/backwards, string: deviceId
   private nextWebcam: Subject<boolean | string> = new Subject<boolean | string>();
 
-  public ngOnInit(): void {
-    WebcamUtil.getAvailableVideoInputs()
-      .then((mediaDevices: MediaDeviceInfo[]) => {
-        this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
-      });
-  }
+//   public ngOnInit(): void {
+//     WebcamUtil.getAvailableVideoInputs()
+//       .then((mediaDevices: MediaDeviceInfo[]) => {
+//         this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
+//       });
+//   }
 
   public triggerSnapshot(): void {
     this.trigger.next();
@@ -118,7 +143,6 @@ export class PhotoComponent {
     return this.nextWebcam.asObservable();
   }
 
-  constructor(private dataService: DataService) { }
   snackBar = inject(MatSnackBar);
   // data: any;
   item: any;
