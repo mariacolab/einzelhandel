@@ -4,15 +4,15 @@ import aio_pika
 import asyncio
 
 import cv2
+from PIL import Image
 
 from common.SharedFolders import SharedFolders
 import requests
 import json
 import logging
-import matplotlib.pyplot as plt
 from common.product_data import get_product_with_data
 from common.shared_drive import copy_file_to_folder
-from detectYOLO11 import detect
+from detectYOLO11 import detect, pfad_zerlegen, retrain
 from common.utils import load_secrets
 from rh_TF_Predict import predict_object_TF
 
@@ -56,24 +56,28 @@ async def on_message(message: aio_pika.IncomingMessage):
                 event_filename = event.get("file", "")
                 logging.info(f"Event filename: {event_filename}")
 
-                # aufruf der KI
+                #aufruf der KI
                 class_names = ['Apfel', 'Aubergine', 'Avocado', 'Birne',
                                'Granatapfel', 'Kaki', 'Kartoffel', 'Kiwi',
                                'Mandarine', 'Orange', 'Pampelmuse', 'Paprika',
                                'Tomate', 'Zitrone', 'Zucchini', 'Zwiebel']
 
-                image = plt.imread(event_filename)  # Lädt das Bild als NumPy-Array
+                image = Image.open(event_filename)  # Lädt das Bild als NumPy-Array
 
-                result1, yolo_result = detect(image, event_filename)  # großes Modell
+                result1 = detect(image, event_filename) #großes Modell
+                result2=None
                 if result1 in class_names:
                     result2 = predict_object_TF(image)  # kleines Modell
-                else:
-                    result2 = None
-                if not result2 or result1 == result2:
-                    result = result1
-                else:  # verschiedene Ergebnisse
-                    mixed_results = True
+
+                if result2: # kleines Modell kam zum Einsatz
                     result = result2
+                    if result1 == result2: #gleiches Resultat
+                        mixed_results = "False"
+                    else: #verschiedene Resultate
+                        mixed_results="True"
+                else:
+                    mixed_results="False"
+                    result = result1
                 logging.info(f"result from image: {result}")
 
                 if event_role == "Kunde":
@@ -81,12 +85,9 @@ async def on_message(message: aio_pika.IncomingMessage):
                         - Bild wird in traningsordner verschoben
                         - Klassifizierung weitergegeben
                     """
+
                     product_data = get_product_with_data(result) or {}
-                    logging.info(f"result from product_data: {product_data}")
-                    product_data = get_product_with_data(result) or {}
-                    logging.info(f"result from product_data: {product_data}")
-                    for key, value in product_data.items():
-                        logging.info(f"{key}: {value}")
+                   
                     produkt = product_data['Produkt']
                     info = product_data['Informationen']
                     regal = product_data['Regal']
@@ -98,18 +99,17 @@ async def on_message(message: aio_pika.IncomingMessage):
                     logging.info(f"Regal: {regal}")
                     logging.info(f"Preis pro Stück: {preis_pro_stueck} €")
                     logging.info(f"Preis pro kg: {preis_pro_kg} €")
+#Abschnitt von Sonja Schwabe - Anfang
 
-                    # # TODO Bild in Trainingsordner für Kundenbilder kopieren
-                    # img_small = cv2.resize(image, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
-                    # copy_file_to_folder(img_small,
-                    #                     SharedFolders.TRAININGSSATZ.value,
-                    #                     event_filename)
-                    # # TODO in unlabeled Data
-                    # if result2 is not None:
-                    #     img_small = cv2.resize(image, dsize=(128, 128), interpolation=cv2.INTER_CUBIC)
-                    #     copy_file_to_folder(img_small,
-                    #                         SharedFolders.TRAININGSSATZ.value,
-                    #                         event_filename)
+                    # Bilder für kleines Modell ungelabelt ablegen
+                    if result2 is not None:
+                        pfad, name, endung = pfad_zerlegen(event_filename)
+                        img_small = image.resize((128, 128))
+                        img_small.save(f"{SharedFolders.TRAININGSSATZ.value}/kleinesModell/{name}{endung}")
+
+#Abschnitt von Sonja Schwabe - Ende
+
+
                     url = " http://nginx-proxy/eventing-service/publish/MisclassificationReported"
                     headers = {
                         "Cookie": f"{event_cookie}",
@@ -118,12 +118,14 @@ async def on_message(message: aio_pika.IncomingMessage):
                         "type": (None, "MisclassifiedFiles"),
                         "classification": (None, result),
                         "filename": (None, event_filename),
-                        "product": (None, produkt),
+                         "product": (None, produkt),
                         "info": (None, info),
                         "shelf": (None, regal),
                         "price_piece": (None, str(preis_pro_stueck)),
                         "price_kg": (None, str(preis_pro_kg)),
-                        "role": (None, event_role)
+                        "role": (None, event_role),
+                        "mixed_results": (None, mixed_results)
+
                     }
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
@@ -142,12 +144,9 @@ async def on_message(message: aio_pika.IncomingMessage):
                         "type": (None, "MisclassifiedFiles"),
                         "classification": (None, result),
                         "filename": (None, event_filename),
-                        "product": (None, None),
-                        "info": (None, None),
-                        "shelf": (None, None),
-                        "price_piece": (None, None),
-                        "price_kg": (None, None),
-                        "role": (None, event_role)
+                        "product_data": (None, None),
+                        "role": (None, event_role),
+                        "mixed_results": (None,mixed_results)
                     }
                     logging.info(f"files: {files}")
                     response = requests.post(url, headers=headers, files=files)
@@ -157,24 +156,34 @@ async def on_message(message: aio_pika.IncomingMessage):
                 event_classification = event.get("classification", "")
                 event_class_correct = event.get("is_classification_correct ", "")
                 event_filename = event.get("filename", "")
+                mixed_results = event.get("mixed_results","")
                 logging.info(f"Event file: {event_classification}")
                 logging.info(f"Event path: {event_class_correct}")
                 logging.info(f"Event path: {event_filename}")
-                if event_class_correct:
-                    class_names = ['Apfel', 'Aubergine', 'Avocado', 'Birne',
-                                   'Granatapfel', 'Kaki', 'Kartoffel', 'Kiwi',
-                                   'Mandarine', 'Orange', 'Pampelmuse', 'Paprika',
-                                   'Tomate', 'Zitrone', 'Zucchini', 'Zwiebel']
-                    if event_classification in class_names:
-                        img_small = cv2.resize(image, dsize=(128, 128), interpolation=cv2.INTER_CUBIC)
-                        copy_file_to_folder(img_small,
-                                            SharedFolders.TRAININGSSATZ.value,  # TODO Richtiger Ordner für Ralfs Bilder
-                                            event_filename)
-                    img_small = cv2.resize(image, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
-                    copy_file_to_folder(img_small,
-                                        SharedFolders.DATASETS_FFv3_TRAIN_IMAGES.value,
-                                        event_filename)
-                    # TODO: Label speichern und sonst löschen
+#Abschnitt von Sonja Schwabe - Anfang
+
+                class_names = ['Apfel', 'Aubergine', 'Avocado', 'Birne',
+                               'Granatapfel', 'Kaki', 'Kartoffel', 'Kiwi',
+                               'Mandarine', 'Orange', 'Pampelmuse', 'Paprika',
+                               'Tomate', 'Zitrone', 'Zucchini', 'Zwiebel']
+                image = Image.open(event_filename)  # Lädt das Bild als NumPy-Array
+
+                pfad, name, endung = pfad_zerlegen(event_filename)
+                if event_class_correct: #Bild wurde korrekt klassifiziert
+                    if event_classification in class_names: #passend für kleines Modell
+                        img_small = image.resize((128, 128))
+                        img_small.save(f"{SharedFolders.DATA_OBST_GEMUESE_NEU_1_TRAIN.value}/{event_classification}")
+                    if mixed_results == "False":
+                        img_small = image.resize((224, 224))
+                        img_small.save(f"{SharedFolders.DATASETS_FFv3_TRAIN_IMAGES.value}/{name}{endung}")
+                        if os.path.exists(f"{SharedFolders.TRAININGSSATZ.value}/{name}.txt"):
+                            copy_file_to_folder(f"{SharedFolders.TRAININGSSATZ.value}/{name}.txt",
+                                        SharedFolders.DATASETS_FFv3_TRAIN_LABELS.value,
+                                        f"{name}.txt")
+                            os.remove(f"{SharedFolders.TRAININGSSATZ.value}/{name}.txt")
+                            if os.path.exists(f"{SharedFolders.TRAININGSSATZ.value}/{name}{endung}"):
+                                os.remove(f"{SharedFolders.TRAININGSSATZ.value}/{name}{endung}")
+#Abschnitt von Sonja Schwabe - Ende
                     url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                     headers = {
                         "Cookie": f"{event_cookie}",
@@ -187,17 +196,18 @@ async def on_message(message: aio_pika.IncomingMessage):
                     logging.info(f"Response: {response}")
                 else:
                     logging.info(f"Event file: {event_classification}")
+#Abschnitt von Sonja Schwabe - Anfang
 
-                    img_small = cv2.resize(image, dsize=(224, 224), interpolation=cv2.INTER_CUBIC)
-                    copy_file_to_folder(img_small,
-                                        SharedFolders.TRAININGSSATZ.value,
-                                        event_filename)
-                    # TODO in unlabeled Data
-                    if result2 is not None:
-                        img_small = cv2.resize(image, dsize=(128, 128), interpolation=cv2.INTER_CUBIC)
-                        copy_file_to_folder(img_small,
-                                            SharedFolders.TRAININGSSATZ.value,
-                                            event_filename)
+
+backend_ki_integration_ralf
+                    if event_classification in class_names:
+                        img_small = image.resize((128, 128))
+                        img_small.save(f"{SharedFolders.TRAININGSSATZ.value}/kleinesModell/{name}{endung}")  # TODO richtiger Ordner für unlabeled Data
+
+#Abschnitt von Sonja Schwabe - Ende
+                    logging.info("Fehlerhafte Klassifizierung")
+
+                    
             if "TrainYOLO" in event_type:
                 event_classification = event.get("classification", "")
                 event_class_correct = event.get("is_classification_correct ", "")
@@ -214,6 +224,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event path: {event_class_correct}")
                 logging.info(f"Event path: {event_filename}")
                 logging.info("Fehlerhafte Klassifizierung")
+
         except Exception as e:
             logging.error(f"Error processing message: {e}")
 
