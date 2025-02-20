@@ -19,8 +19,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
 
+// interface ImageCards {
+//   avatar: string;
+//   class: string;
+// }
+
 interface ImageCards {
-  avatar: string;
+  imageUrl: string;
   class: string;
 }
 
@@ -32,13 +37,22 @@ interface ImageCards {
   styleUrl: './employee.component.scss'
 })
 export class EmployeeComponent {
+  // imageCards: ImageCards[] = [
+  //   { avatar: 'apple', class: 'Apfel' },
+  //   { avatar: 'banana', class: 'Banane' },
+  //   { avatar: 'cucumber', class: 'Apfel' },
+  //   { avatar: 'apple', class: 'Apfel' },
+  //   { avatar: 'banana', class: 'Kiwi' },
+  // ];
+
   imageCards: ImageCards[] = [
-    { avatar: 'apple', class: 'Apfel' },
-    { avatar: 'banana', class: 'Banane' },
-    { avatar: 'cucumber', class: 'Apfel' },
-    { avatar: 'apple', class: 'Apfel' },
-    { avatar: 'banana', class: 'Kiwi' },
+    { imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/661px-Red_Apple.jpg?20151001144956', class: 'Apfel' },
+    { imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/77/Banana_d%C3%A1gua.jpg', class: 'Banane' },
+    { imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/82/Golden_Asian_Pear_2.png', class: 'Apfel' },
+    { imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/40/Bananas_on_countertop.JPG', class: 'Banane' },
+    { imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Kiwi_aka.jpg', class: 'Kiwi' },
   ];
+  
   objectClasses: string[] = [
     'Apfel', 'Aubergine', 'Avocado', 'Banane', 'Birne', 'Bohnen', 'Cerealien', 'Chips', 'Essig', 'Fisch', 'Gewuerze', 'Granatapfel', 'Honig', 'Kaffee', 'Kaki', 'Karotte', 'Kartoffel', 'Kiwi', 'Knoblauch', 'Kuchen', 'Mais', 'Mandarine', 'Mango', 'Marmelade', 'Mehl', 'Milch', 'Nudeln', 'Nuss', 'Oel', 'Orange', 'Pampelmuse', 'Paprika', 'Pflaume', 'Reis', 'Saft', 'Schokolade', 'Soda', 'Suessigkeit', 'Tee', 'Tomate', 'Tomatensauce', 'Wasser', 'Zitrone', 'Zucchini', 'Zucker', 'Zwiebel'
   ];
