@@ -1,8 +1,71 @@
-<div class="container">
+<!-- <div class="container">
   <div>
     <button mat-flat-button routerLink="/photo_emp">Take a photo</button>
   </div>
   <div>
     <button mat-flat-button routerLink="/qrcodeemp">QR code</button>
+  </div>
+</div> -->
+
+<!-- <p>employee works!</p> -->
+
+<!-- <mat-list>
+  @for (imageCard of imageCards; track imageCard) {
+  <mat-list-item>
+    <mat-card class="example-card" appearance="outlined">
+      <mat-card-content>
+        <mat-card-title-group>
+          <mat-card-title>Shiba Inu</mat-card-title>
+          <mat-card-subtitle>Small</mat-card-subtitle>
+          <img mat-card-sm-image
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/661px-Red_Apple.jpg?20151001144956">
+          {{ imageCard.avatar }}
+        </mat-card-title-group>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button>LIKE</button>
+        <button mat-button>SHARE</button>
+      </mat-card-actions>
+    </mat-card>
+  </mat-list-item>
+  }
+</mat-list> -->
+
+<!-- <button mat-button (click)="getMessages()">
+  getMessages()
+</button> -->
+
+<div class="container">
+  Please confirm the classes of all shown items.
+  <mat-grid-list cols="2" rowHeight="180px">
+    @for (imageCard of imageCards; track imageCard) {
+    <mat-grid-tile>
+      <!-- <mat-card class="example-card" appearance="outlined"> -->
+      <!-- <mat-card-content> -->
+      <!-- <img mat-card-sm-image src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/661px-Red_Apple.jpg?20151001144956"> -->
+      <img
+        src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/661px-Red_Apple.jpg?20151001144956">
+    </mat-grid-tile>
+    <mat-grid-tile>
+      <!-- <div class="text-inside-grid"> -->
+      <mat-form-field class="denser-form-field" appearance="outline">
+        <mat-label>Select an option</mat-label>
+        <mat-select [(value)]="imageCard.class">
+          @for (objectClass of objectClasses; track objectClass) {
+          <mat-option [value]="objectClass">{{objectClass}}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <!-- </div> -->
+      <!-- </mat-card-content> -->
+      <!-- </mat-card> -->
+    </mat-grid-tile>
+    }
+  </mat-grid-list>
+
+  <div>
+    <button mat-flat-button (click)="reclassify();">
+      Re-classify
+    </button>
   </div>
 </div>
