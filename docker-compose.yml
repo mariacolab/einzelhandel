@@ -197,6 +197,8 @@ services:
       - shared_uploads:/shared/uploads
       - training_data_yolo:/mnt/shared_training/ki/YoloErgebnisse
       - training_data_tf:/mnt/shared_training/ki/kleinesModell
+      - labeled_tf:/mnt/labeled_tf
+      - labeled_yolo:/mnt/labeled_yolo
     command: ["python3", "subscriber.py"]
 
   webhook-service:
@@ -311,6 +313,7 @@ services:
     environment:
       - FILE_THRESHOLD=20
       - TARGET_URL=http://eventing-service:5005/Trainingsdata
+      - WEBSOCKET_SERVER=http://watchdog-controller:5010
     depends_on:
       - webhook-service
     command: [ "python3", "watch_folder.py" ]
@@ -324,6 +327,7 @@ services:
     environment:
       - FILE_THRESHOLD=20
       - TARGET_URL=http://eventing-service:5005/Trainingsdata
+      - WEBSOCKET_SERVER=http://watchdog-controller:5011
     depends_on:
       - webhook-service
     command: [ "python3", "watch_folder.py" ]
@@ -345,6 +349,9 @@ volumes:
   shared_uploads:
   training_data_tf:
   training_data_yolo:
+  labeled_yolo:
+  labeled_tf:
+
 
 secrets:
   github_credentials:

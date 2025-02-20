@@ -79,6 +79,11 @@
       "name": "process_sendresult_queue",
       "vhost": "/",
       "durable": true
+    },
+    {
+      "name": "process_labeleddata_queue",
+      "vhost": "/",
+      "durable": true
     }
   ],
   "exchanges": [
@@ -166,6 +171,13 @@
       "destination": "process_sendresult_queue",
       "destination_type": "queue",
       "routing_key": "sendQrCodeResult"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "process_labeleddata_queue",
+      "destination_type": "queue",
+      "routing_key": "labeledTrainingdata"
     }
   ]
 }

@@ -296,10 +296,10 @@ def publish_trainingsdata():
         logging.debug(f"Error in publish_event: {e}")
         return jsonify({"message": "Internal server error", "details": str(e)}), 500
 
-@app.route('/Trainingsdata', methods=['POST'])
-def publish_trainingsdata():
+@app.route('/LabeledTrainingdata', methods=['POST'])
+def publish_labeledtrainingsdata():
     """
-        übermittelt die Bilder der Kunden zur Validierung um sie zu labeln
+        Erhält die gelabelten Bilder zurück
     """
     try:
         logging.debug(f"Headers: {request.headers}")
@@ -307,7 +307,8 @@ def publish_trainingsdata():
 
         event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
         event_ki = request.form.get("ki", "") # angabe ob es sich um Tensorflow oder Yolo handelt
-        if event_type != "Trainingdata":
+        event_labels = request.form.get("labels", "")
+        if event_type != "LabeledTrainingdata":
             return jsonify({"error": "Ungültiger Event-Typ"}), 400
 
         # Dateien abrufen
@@ -315,20 +316,28 @@ def publish_trainingsdata():
         if not files:
             return jsonify({"error": "Keine Dateien hochgeladen!"}), 400
 
-        saved_files = []
-        for file in files:
-            file_path = os.path.join("/mnt/shared_training", file.filename)
-            file.save(file_path)
-            saved_files.append(file_path)
+        if event_ki is "yolo":
+            saved_files = []
+            for file in files:
+                file_path = os.path.join("/mnt/labeled_yolo", file.filename)
+                file.save(file_path)
+                saved_files.append(file_path)
+        elif event_ki is "tf":
+            saved_files = []
+            for file in files:
+                file_path = os.path.join("/mnt/labeled_yolo", file.filename)
+                file.save(file_path)
+                saved_files.append(file_path)
 
         logging.debug(f"Gespeicherte Dateien: {saved_files}")
 
         message = {
             "type": event_type,
             "ki": event_ki,
+            "labels": event_labels,
             "files": saved_files,
         }
-        logging.debug(f"Message Trainingdata Event: {message}")
+        logging.debug(f"Message LabeledTrainingdata Event: {message}")
         asyncio.run(send_message(message))
         return jsonify({"status": f"Type {event_type} uploaded successfully.", "files": saved_files}), 200
 

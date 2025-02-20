@@ -43,9 +43,9 @@ class FileHandler(FileSystemEventHandler):
 
     def send_files(self):
         """Sendet die Dateien per POST-Request"""
-         if not watchdog_active:
-            logging.info("Watchdog inaktiv. Keine Daten werden gesendet.")
-            return
+        if not watchdog_active:
+           logging.info("Watchdog inaktiv. Keine Daten werden gesendet.")
+           return
 
         files = []
         data = {'type': 'Trainingdata',

@@ -13,8 +13,8 @@ export class WebsocketService {
   private classifiedFilesubject = new Subject<any>();
   private trainingSubject = new Subject<any>();
   private sendQrCodeResultSubject = new Subject<any>();
-  private socket2 = io('http://nginx:5010');
-  private socket3 = io('http://nginx:5011');
+  private socket2 = io('http://watchdog-controller:5010');
+  private socket3 = io('http://watchdog-controller:5011');
 
 
   constructor() {
