@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   Object Relational Mapping SQLAlchemy und Postgresql
+"""
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 

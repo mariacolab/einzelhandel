@@ -45,6 +45,8 @@ export class ClassificationValidationComponent implements OnInit, OnDestroy {
             }
           }) // <--- Stelle sicher, dass hier KEIN unnötiges `,` oder fehlendes `;` ist
         );
+
+        this.websocketService.startWatchdog();
       }
 
       isValidBase64Image(base64String: string): boolean {
@@ -76,6 +78,7 @@ export class ClassificationValidationComponent implements OnInit, OnDestroy {
   }
 
       ngOnDestroy() {
+        this.websocketService.stopWatchdog();
         this.subscriptions.forEach(sub => sub.unsubscribe());
       }
   imageCards: ImageCards[] = [

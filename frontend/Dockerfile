@@ -14,6 +14,7 @@ RUN npm install -g @angular/cli
 # Install dependencies
 RUN npm install
 RUN npm install ngx-cookie-service
+RUN npm install qrcode-decoder
 RUN npm install --legacy-peer-deps ngx-file-drop
 RUN npm install --legacy-peer-deps \
     @angular/material @angular/cdk @angular/animations \

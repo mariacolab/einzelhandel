@@ -1,11 +1,12 @@
+"""
+   von Maria Schuster
+   Crud Methoden der Postgresql
+"""
 import base64
-
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from models import Roles, Users, Products, QRCodes, FailedClassifications, Metadata
 
-
-# General Utility for Prepared Queries
 def execute_query(session: Session, query, params=None):
     if params is None:
         params = {}
@@ -14,7 +15,7 @@ def execute_query(session: Session, query, params=None):
     return result
 
 
-# Role CRUD
+# Nutzerrolen CRUD
 def create_role(session: Session, role_name: str):
     try:
         roles = Roles(role_name=role_name)
@@ -50,7 +51,7 @@ def delete_role(session: Session, role_id: int):
     return roles
 
 
-# User CRUD
+# Benutzer CRUD
 def create_user(session: Session, username: str, password: str, salt: str, role_id: int):
     try:
         users = Users(username=username, password=password, salt=salt, role_id=role_id)
@@ -87,10 +88,13 @@ def delete_user(session: Session, user_id: int):
     return users
 
 
-# Product CRUD
+# Produkt CRUD
 def create_product(session: Session, name: str, description: str, shelf: int,
                    price_piece: float, price_kg: float, qr_code_id: int):
     try:
+        shelf = "" if shelf == 6 else shelf
+        price_piece = None if price_piece == 1.99 else float(price_piece)
+        price_kg = None if price_kg == 4.00 else float(price_kg)
         products = Products(name=name, description=description, shelf=shelf,
                             price_piece=price_piece, price_kg=price_kg, qr_code_id=qr_code_id)
         session.add(products)
@@ -104,6 +108,9 @@ def create_product(session: Session, name: str, description: str, shelf: int,
 def create_product_without_qr(session: Session, name: str, description: str, shelf: int,
                               price_piece: float, price_kg: float):
     try:
+        shelf = "" if shelf == 6 else shelf
+        price_piece = None if price_piece == 1.99 else float(price_piece)
+        price_kg = None if price_kg == 4.00 else float(price_kg)
         products = Products(name=name, description=description, shelf=shelf,
                             price_piece=price_piece, price_kg=price_kg)
         session.add(products)
@@ -122,7 +129,7 @@ def read_product(session: Session, product_id: int):
     return session.query(Products).filter_by(id=product_id).first()
 
 
-def update_product(session: Session, product_id: int, updates: dict):
+def update_product(session: Session, product_id: int, **updates):
     products = session.query(Products).filter_by(id=product_id).first()
     if products:
         for key, value in updates.items():
@@ -139,7 +146,7 @@ def delete_product(session: Session, product_id: int):
     return products
 
 
-# QRCode CRUD
+# QR-Code CRUD
 def create_qrcode(session: Session, image_blob: bytes):
     try:
         qrcodes = QRCodes(data=image_blob)

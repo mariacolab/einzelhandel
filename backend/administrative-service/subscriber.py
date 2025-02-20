@@ -1,3 +1,8 @@
+"""
+   von Maria Schuster
+   Konsument der RabbitMQ Events die in dem Administrativenserice verarbeitet werden
+   ruft process_uploads auf
+"""
 import json
 import os
 import aio_pika

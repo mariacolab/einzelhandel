@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   Endpunkte über die, die Datenbank angesprochen werden kann
+"""
 import base64
 import os
 
@@ -320,12 +324,6 @@ def delete_metadata_info(metadata_id):
     if metadata:
         return jsonify({"status": "Metadata deleted"}), 200
     return jsonify({"error": "Metadata not found"}), 404
-
-
-@app.route('/')
-def index():
-    return "Hello, World!"
-
 
 @app.route('/admin/health', methods=['GET'])
 def health_check():

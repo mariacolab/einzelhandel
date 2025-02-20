@@ -48,18 +48,9 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event Data: {event_data}")
                 logging.info("Processing files after ProcessQrcode event.")
 
-                base64_decoded_qrcode = base64.b64decode(event_data)
-                # Rückgabe des Blob QR-Codes aus Backend als Image an Frontend geben
-                # Blob in ein Bild laden
-                image_stream = io.BytesIO(base64_decoded_qrcode)
-                image = Image.open(image_stream)
-
-                # Bild anzeigen
-                image.show()
-
                 response = requests.post(WEBHOOK_URL, json={"type": "QRCodeGenerated", "image": event_data})
                 logging.info(f"Webhook response: {response.status_code}, {response.text}")
-            elif "MisclassifiedFiles" == event_type:
+            elif "ClassifiedFiles" == event_type:
                 mixed_results = event.get("mixed_results","")
                 event_classification = event.get("classification", "")
                 logging.info(f"Event Data: {event_classification}")
@@ -78,7 +69,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 event_price_kg = event.get("price_kg", "")
                 logging.info(f"Event Product: {event_price_kg}")
                 # TODO Load the Image into a Viewer and submit if the classification is correct
-                logging.info("Processing files after MisclassifiedFiles event.")
+                logging.info("Processing files after ClassifiedFiles event.")
 
                 try:
                     with open(event_filename, "rb") as file:
@@ -92,7 +83,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 filename = os.path.basename(event_filename)
                 logging.info(f"filename: {filename}")
 
-                response = requests.post(WEBHOOK_URL, json={"type": "MisclassifiedFiles",
+                response = requests.post(WEBHOOK_URL, json={"type": "ClassifiedFiles",
                                                             "classification": event_classification,
                                                             "filename": filename,
                                                             "role": event_role,
@@ -121,7 +112,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 event_files = event.get("files", "")
                 #logging.info(f"Event Data: {event_data}")
                 logging.info("Processing files after Trainingdata event.")
-
+                event_ki = event.get("ki", "")
                 base64_encoded = []
                 for file in event_files:
                     try:
@@ -133,7 +124,28 @@ async def on_message(message: aio_pika.IncomingMessage):
                         logging.error(f"Error processing file: {e}")
                         logging.info(f"Fehler: Datei konnte nicht verarbeitet werden. {str(e)}")
                 response = requests.post(WEBHOOK_URL, json={"type": "Trainingdata",
+                                                            "ki": event_ki,
                                                             "files": base64_encoded})
+                logging.info(f"Webhook response: {response.status_code}, {response.text}")
+            elif "sendQrCodeResult" == event_type:
+                logging.info("Processing files after sendQrCodeResult event.")
+                event_name = event.get("name", "")
+                event_description = event.get("description", "")
+                event_shelf = event.get("shelf", "")
+                event_price_piece = event.get("price_piece", "")
+                event_price_kg = event.get("price_kg", "")
+                logging.info(f"Event Name: {event_name}")
+                logging.info(f"Event Description: {event_description}")
+                logging.info(f"Event Shelf: {event_shelf}")
+                logging.info(f"Event Price_piece: {event_price_piece}")
+                logging.info(f"Event Price_kg: {event_price_kg}")
+
+                response = requests.post(WEBHOOK_URL, json={"type": "sendQrCodeResult",
+                                                            "product": event_name,
+                                                            "info": event_description,
+                                                            "shelf": event_shelf,
+                                                            "price_piece": event_price_piece,
+                                                            "price_kg": event_price_kg})
                 logging.info(f"Webhook response: {response.status_code}, {response.text}")
             else:
                 logging.debug("if fehlgeschlagen")
@@ -150,7 +162,7 @@ async def main():
             channel = await connection.channel()
             exchange = await channel.declare_exchange("events", aio_pika.ExchangeType.TOPIC, durable=True)
             queue_mis = await channel.declare_queue("process_misclassified_queue", durable=True)
-            await queue_mis.bind(exchange, routing_key="MisclassifiedFiles")  # Beispiel: Lauschen auf "ProcessFiles"
+            await queue_mis.bind(exchange, routing_key="ClassifiedFiles")  # Beispiel: Lauschen auf "ProcessFiles"
 
             queue_qrcode = await channel.declare_queue("process_qrcode_queue", durable=True)
             await queue_qrcode.bind(exchange, routing_key="ProcessQrcode")

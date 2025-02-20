@@ -22,6 +22,20 @@
   </div>
 </div>
 
+<div *ngIf="qrCodeImage">
+  <h2>Generierter QR-Code</h2>
+  <img #qrImage [src]="qrCodeImage" alt="QR Code">
+  <button mat-button (click)="decodeQRCode()">QR-Code scannen</button>
+</div>
+
+<div *ngIf="sendQrCodeResult">
+  <h2>Produktdaten</h2>
+  <p><strong>Produkt:</strong> {{ sendQrCodeResult.product }}</p>
+  <p><strong>Infos:</strong> {{ sendQrCodeResult.info }}</p>
+  <p><strong>Regal:</strong> {{ sendQrCodeResult.shelf }}</p>
+  <p><strong>Preis pro Stück:</strong> {{ sendQrCodeResult.price_piece }}</p>
+  <p><strong>Preis pro Kg:</strong> {{ sendQrCodeResult.price_kg }}</p>
+</div>
 <!-- <div>
   <button mat-flat-button (click)="showProductDetails = !showProductDetails;">
     Show product details

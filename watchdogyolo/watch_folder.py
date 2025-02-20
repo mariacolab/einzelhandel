@@ -4,14 +4,21 @@ import time
 import requests
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from socketIO_client import SocketIO
 
-# Setup Logging
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
 
 WATCHED_DIR = "/watched_data"
 FILE_THRESHOLD = int(os.getenv("FILE_THRESHOLD", 50))
 TARGET_URL = os.getenv("TARGET_URL", "http://nginx/eventing-service/Trainingsdata")
+WATCHDOG_SERVER = "nginx"  # WebSocket Server-Adresse
+WATCHDOG_PORT = 5010
 
+# Verbindung zu WebSocket
+socket = SocketIO(WATCHDOG_SERVER, WATCHDOG_PORT)
+watchdog_active = False  # Zustand des Watchdogs
 
 class FileHandler(FileSystemEventHandler):
     def on_created(self, event):
@@ -38,8 +45,13 @@ class FileHandler(FileSystemEventHandler):
 
     def send_files(self):
         """Sendet die Dateien per POST-Request"""
+         if not watchdog_active:
+            logging.info("Watchdog inaktiv. Keine Daten werden gesendet.")
+            return
+
         files = []
-        data = {'type': 'Trainingdata'}  # Zusätzliche Form-Daten
+        data = {'type': 'Trainingdata',
+                'ki': 'Tensorflow'}  # Zusätzliche Form-Daten
 
         # Alle Dateien aus dem Verzeichnis sammeln
         for filename in os.listdir(WATCHED_DIR):
@@ -89,6 +101,24 @@ def initial_check(handler):
         logging.info("Schwellenwert bereits erreicht, starte Upload.")
         handler.send_files()
 
+def listen_for_ws_messages():
+    """ Lauscht auf WebSocket-Nachrichten, um den Watchdog zu aktivieren oder zu deaktivieren """
+    global watchdog_active
+
+    def on_start_watchdog():
+        global watchdog_active
+        watchdog_active = True
+        logging.info("Watchdog aktiviert.")
+
+    def on_stop_watchdog():
+        global watchdog_active
+        watchdog_active = False
+        logging.info("Watchdog deaktiviert.")
+
+    socket.on("start_watchdog", on_start_watchdog)
+    socket.on("stop_watchdog", on_stop_watchdog)
+    socket.wait()
+
 
 if __name__ == "__main__":
     logging.info(f"Starte Datei-Überwachung in {WATCHED_DIR}")
@@ -101,6 +131,10 @@ if __name__ == "__main__":
     observer = Observer()
     observer.schedule(handler, path=WATCHED_DIR, recursive=True)
     observer.start()
+
+     # Starte WebSocket-Listener im Hintergrund
+     import threading
+     threading.Thread(target=listen_for_ws_messages, daemon=True).start()
 
     try:
         while True:

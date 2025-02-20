@@ -1,14 +1,14 @@
-# Basis-Image auswählen
+# von Maria  Schuster
+# Basisimage
 FROM python:3.10-slim AS base
 
 # Arbeitsverzeichnis setzen
 WORKDIR /app
 
-# Allgemeine Abhängigkeiten installieren
+# Abhängigkeiten installieren
 RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -y libmagic1 file
 
-# Anforderungen installieren
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # ---- Build für Tests ----
 FROM base AS test
 
-# Zusätzliche Abhängigkeiten für Tests installieren
+# zusätzliche Abhängigkeiten für Tests installieren
 RUN pip install pytest pytest-flask
 
 # Anwendung und Testdateien kopieren

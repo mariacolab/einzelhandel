@@ -91,8 +91,8 @@ components:
             type: string
             description: Base64 String des QR-Codes
 
-    MisclassificationReported:
-      name: MisclassificationReported
+    ClassificationReported:
+      name: ClassificationReported
       title: mögliche Fehlklassifizierung gemeldet
       description: Meldung einer möglichen Fehlklassifizierung durch das Frontend.
       contentType: multipart/form-data
@@ -179,11 +179,11 @@ channels:
     description: Event, das von der KI gesendet wird, wenn eine Fehlklassifikation erkannt wird und vom Frontend empfangen werden soll.
     publish:
       summary: Frontend sendet Fehlklassifizierung zur Verarbeitung an das Backend.
-      operationId: onMisclassificationReported
+      operationId: onClassificationReported
       security:
         - OAuth2: [publish]
       message:
-        $ref: '#/components/messages/MisclassificationReported'
+        $ref: '#/components/messages/ClassificationReported'
 
   corrected_classification:
     description: Event das vom Frontend gesendet wird, wenn eine korrigierte Klassifikation vom Mitarbeiter oder Admin bestätigt wurde.

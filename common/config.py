@@ -7,7 +7,7 @@ from common import JSONSerializer
 class Config:
     """ Allgemeine Konfiguration für alle Microservices """
 
-    DEBUG = True
+    DEBUG = False
 
     # Lade Secrets
     secrets = load_secrets()

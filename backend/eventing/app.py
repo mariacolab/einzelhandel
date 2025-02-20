@@ -1,3 +1,7 @@
+"""
+    von Maria Schuster
+    Events werden mit den Messages gemappt
+"""
 import logging
 import os
 from flask import Flask, jsonify, request, session
@@ -23,7 +27,7 @@ Session(app)
 def home():
     return "Welcome to the Eventing"
 
-
+#fügt das Rate Limiting einer bestimmten Rolle zu
 def role_based_key():
     try:
         user_role = request.user.get("role", "default")
@@ -34,38 +38,37 @@ def role_based_key():
         logging.error("Role-based key generation failed. Defaulting to remote address.")
         return get_remote_address()
 
-
+#konfiguration Rate Limiting
 limiter = Limiter(
     key_func=role_based_key,
     app=app,
-    # storage_uri="redis://redis:6379",
     default_limits=["200 per day", "50 per hour"]
 )
-
-
+#Events die alle Rollen ausführen können
 @app.route('/publish/<event>', methods=['POST'])
 @cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
 @token_required
 @role_required('Admin', 'Mitarbeiter', 'Kunde')
-@limiter.limit("60 per minute",
-               key_func=lambda: f"Admin:{get_remote_address()}" if request.user.get('role') == 'Admin' else None,
-               override_defaults=True)
-@limiter.limit("20 per minute", key_func=lambda: f"Mitarbeiter:{get_remote_address()}" if request.user.get(
+@limiter.limit("30 per minute", key_func=lambda: f"Mitarbeiter:{get_remote_address()}" if request.user.get(
     'role') == 'Mitarbeiter' else None, override_defaults=True)
 @limiter.limit("10 per minute",
                key_func=lambda: f"Kunde:{get_remote_address()}" if request.user.get('role') == 'Kunde' else None,
                override_defaults=True)
 def publish_event(event):
-    # Map event types to messages
+    """
+        mapping von Eventtypen zu den Messages
+
+        :param event: Bezeichnung des erhaltenen Events
+    """
     try:
         logging.debug(f"Processing event: {event}")
 
         # Event-Typen
         if event not in ["ImageUploaded", "ImageValidated", "ClassificationCompleted",
-                         "QRCodeGenerated", "CorrectedClassification", "MisclassificationReported"]:
+                         "QRCodeGenerated", "CorrectedClassification", "ClassificationReported"]:
             logging.debug("Event not recognized")
             return jsonify({"error": "Event not recognized"}), 400
-
+        #hochladen des Fotos
         elif event == "ImageUploaded":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
@@ -105,7 +108,7 @@ def publish_event(event):
             asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
-
+        #validierung des Fotos
         elif event == "ImageValidated":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
@@ -140,7 +143,7 @@ def publish_event(event):
             asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"File {file.filename} uploaded successfully."}), 200
-
+        #Klassifiezierung ist abgeschlossen
         elif event == "ClassificationCompleted":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
@@ -161,7 +164,7 @@ def publish_event(event):
             asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Result {result} uploaded successfully."}), 200
-
+        #Klassifiezierung war korrekt und QR-Code kann erzeugt oder geladen werden
         elif event == "QRCodeGenerated":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
@@ -183,8 +186,8 @@ def publish_event(event):
             asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
-
-        elif event == "MisclassificationReported":
+        #Klassifiezierung wird an das Frontend gesendet
+        elif event == "ClassificationReported":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
             logging.debug(f"Files: {request.files}")
@@ -215,12 +218,12 @@ def publish_event(event):
                 "cookie": cookie,
                 "mixed_results" : mixed_results
             }
-            logging.debug(f"Message MisclassificationReported: {message}")
+            logging.debug(f"Message ClassificationReported: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
             asyncio.run(send_message(message))
             logging.debug(f"Event {event} published successfully")
             return jsonify({"status": f"Type {message_type} uploaded successfully."}), 200
-
+        #Klassifizierung wurde durch das Frontend korrigiert oder bestätigt und an die KI zurückgesendet
         elif event == "CorrectedClassification":
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
@@ -255,12 +258,15 @@ def publish_event(event):
 
 @app.route('/Trainingsdata', methods=['POST'])
 def publish_trainingsdata():
-    # Map event types to messages
+    """
+        übermittelt die Bilder der Kunden zur Validierung um sie zu labeln
+    """
     try:
         logging.debug(f"Headers: {request.headers}")
         logging.debug(f"Form: {request.form}")
 
         event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
+        event_ki = request.form.get("ki", "") # angabe ob es sich um Tensorflow oder Yolo handelt
         if event_type != "Trainingdata":
             return jsonify({"error": "Ungültiger Event-Typ"}), 400
 
@@ -279,6 +285,47 @@ def publish_trainingsdata():
 
         message = {
             "type": event_type,
+            "ki": event_ki,
+            "files": saved_files,
+        }
+        logging.debug(f"Message Trainingdata Event: {message}")
+        asyncio.run(send_message(message))
+        return jsonify({"status": f"Type {event_type} uploaded successfully.", "files": saved_files}), 200
+
+    except Exception as e:
+        logging.debug(f"Error in publish_event: {e}")
+        return jsonify({"message": "Internal server error", "details": str(e)}), 500
+
+@app.route('/Trainingsdata', methods=['POST'])
+def publish_trainingsdata():
+    """
+        übermittelt die Bilder der Kunden zur Validierung um sie zu labeln
+    """
+    try:
+        logging.debug(f"Headers: {request.headers}")
+        logging.debug(f"Form: {request.form}")
+
+        event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
+        event_ki = request.form.get("ki", "") # angabe ob es sich um Tensorflow oder Yolo handelt
+        if event_type != "Trainingdata":
+            return jsonify({"error": "Ungültiger Event-Typ"}), 400
+
+        # Dateien abrufen
+        files = request.files.getlist("files")  # Prüfen, ob Dateien vorhanden sind
+        if not files:
+            return jsonify({"error": "Keine Dateien hochgeladen!"}), 400
+
+        saved_files = []
+        for file in files:
+            file_path = os.path.join("/mnt/shared_training", file.filename)
+            file.save(file_path)
+            saved_files.append(file_path)
+
+        logging.debug(f"Gespeicherte Dateien: {saved_files}")
+
+        message = {
+            "type": event_type,
+            "ki": event_ki,
             "files": saved_files,
         }
         logging.debug(f"Message Trainingdata Event: {message}")
@@ -368,10 +415,9 @@ def start_ai_yolo():
 @app.route('/qrcode/scan/result', methods=['GET'])
 def qrcode_scan_result():
     try:
-        logging.debug(f"Headers: {request.headers}")
-        logging.debug(f"Form: {request.form}")
-
-        event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
+        event_type = request.args.get('type')
+        produkt = request.args.get('produkt')
+        # Holt den Event-Typ aus der Form-Daten
         if event_type != "ReadQrCode":
             return jsonify({"error": "Ungültiger Event-Typ"}), 400
 
@@ -379,7 +425,7 @@ def qrcode_scan_result():
 
         message = {
             "type": event_type,
-            "qrdata": qrdata,
+            "qrdata": produkt,
         }
         logging.debug(f"Message TrainYOLO Event: {message}")
         asyncio.run(send_message(message))
@@ -389,14 +435,14 @@ def qrcode_scan_result():
         logging.debug(f"Error in publish_event: {e}")
         return jsonify({"message": "Internal server error", "details": str(e)}), 500
 
-@app.route('/qrcode/send/result', methods=['GET'])
+@app.route('/qrcode/send/result', methods=['POST'])
 def qrcode_send_result():
     try:
         logging.debug(f"Headers: {request.headers}")
         logging.debug(f"Form: {request.form}")
 
         event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
-        if event_type != "ReadQrCode":
+        if event_type != "sendQrCodeResult":
             return jsonify({"error": "Ungültiger Event-Typ"}), 400
 
         name = request.form.get("name", "")

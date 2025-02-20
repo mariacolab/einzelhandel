@@ -1,10 +1,11 @@
-import base64
 import json
 import aio_pika
 import asyncio
 from cryptography.fernet import Fernet
 import requests
-
+import qrcode
+import base64
+from io import BytesIO
 from common.product_data import get_product_with_data
 
 from common.utils import load_secrets
@@ -85,43 +86,24 @@ async def on_message(message: aio_pika.IncomingMessage):
                     #     "Preis_pro_kg": item["preis"].get("pro_kg")
                     # }
                     # logging.info(f"item_data: {data}")
-                    data = get_product_with_data(event_result)
+                    data = get_product_with_data(event_result) or {}
 
+                    produkt = data['Produkt']
+                    info = data['Informationen']
+                    regal = data['Regal']
+                    preis_pro_stueck = data['Preis_pro_stueck']
+                    preis_pro_kg = data['Preis_pro_kg']
 
-                    data_to_encrypt = json.dumps(data)
+                    logging.info(f"Produkt: {produkt}")
+                    logging.info(f"Informationen: {info}")
+                    logging.info(f"Regal: {regal}")
+                    logging.info(f"Preis pro Stück: {preis_pro_stueck} €")
+                    logging.info(f"Preis pro kg: {preis_pro_kg} €")
+                    regal = int(regal) if regal else 0
+                    preis_pro_stueck = float(preis_pro_stueck) if preis_pro_stueck else 0.00
+                    preis_pro_kg = float(preis_pro_kg) if preis_pro_kg else 0.00
 
-                    # Datensatz wird verschlüsselt
-                    cipher = Fernet(key)
-
-                    # Daten zum Verschlüsseln
-                    #data_to_encrypt = data.encode()
-
-                    # Verschlüsseln der Daten
-                    encrypted_data = cipher.encrypt(data_to_encrypt.encode())
-                    logging.debug(f"Verschlüsselte Daten: {encrypted_data}")
-                    qr_data = base64.b64encode(encrypted_data).decode("utf-8")
-                    logging.debug(f"Verschlüsselte Daten: {qr_data}")
-                    message_data = qr_data
-
-                    # qr-code generieren
-                    url = " http://nginx-proxy/database-management/qrcodes"
-                    headers = {
-                        'Content-Type': 'application/json',
-                        "Cookie": f"{event_cookie}",
-                    }
-                    logging.info(f"Data: {headers}")
-                    data = {
-                        "data": f"{qr_data}",
-                    }
-
-                    logging.info(f"Data Post Product: {data}")
-                    response = requests.post(url, headers=headers, json=data)
-                    # Initialisiere den Fernet-Verschlüsselungsalgorithmus
-
-                    qr_body = response.json()
-                    logging.info(f"qr_body: {qr_body}")
-
-                    url = " http://nginx-proxy/database-management/products"
+                    url = "http://nginx-proxy/database-management/products/no-qr"
                     headers = {
                         'Content-Type': 'application/json',
                         "Cookie": f"{event_cookie}",
@@ -129,15 +111,71 @@ async def on_message(message: aio_pika.IncomingMessage):
                     logging.info(f"Data: {headers}")
                     # TODO Daten ersetzen mit Rückgabe der KI
                     data = {
-                        "name": f"{event_result}",
-                        "description": item.get("info"),
-                        "shelf": item.get("regal"),
-                        "price_piece": item["preis"].get("pro_stueck"),
-                        "price_kg": item["preis"].get("pro_kg"),
-                        "qr_code_id": qr_body.get("id")
+                        "name": produkt,
+                        "description": info,
+                        "shelf": regal,
+                        "price_piece": preis_pro_stueck,
+                        "price_kg": preis_pro_kg
                     }
                     logging.info(f"Data Post Product: {data}")
                     response = requests.post(url, headers=headers, json=data)
+                    logging.info(f"Data Post Product: {response}")
+                    # Initialisiere den Fernet-Verschlüsselungsalgorithmus
+                    produkt_body = response.json()
+                    logging.info(f"produkt_body: {produkt_body}")
+                    id = produkt_body.get("id")
+                    data_to_encrypt = json.dumps(id)
+
+                    # Datensatz wird verschlüsselt
+                    cipher = Fernet(key)
+
+                    # Verschlüsseln der Daten
+                    encrypted_data = cipher.encrypt(data_to_encrypt.encode())
+                    logging.debug(f"Verschlüsselte Daten: {encrypted_data}")
+
+                    # QR-Code Bild generieren (PIL Image)
+                    img = qrcode.make(encrypted_data)
+                    # Bild in einen BytesIO-Stream speichern
+                    buffer = BytesIO()
+                    img.save(buffer, format="JPEG")
+                    buffer.seek(0)
+                    # Bildinhalt als Base64 kodieren
+                    img_bytes = buffer.getvalue()
+                    img_base64 = base64.b64encode(img_bytes).decode('utf-8')
+                    logging.debug(f"img_base64: {img_base64}")
+                    url = " http://nginx-proxy/database-management/qrcodes"
+                    headers = {
+                        'Content-Type': 'application/json',
+                        "Cookie": f"{event_cookie}",
+                    }
+                    logging.info(f"Data: {headers}")
+                    data = {
+                        "data": f"{img_base64}",
+                    }
+
+                    logging.info(f"Data Post Product: {data}")
+                    response = requests.post(url, headers=headers, json=data)
+
+                    qr_body = response.json()
+                    logging.info(f"qr_body: {qr_body}")
+                    logging.info(f"qr_code_id: {qr_body.get('id')}")
+                    url = f"http://nginx-proxy/database-management/products/{id}"
+                    headers = {
+                        'Content-Type': 'application/json',
+                        "Cookie": f"{event_cookie}",
+                    }
+                    logging.info(f"Data: {headers}")
+                    # TODO Daten ersetzen mit Rückgabe der KI
+                    data = {
+                        "name": produkt,
+                        "description": info,
+                        "shelf": regal,
+                        "price_piece": preis_pro_stueck,
+                        "price_kg": preis_pro_kg,
+                        "qr_code_id": qr_body.get("id")
+                    }
+                    logging.info(f"Data Post Product: {data}")
+                    response = requests.put(url, headers=headers, json=data)
                     # Initialisiere den Fernet-Verschlüsselungsalgorithmus
 
                 else:
@@ -177,6 +215,50 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Response: {response.request}")
                 logging.info(f"Response: {response.status_code}")
 
+            elif "ReadQrCode" in event_type:
+                logging.info("Processing files after ClassificationCompleted event.")
+                event_result = event.get("qrdata", "")
+                logging.info(f"Event Data: {event_result}")
+
+                # Datensatz wird verschlüsselt
+                cipher = Fernet(key)
+                encrypted_data = base64.b64decode(event_result)
+                decrypted_data = cipher.decrypt(encrypted_data).decode()
+
+                url = f"http://nginx-proxy/database-management/products/{decrypted_data}"
+                headers = {
+                    'Content-Type': 'application/json',
+                    "Cookie": f"{event_cookie}",
+                }
+                logging.info(f"Data: {headers}")
+
+                response = requests.get(url, headers=headers)
+
+                product_body = response.json()
+                logging.info(f"qr_body: {product_body}")
+
+                produkt = product_body.get("name")
+                info = product_body.get("description")
+                regal = product_body.get("regal")
+                preis_pro_stueck = product_body.get("preis_pro_stueck")
+                preis_pro_kg = product_body.get("preis_pro_kg")
+
+                url = " http://nginx-proxy/eventing-service/qrcode/send/result"
+                headers = {
+                    "Cookie": f"{event_cookie}",
+                }
+                files = {
+                    "type": (None, "sendQrCodeResult"),
+                    "name": (None, produkt),
+                    "description": (None, info),
+                    "shelf": (None, regal),
+                    "price_piece": (None, str(preis_pro_stueck)),
+                    "price_kg": (None, str(preis_pro_kg)),
+                }
+                response = requests.post(url, headers=headers, files=files)
+                logging.info(f"Response: {response}")
+
+
         except Exception as e:
             logging.error(f"Error processing message: {e}")
 
@@ -195,7 +277,11 @@ async def main():
             queue_classified = await channel.declare_queue("process_classified_queue", durable=True)
             await queue_classified.bind(exchange, routing_key="ClassFiles")
 
+            queue_readqr = await channel.declare_queue("process_readqr_queue", durable=True)
+            await queue_readqr.bind(exchange, routing_key="ReadQrCode")
+
             await queue_classified.consume(on_message)
+            await queue_readqr.consume(on_message)
             logging.info("Waiting for messages. To exit press CTRL+C.")
             await asyncio.Future()  # Blockiert, um Nachrichten zu empfangen
     except Exception as e:

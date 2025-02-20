@@ -5,6 +5,15 @@
   <img [src]="qrCodeImage" alt="QR Code">
 </div>
 
+<div *ngIf="sendQrCodeResult">
+  <h2>Produktdaten</h2>
+  <p><strong>Produkt:</strong> {{ sendQrCodeResult.product }}</p>
+  <p><strong>Infos:</strong> {{ sendQrCodeResult.info }}</p>
+  <p><strong>Regal:</strong> {{ sendQrCodeResult.shelf }}</p>
+  <p><strong>Preis pro Stück:</strong> {{ sendQrCodeResult.price_piece }}</p>
+  <p><strong>Preis pro Kg:</strong> {{ sendQrCodeResult.price_kg }}</p>
+</div>
+
 <div *ngIf="misclassifiedFile">
   <h2>klassifizierte Datei</h2>
   <p><strong>Dateiname:</strong> {{ misclassifiedFile.filename }}</p>

@@ -1,3 +1,8 @@
+"""
+   von Maria Schuster
+   Verarbeitet das hochgeladene Bild
+   Bildvalidierung und umbennen
+"""
 import logging
 import os
 import uuid
@@ -16,6 +21,9 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def validate_file_magic(file_path):
+    """
+    prüft das magic byte des Bildes, damit sichergestellt werden das es nicht manipuliert wurde
+    """
     try:
         logging.info("validate_file_magic")
         with open(file_path, 'rb') as file:
@@ -68,7 +76,7 @@ def process_files(filename):
     if not validate_file_magic(file_path):
         logging.warning(f"Ungültiger Dateityp: {file_path}. Datei wird übersprungen.")
 
-        # Benenne die Datei in einen generischen Namen um
+    # Benennt die Datei in einen generischen Namen um
     file = rename_file(filename, SharedFolders.UPLOAD.value)
     logging.info(f"Datei umbenannt: {file}")
     return file

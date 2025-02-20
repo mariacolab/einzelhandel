@@ -69,6 +69,16 @@
       "name": "process_yolo_queue",
       "vhost": "/",
       "durable": true
+    },
+    {
+      "name": "process_readqr_queue",
+      "vhost": "/",
+      "durable": true
+    },
+    {
+      "name": "process_sendresult_queue",
+      "vhost": "/",
+      "durable": true
     }
   ],
   "exchanges": [
@@ -113,7 +123,7 @@
       "vhost": "/",
       "destination": "process_misclassified_queue",
       "destination_type": "queue",
-      "routing_key": "MisclassifiedFiles"
+      "routing_key": "ClassifiedFiles"
     },
     {
       "source": "events",
@@ -142,6 +152,20 @@
       "destination": "process_yolo_queue",
       "destination_type": "queue",
       "routing_key": "TrainYolo"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "process_readqr_queue",
+      "destination_type": "queue",
+      "routing_key": "ReadQrCode"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "process_sendresult_queue",
+      "destination_type": "queue",
+      "routing_key": "sendQrCodeResult"
     }
   ]
 }

@@ -15,6 +15,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   qrCodeImage: string | null = null;
   misclassifiedFile: any = null;
   training: any = null;
+  sendQrCodeResult: any = null;
 
   constructor(private websocketService: WebsocketService) {}
 
@@ -24,11 +25,15 @@ export class MessagesComponent implements OnInit, OnDestroy {
     );
 
     this.subscriptions.push(
-      this.websocketService.getMisclassifiedFiles().subscribe((file: any) => this.misclassifiedFile = file)
+      this.websocketService.getClassifiedFiles().subscribe((file: any) => this.misclassifiedFile = file)
     );
 
     this.subscriptions.push(
       this.websocketService.getTraining().subscribe((data: any) => this.training = data)
+    );
+
+    this.subscriptions.push(
+      this.websocketService.getSendQrCodeResult().subscribe((data: any) => this.sendQrCodeResult = data)
     );
   }
 
@@ -39,12 +44,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
   getMimeType(base64String: string): string {
     if (base64String.startsWith("/9j/")) {
       console.log("Trainingdata erhalten:", "image/jpeg");
-      return "image/jpg";
+      return "image/jpeg";
     } else if (base64String.startsWith("iVBOR")) {
       console.log("Trainingdata erhalten:", "image/png");
       return "image/png";
     }
-    return "image/jpg";
+    return "image/jpeg";
   }
 
   ngOnDestroy() {

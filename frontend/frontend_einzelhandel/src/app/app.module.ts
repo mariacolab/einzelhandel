@@ -14,17 +14,22 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { WebcamModule } from 'ngx-webcam';
 import { NgxFileDropModule } from 'ngx-file-drop';
+import { ZXingScannerModule } from '@zxing/ngx-scanner';
 
 // Komponenten
 import { AppComponent } from './app.component';
 import { PhotoComponent } from './components/photo/photo.component';
 import { PhotoEmpComponent } from './components/photo_emp/photo_emp.component';
+import { QrcodeComponent } from './components/qrcode/qrcode.component';
+import { QrcodeempComponent } from './components/qrcodeemp/qrcodeemp.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     PhotoComponent,
-    PhotoEmpComponent
+    PhotoEmpComponent,
+    QrcodeComponent,
+    QrcodeempComponent
   ],
   imports: [
     BrowserModule,
@@ -40,9 +45,10 @@ import { PhotoEmpComponent } from './components/photo_emp/photo_emp.component';
     MatInputModule,
     WebcamModule,
     NgxFileDropModule,
-    NgIf
+    NgIf,
+    ZXingScannerModule
   ],
-  exports: [EmployeeComponent],
+  exports: [WebsocketService],
   providers: [],
   bootstrap: [AppComponent]
 })

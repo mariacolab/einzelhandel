@@ -1,7 +1,9 @@
+"""
+   von Maria Schuster
+   Sendet Nachrichten an Exchanges und von dort werden sie auf die Queues verteielt
+"""
 import logging
-
 import aio_pika
-
 from common.utils import load_secrets
 
 secrets = load_secrets()

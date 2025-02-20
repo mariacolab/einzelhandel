@@ -1,3 +1,9 @@
+"""
+   von Maria Schuster
+   Konsument der RabbitMQ Events die in der Ki verarbeitet werden
+   ruft die Yolo und Tensorflow auf, die Erstellung des QR Codes,
+   die Rückgabe der Produktdaten an den Kunden und ruft das Nachlernen der Ki's auf
+"""
 import os.path
 
 import aio_pika
@@ -18,7 +24,7 @@ from rh_TF_Update import update_model_TF
 from rh_TF_Predict import predict_object_TF
 
 # Setup logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 # Load secrets
 try:
@@ -37,20 +43,11 @@ async def on_message(message: aio_pika.IncomingMessage):
         try:
             event = message.body.decode()
             logging.debug(f"Received event: {event}")
-
             event_corrected = event.replace("'", '"')
-            logging.debug(f"Corrected event JSON: {event_corrected}")
-
             event = json.loads(event_corrected)
-            logging.debug(f"Parsed event: {event}")
-
             event_type = event.get("type", "")
             event_cookie = event.get("cookie", "")
             event_role = event.get("role", "")
-
-            logging.info(f"Event type: {event_type}")
-            logging.info(f"Event cookie: {event_cookie}")
-            logging.info(f"Event role: {event_role}")
 
             if "ValidatedFiles" in event_type:
                 logging.info("Processing files after ImageUploaded event.")
@@ -80,6 +77,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                     mixed_results="False"
                     result = result1
                 logging.info(f"result from image: {result}")
+
+                #einlesen der Produktdaten aus einem JSON um sie als Rückgabewert mit zu senden
                 product_data = get_product_with_data(result) or {}
 
                 produkt = product_data['Produkt']
@@ -97,24 +96,22 @@ async def on_message(message: aio_pika.IncomingMessage):
                 if event_role == "Kunde":
                     """
                         - Bild wird in traningsordner verschoben
-                        - Klassifizierung weitergegeben
+                        - Klassifizierung weitergegeben an Kunden
                     """
 #Abschnitt von Sonja Schwabe - Anfang
-
                     # Bilder für kleines Modell ungelabelt ablegen
                     if result2 is not None:
                         pfad, name, endung = pfad_zerlegen(event_filename)
                         img_small = image.resize((128, 128))
                         img_small.save(f"{SharedFolders.TRAININGSSATZ.value}/kleinesModell/{name}{endung}")
-
 #Abschnitt von Sonja Schwabe - Ende
 
-                    url = " http://nginx-proxy/eventing-service/publish/MisclassificationReported"
+                    url = " http://nginx-proxy/eventing-service/publish/ClassificationReported"
                     headers = {
                         "Cookie": f"{event_cookie}",
                     }
                     files = {
-                        "type": (None, "MisclassifiedFiles"),
+                        "type": (None, "ClassifiedFiles"),
                         "classification": (None, result),
                         "filename": (None, event_filename),
                          "product": (None, produkt),
@@ -133,14 +130,14 @@ async def on_message(message: aio_pika.IncomingMessage):
                     """
                         - prüfen ob Klassifizierung korrekt ist
                         - falls ja Klassifizierung weitergegeben
-                        - falls nein Nachtraining
+                        - falls nein labeln für das Nachtraining
                     """
-                    url = " http://nginx-proxy/eventing-service/publish/MisclassificationReported"
+                    url = " http://nginx-proxy/eventing-service/publish/ClassificationReported"
                     headers = {
                         "Cookie": f"{event_cookie}",
                     }
                     files = {
-                        "type": (None, "MisclassifiedFiles"),
+                        "type": (None, "ClassifiedFiles"),
                         "classification": (None, result),
                         "filename": (None, event_filename),
                         "product": (None, produkt),
@@ -174,8 +171,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event file: {event_classification}")
                 logging.info(f"Event path: {event_class_correct}")
                 logging.info(f"Event path: {event_filename}")
-#Abschnitt von Sonja Schwabe - Anfang
 
+#Abschnitt von Sonja Schwabe - Anfang
                 class_names = ['Apfel', 'Aubergine', 'Avocado', 'Birne',
                                'Granatapfel', 'Kaki', 'Kartoffel', 'Kiwi',
                                'Mandarine', 'Orange', 'Pampelmuse', 'Paprika',
@@ -198,6 +195,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                             if os.path.exists(f"{SharedFolders.TRAININGSSATZ.value}/{name}{endung}"):
                                 os.remove(f"{SharedFolders.TRAININGSSATZ.value}/{name}{endung}")
 #Abschnitt von Sonja Schwabe - Ende
+
                     url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                     headers = {
                         "Cookie": f"{event_cookie}",
@@ -210,8 +208,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                     logging.info(f"Response: {response}")
                 else:
                     logging.info(f"Event file: {event_classification}")
-#Abschnitt von Sonja Schwabe - Anfang
 
+#Abschnitt von Sonja Schwabe - Anfang
 
                     if event_classification in class_names:
                         img_small = image.resize((128, 128))
@@ -220,24 +218,10 @@ async def on_message(message: aio_pika.IncomingMessage):
 #Abschnitt von Sonja Schwabe - Ende
                     logging.info("Fehlerhafte Klassifizierung")
 
-                    
             if "TrainYOLO" in event_type:
-                event_classification = event.get("classification", "")
-                event_class_correct = event.get("is_classification_correct ", "")
-                event_filename = event.get("filename", "")
-                logging.info(f"Event file: {event_classification}")
-                logging.info(f"Event path: {event_class_correct}")
-                logging.info(f"Event path: {event_filename}")
-                logging.info("Fehlerhafte Klassifizierung")
+                retrain()
             if "TrainTF" in event_type:
                 update_model_TF()
-                # event_classification = event.get("classification", "")
-                # event_class_correct = event.get("is_classification_correct ", "")
-                # event_filename = event.get("filename", "")
-                # logging.info(f"Event file: {event_classification}")
-                # logging.info(f"Event path: {event_class_correct}")
-                # logging.info(f"Event path: {event_filename}")
-                # logging.info("Fehlerhafte Klassifizierung")
 
         except Exception as e:
             logging.error(f"Error processing message: {e}")

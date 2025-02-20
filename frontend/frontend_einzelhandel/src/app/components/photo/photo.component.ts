@@ -68,7 +68,7 @@ export class PhotoComponent implements OnInit, OnDestroy {
 
       ngOnInit() {
         this.subscriptions.push(
-          this.websocketService.getMisclassifiedFiles().subscribe(file => this.misclassifiedFile = file)
+          this.websocketService.getClassifiedFiles().subscribe(file => this.misclassifiedFile = file)
         );
 
         WebcamUtil.getAvailableVideoInputs()
