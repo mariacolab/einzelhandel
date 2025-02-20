@@ -22,17 +22,28 @@ mat-form-field {
   /* display: block; */
 }
 
-p {
-      color: #319996;
-      display: center;
-      margin: 50px;
-      font-size: 30px;
-
-}
-
-img{
-height:200px;
-}
-// button {
-//   width: 80vw;
+// p {
+//       color: #319996;
+//       display: center;
+//       margin: 50px;
+//       font-size: 30px;
 // }
+
+// p {
+//   // display: center;
+//   // align-items: center;
+// }
+
+// img{
+// height:200px;
+// }
+
+img {
+  height: 200px;
+  margin-bottom: 10px;
+}
+
+button {
+  // width: 80vw;
+  margin-bottom: 10px;
+}

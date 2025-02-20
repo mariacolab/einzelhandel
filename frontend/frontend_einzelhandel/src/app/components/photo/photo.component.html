@@ -20,23 +20,48 @@
     </button>
   </div>
 
-  <div *ngIf="webcamImage">
+  <!-- <div *ngIf="webcamImage">
     <button mat-flat-button (click)="handleCapturedImage(webcamImage);">
       Handle captured image
     </button>
-  </div>
+  </div> -->
+
+  <!-- <div *ngIf="webcamImage">
+    <button mat-button (click)="sendCapturedImage(webcamImage);">
+      sendCapturedImage(webcamImage: WebcamImage)
+    </button>
+  </div> -->
 
   <div *ngIf="webcamImage">
-    <button mat-flat-button (click)="showProductDetails = !showProductDetails;">
-      Show product details
+    <!-- <button mat-button (click)="sendCapturedImage(webcamImage: WebcamImage);"> -->
+    <button mat-flat-button (click)="fakeIt();">
+      <!-- fakeIt() -->
+       Analyse photo
     </button>
   </div>
 
-  <div>
-    <app-image-upload />
-  </div>
+  <!-- <div *ngIf="webcamImage">
+    <button mat-flat-button (click)="showProductDetails = !showProductDetails;">
+      Show product details
+    </button>
+  </div> -->
 
-  <div *ngIf="misclassifiedFile">
+  <!-- <div *ngIf="webcamImage">
+    <h2>Ich habe diese Klassifizierung erkannt: </h2>
+    <img [src]="'data:image/png;base64,' + fakeMisclassifiedFile.file" alt="Fehlklassifiziertes Bild">
+    <p><strong>Klassifikation:</strong> {{ fakeMisclassifiedFile.classification }}</p>
+    <p><strong>Produkt:</strong> {{ fakeMisclassifiedFile.product }}</p>
+    <p><strong>Infos:</strong> {{ fakeMisclassifiedFile.info }}</p>
+    <p><strong>Regal:</strong> {{ fakeMisclassifiedFile.shelf }}</p>
+    <p><strong>Preis pro Stück:</strong> {{ fakeMisclassifiedFile.price_piece }}</p>
+    <p><strong>Preis pro Kg:</strong> {{ fakeMisclassifiedFile.price_kg }}</p>
+  </div> -->
+
+  <!-- <div>
+    <app-image-upload />
+  </div> -->
+
+  <!-- <div *ngIf="misclassifiedFile">
     <h2>Ich habe diese Klassifizierung erkannt: </h2>
     <img [src]="'data:image/png;base64,' + misclassifiedFile.file" alt="Fehlklassifiziertes Bild">
     <p><strong>Klassifikation:</strong> {{ misclassifiedFile.classification }}</p>
@@ -45,14 +70,14 @@
     <p><strong>Regal:</strong> {{ misclassifiedFile.shelf }}</p>
     <p><strong>Preis pro Stück:</strong> {{ misclassifiedFile.price_piece }}</p>
     <p><strong>Preis pro Kg:</strong> {{ misclassifiedFile.price_kg }}</p>
+  </div> -->
 
-  </div>
-
-  <!--<div>
+  <!--
+  <div>
     <button mat-flat-button routerLink="/product-details">Show product details on new page</button>
   </div>
-</div>
+  -->
 
-<div *ngIf="showProductDetails">
+<!-- <div *ngIf="showProductDetails">
   <app-product-details />
-</div>-->
+</div> -->

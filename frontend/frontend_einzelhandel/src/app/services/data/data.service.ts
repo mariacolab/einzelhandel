@@ -2,12 +2,19 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { HttpHeaders } from '@angular/common/http';
+import { CookieService } from 'ngx-cookie-service';
+
 @Injectable({
   providedIn: 'root'
 })
 export class DataService {
   // constructor() { }
-  constructor(private http: HttpClient) { }
+  // constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private cookieService: CookieService
+  ) {}
 
   private token: string = '';
   private baseUrl = 'https://jsonplaceholder.typicode.com'; // Example API URL
@@ -47,5 +54,29 @@ export class DataService {
       }
     });
     // .subscribe()
+  }
+
+  // From Maria's image-upload-component
+  sendFileToEndpoint(file: File,) {
+    const formData = new FormData();
+    formData.append('type', 'ProcessFiles');
+    formData.append('filename', file);
+    const sessionCookie = this.cookieService.get('session');
+    const headers = new HttpHeaders({
+      'Cookie': `session=${sessionCookie}`
+    });
+
+    this.http.post('http://localhost:8080/eventing-service/publish/ImageUploaded', formData, {
+      withCredentials: true
+    }).subscribe(
+      response => {
+        console.log("Datei an externen Service gesendet:", response);
+        // this.snackBar.open('Datei erfolgreich gesendet', 'OK', { duration: 3000 });
+      },
+      error => {
+        console.error("Fehler beim Senden an API:", error);
+        // this.snackBar.open('Fehler beim Senden', 'Fehler', { duration: 3000 });
+      }
+    );
   }
 }

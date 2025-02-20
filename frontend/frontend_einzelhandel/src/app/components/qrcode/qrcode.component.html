@@ -15,12 +15,21 @@
   </div>
 
   <div>
-    <button mat-flat-button (click)="scannerEnabled = !scannerEnabled;">
+    <button mat-flat-button (click)="toggleScanner();">
       <!--mat-icon>qr_code_scanner</mat-icon-->
       Toggle scanner
     </button>
   </div>
+
+  <div *ngIf="scanSuccess">
+    <!-- <button mat-button (click)="sendCapturedImage(webcamImage: WebcamImage);"> -->
+    <button mat-flat-button (click)="fakeIt();">
+      <!-- fakeIt() -->
+      Analyse photo
+    </button>
+  </div>
 </div>
+
 
 <!-- <div>
   <button mat-flat-button (click)="showProductDetails = !showProductDetails;">

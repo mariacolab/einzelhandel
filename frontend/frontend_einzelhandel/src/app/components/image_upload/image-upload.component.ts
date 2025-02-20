@@ -61,7 +61,7 @@ export class ImageUploadComponent {
       'Cookie': `session=${sessionCookie}`
     });
 
-    this.http.post('http://localhost/eventing-service/publish/ImageUploaded', formData, {
+    this.http.post('http://localhost:8080/eventing-service/publish/ImageUploaded', formData, {
       withCredentials: true
     }).subscribe(
       response => {

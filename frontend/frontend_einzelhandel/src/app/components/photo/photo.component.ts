@@ -1,29 +1,42 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-//import { NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
-import { NgIf, CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+// import { NgIf, CommonModule } from '@angular/common';
 import { Component, inject, OnInit, OnDestroy  } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatGridListModule } from '@angular/material/grid-list';
-//import { MatIconModule } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
-//import { RouterLink } from '@angular/router';
+// import { RouterLink } from '@angular/router';
 import { WebcamImage, WebcamInitError, WebcamModule, WebcamUtil } from 'ngx-webcam';
 import { Observable, Subject } from 'rxjs';
 import { NgxFileDropModule, NgxFileDropEntry } from 'ngx-file-drop';
 import { DataService } from '../../services/data/data.service';
-import { ImageUploadComponent } from '../image_upload/image-upload.component';
-//import { ProductDetailsComponent } from '../product-details/product-details.component';
+// import { ImageUploadComponent } from '../image_upload/image-upload.component';
+// import { ProductDetailsComponent } from '../product-details/product-details.component';
 import { WebsocketService } from '../../services/websocket/websocket.service';
 import { Subscription } from 'rxjs';
+// import { File } from 'buffer';
 
+import { Router, RouterModule } from '@angular/router';
+
+interface misclassifiedFile {
+  file: File;
+  classification: string;
+  product: string;
+  info: string;
+  shelf: string;
+  price_piece: number;
+  price_kg: number;
+}
 
 @Component({
   selector: 'app-photo',
-  imports: [CommonModule, WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, ImageUploadComponent, MatInputModule], //MatIconModule, ProductDetailsComponent, RouterLink NgSwitch, NgSwitchCase
+  // imports: [CommonModule, WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, ImageUploadComponent, MatInputModule]
+  imports: [CommonModule, WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, MatInputModule, MatIconModule, NgSwitch, NgSwitchCase, RouterModule],
   templateUrl: './photo.component.html',
   styleUrl: './photo.component.scss',
   animations: [
@@ -185,4 +198,52 @@ export class PhotoComponent implements OnInit, OnDestroy {
   // }
 
   public showProductDetails: boolean = false;
+
+  // fakeFile: File = null!;
+  // fakeMisclassifiedFile: misclassifiedFile = null!;
+  fakeMisclassifiedFile: misclassifiedFile = {
+    file: new File(["foo"], "foo.txt", {type: "text/plain",}),
+    classification: 'Obst',
+    product: 'Banane',
+    info: 'Brasilien',
+    shelf: 'Obst 2',
+    price_piece: 0,
+    price_kg: 0.99,
+  };
+
+  sendCapturedImage(webcamImage: WebcamImage) {
+    this.webcamImage = webcamImage;
+    const arr = this.webcamImage.imageAsDataUrl.split(",");
+    // const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    const file: File = new File([u8arr], this.imageName, { type: this.imageFormat })
+    console.log(file);
+    // return file;
+    this.dataService.sendFileToEndpoint(file);
+    this.fakeMisclassifiedFile.file = file;
+  }
+
+  router = inject(Router);
+  fakeIt() {
+    // this.subscriptions.push(
+    //   this.websocketService.getMisclassifiedFiles().subscribe(file => this.misclassifiedFile = file)
+    // );
+    // console.log(this.misclassifiedFile);
+    // this.fakeMisclassifiedFile.file = this.fakeFile;
+    this.fakeMisclassifiedFile.classification = 'Obst';
+    this.fakeMisclassifiedFile.product = 'Banane';
+    this.fakeMisclassifiedFile.info = 'Brasilien';
+    this.fakeMisclassifiedFile.shelf = 'Obst 2';
+    this.fakeMisclassifiedFile.price_piece = 0;
+    this.fakeMisclassifiedFile.price_kg = 0.99;
+    console.log(this.fakeMisclassifiedFile.classification)
+    this.snackBar.open('Analysing. Please wait...', '', {duration: 500});
+    // this.router.navigate(['/product-details']);
+    setTimeout(() => {this.router.navigate(['product-details'])}, 500);
+  }
 }
