@@ -242,8 +242,8 @@ export class PhotoComponent implements OnInit, OnDestroy {
     this.fakeMisclassifiedFile.price_piece = 0;
     this.fakeMisclassifiedFile.price_kg = 0.99;
     console.log(this.fakeMisclassifiedFile.classification)
-    this.snackBar.open('Analysing. Please wait...', '', {duration: 500});
+    this.snackBar.open('Analysing. Please wait...', '', {duration: 1400});
     // this.router.navigate(['/product-details']);
-    setTimeout(() => {this.router.navigate(['product-details'])}, 500);
+    setTimeout(() => {this.router.navigate(['product-details'])}, 1500);
   }
 }
