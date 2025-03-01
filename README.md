@@ -77,16 +77,18 @@ oder per Terminal (ehr für Linux Nutzer, unter Windows recht umständlich umzus
        JWT_SECRET_KEY=jwtsecretkey
        RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
        ENCRYPTION_KEY=-mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=
+       REDIS_PASSWORD=your_redis_password
         ````
    3. Die Datei [fapra-ki-einzelhandel-555f5e4a0722.json](https://drive.google.com/file/d/1VB18ly18vYcwqRV6CTjhETdnbLM6qQU7/view?usp=drive_link) 
    downloaden und in das Verzeichnis einzelhandel/secrets/ einfügen. Docker build ausführen und starten. 
    4. ebenfalls in dem Projektverzeichnis einzelhandel/ muss eine .env angelegt werden
-            ````bash
-           PEPPER_KEY=my-secret-pepper
-           POSTGRES_PASSWORD=a2GtDwGcCYpPMfzb9T
-           RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
-           ENCRYPTION_KEY=-mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=
-           ````
+        ````bash
+       PEPPER_KEY=my-secret-pepper
+       POSTGRES_PASSWORD=a2GtDwGcCYpPMfzb9T
+       RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
+       ENCRYPTION_KEY=-mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=
+       REDIS_PASSWORD=your_redis_password
+       ````
     
 
 
