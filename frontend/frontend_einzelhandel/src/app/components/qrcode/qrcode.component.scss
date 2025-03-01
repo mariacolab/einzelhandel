@@ -36,3 +36,82 @@ button {
   width: 40vw;
   margin: 10px;
 }
+
+/* Allgemeine Container-Styling */
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Abstand zwischen den Karten */
+}
+
+/* Styling für die MatCards */
+mat-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* QR-Code Scanner */
+.scanner-card {
+  text-align: center;
+}
+
+/* QR-Code Bild Styling */
+.qr-code-card {
+  text-align: center;
+}
+
+.qr-code-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.qr-code-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 8px;
+}
+
+/* Produktinfo Styling */
+.product-info-card p {
+  font-size: 16px;
+  margin: 5px 0;
+  color: #555;
+}
+
+/* Styling für Buttons */
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+button[mat-raised-button] {
+  text-transform: uppercase;
+  font-weight: bold;
+  border-radius: 8px;
+}
+
+mat-icon {
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+/* Responsives Design */
+@media (max-width: 768px) {
+  .button-group {
+    flex-direction: column;
+  }
+
+  .qr-code-image {
+    width: 150px;
+    height: 150px;
+  }
+}

@@ -1,29 +1,33 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-//import { NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { NgIf, CommonModule } from '@angular/common';
-import { Component, inject, OnInit, OnDestroy  } from '@angular/core';
+import {Component, inject, OnInit, OnDestroy, ViewChild, ElementRef} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatGridListModule } from '@angular/material/grid-list';
-//import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
-//import { RouterLink } from '@angular/router';
 import { WebcamImage, WebcamInitError, WebcamModule, WebcamUtil } from 'ngx-webcam';
 import { Observable, Subject } from 'rxjs';
 import { NgxFileDropModule, NgxFileDropEntry } from 'ngx-file-drop';
 import { DataService } from '../../services/data/data.service';
 import { ImageUploadComponent } from '../image_upload/image-upload.component';
-//import { ProductDetailsComponent } from '../product-details/product-details.component';
 import { WebsocketService } from '../../services/websocket/websocket.service';
 import { Subscription } from 'rxjs';
+import {AuthService} from '../../services/auth/auth.service';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {FormsModule} from '@angular/forms';
+import {MatIconModule} from '@angular/material/icon';
+import {MatOptionModule} from '@angular/material/core';
+import {environment} from '../../../environment';
+import QRCodeDecoder from 'qrcode-decoder';
+import {CookieService} from 'ngx-cookie-service';
 
 
 @Component({
   selector: 'app-photo',
-  imports: [CommonModule, WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, ImageUploadComponent, MatInputModule], //MatIconModule, ProductDetailsComponent, RouterLink NgSwitch, NgSwitchCase
+  imports: [CommonModule, FormsModule,  WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, ImageUploadComponent, MatInputModule, MatIconModule, MatButtonModule, MatOptionModule], //MatIconModule, ProductDetailsComponent, RouterLink NgSwitch, NgSwitchCase
   templateUrl: './photo.component.html',
   styleUrl: './photo.component.scss',
   animations: [
@@ -62,19 +66,57 @@ import { Subscription } from 'rxjs';
 export class PhotoComponent implements OnInit, OnDestroy {
 
    private subscriptions: Subscription[] = [];
+    private scannedString: string = '';
       misclassifiedFile: any = null;
+      userRole: string = '';
+      classification: string = '';
+      filename: string = '';
+      mixed_results: string = '';
+      qrCodeImage: string | null = null;
+      sendQrCodeResult: any = null;
+      @ViewChild('qrImage', {static: false}) qrImage!: ElementRef<HTMLImageElement>;
+      showRejectionOptions: boolean = false;
 
-      constructor(private dataService: DataService, private websocketService: WebsocketService) {}
+      constructor(private authService: AuthService,
+                  private dataService: DataService,
+                  private websocketService: WebsocketService,
+                  private http: HttpClient,
+                  private _snackBar: MatSnackBar,
+                  private cookieService: CookieService) {}
 
       ngOnInit() {
+        this.authService.getUserRole().subscribe(role => {
+          this.userRole = role;
+          console.log("Benutzerrolle:", role);
+          console.log("Rolle", this.userRole);
+        });
+
         this.subscriptions.push(
-          this.websocketService.getClassifiedFiles().subscribe(file => this.misclassifiedFile = file)
+          this.websocketService.getQRCode().subscribe((qr: string) => this.qrCodeImage = qr)
         );
 
+        this.subscriptions.push(
+          this.websocketService.getSendQrCodeResult().subscribe((data: any) => this.sendQrCodeResult = data)
+        );
+
+        const subscription = this.websocketService.getClassifiedFiles().subscribe(file => {
+          if (file) {
+            this.misclassifiedFile = file;
+
+            // Assign properties to variables
+            this.classification = file.classification;
+            this.filename = file.filename;
+            this.mixed_results = file.mixed_results;
+          }
+        });
+
+        // Push the subscription properly
+        this.subscriptions.push(subscription);
+
         WebcamUtil.getAvailableVideoInputs()
-              .then((mediaDevices: MediaDeviceInfo[]) => {
-                this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
-              });
+          .then((mediaDevices: MediaDeviceInfo[]) => {
+            this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
+          });
       }
       ngOnDestroy() {
         this.subscriptions.forEach(sub => sub.unsubscribe());
@@ -82,7 +124,7 @@ export class PhotoComponent implements OnInit, OnDestroy {
 
 
   // toggle webcam on/off
-  public showWebcam = true;
+  public showWebcam = false;
   public allowCameraSwitch = true;
   public multipleWebcamsAvailable = false;
   public deviceId!: string;
@@ -112,6 +154,7 @@ export class PhotoComponent implements OnInit, OnDestroy {
   public triggerSnapshot(): void {
     this.trigger.next();
     this.showWebcam = !this.showWebcam;
+
   }
 
   public handleInitError(error: WebcamInitError): void {
@@ -125,9 +168,14 @@ export class PhotoComponent implements OnInit, OnDestroy {
     this.nextWebcam.next(directionOrDeviceId);
   }
 
+  toggleWebcam() {
+    this.showWebcam = !this.showWebcam; // Webcam ein-/ausblenden
+  }
+
   public handleImage(webcamImage: WebcamImage): void {
     console.info('received webcam image', webcamImage);
     this.webcamImage = webcamImage;
+    this.showWebcam = false;
   }
 
   public cameraWasSwitched(deviceId: string): void {
@@ -152,7 +200,6 @@ export class PhotoComponent implements OnInit, OnDestroy {
   handleCapturedImage(webcamImage: WebcamImage) {
     this.webcamImage = webcamImage;
     const arr = this.webcamImage.imageAsDataUrl.split(",");
-    // const mime = arr[0].match(/:(.*?);/)[1];
     const bstr = atob(arr[1]);
     let n = bstr.length;
     const u8arr = new Uint8Array(n);
@@ -160,29 +207,117 @@ export class PhotoComponent implements OnInit, OnDestroy {
       u8arr[n] = bstr.charCodeAt(n);
     }
     const file: File = new File([u8arr], this.imageName, { type: this.imageFormat })
-    console.log(file);
-    // return file;
-    this.dataService.postformData(file).subscribe(
-      data => this.item = data,
-      error => {
-        console.error(error);
-        this.snackBar.open('Handle failed', 'Dismiss', {
-          duration: 3000
-        });
+    // console.log(file);
+    // // return file;
+    // this.dataService.postformData(file).subscribe(
+    //   data => this.item = data,
+    //   error => {
+    //     console.error(error);
+    //     this.snackBar.open('Handle failed', 'Dismiss', {
+    //       duration: 3000
+    //     });
+    //   },
+    //   // () => console.log('Image posted')
+    //   () => console.log(this.item)
+    // );
+    const formData = new FormData();
+    formData.append('type', 'ProcessFiles');
+    formData.append('filename', file);
+
+    const sessionCookie = this.cookieService.get('session');
+    new HttpHeaders({
+      'Cookie': `session=${sessionCookie}`
+    });
+    this.http.post( environment.apiUrls.eventingService.imageUploaded, formData, {
+      withCredentials: true
+    }).subscribe(
+      response => {
+        console.log("Datei an externen Service gesendet:", response);
+        this.snackBar.open('Datei erfolgreich gesendet', 'OK', { duration: 3000 });
       },
-      // () => console.log('Image posted')
-      () => console.log(this.item)
+      error => {
+        console.error("Fehler beim Senden an API:", error);
+        this.snackBar.open('Fehler beim Senden', 'Fehler', { duration: 3000 });
+      }
     );
   }
 
-  // public postImage(img: File): void {
-  //   this.dataService.postformData(img).subscribe(
-  //     data => this.item = data,
-  //     error => console.error(error),
-  //     () => console.log('Post loaded')
-  //     // () => console.log(this.item)
-  //   );
-  // }
+  confirm() {
+    this.showRejectionOptions = true;
+    this.sendData();
+    console.log('Bestätigung ausgeführt.');
+  }
+
+  reject() {
+    this.showRejectionOptions = false;
+    this.sendData();
+    console.log('Ablehnung ausgeführt. Bitte neue Klassifizierung auswählen.');
+  }
+
+  capitalizeBoolean(value: boolean): string {
+    return value ? 'True' : 'False'; // Wandelt Boolean in String mit großem Anfangsbuchstaben um
+  }
+
+  sendData() {
+    const formData = new FormData();
+    formData.append('is_classification_correct', this.capitalizeBoolean(this.showRejectionOptions));
+    formData.append('classification', this.misclassifiedFile.classification);
+    formData.append('type', "CorrectedFiles");
+    formData.append('filename', this.misclassifiedFile.file);
+    formData.append('mixed_results', this.misclassifiedFile.mixed_results);
+
+    // Mit withCredentials werden vorhandene Cookies (z. B. die Session) automatisch mitgesendet.
+    this.http.post(environment.apiUrls.eventingService.publishCorrectedClassification, formData, { withCredentials: true })
+      .subscribe(
+        response => {
+          console.log('Erfolgreiche Antwort:', response);
+        },
+        error => {
+          console.error('Fehler beim Absenden:', error);
+        }
+      );
+  }
+
+  async decodeQRCode() {
+    if (!this.qrImage || !this.qrImage.nativeElement || !this.qrImage.nativeElement.src) {
+      this._snackBar.open('Kein QR-Code-Bild gefunden!', 'OK', { duration: 3000 });
+      return;
+    }
+
+    const decoder = new QRCodeDecoder();
+
+    try {
+      const result = await decoder.decodeFromImage(this.qrImage.nativeElement);
+      this.scannedString = result?.data || 'Kein QR-Code erkannt';
+      this._snackBar.open(`Erkannt: ${this.scannedString}`, 'OK', { duration: 3000 });
+      console.info('Decodieren des QR-Codes:', result);
+      console.info('scannedString:', this.scannedString);
+      this.sendQRCodeData(this.scannedString);
+    } catch (error) {
+      console.error('Fehler beim Decodieren des QR-Codes:', error);
+      this._snackBar.open('Fehler beim Decodieren des QR-Codes', 'OK', { duration: 3000 });
+    }
+  }
+
+  private apiUrl = environment.apiUrls.eventingService.qrcodeScanResult;
+
+  sendQRCodeData(qrData: string) {
+    console.info("sendQRCodeData:", qrData)
+    const formData = new FormData();
+    formData.append('qrdata', qrData);
+    formData.append('type', 'ReadQrCode');
+    console.info("sendQRCodeData formData:", formData)
+    this.http.post(this.apiUrl, formData).subscribe(
+      response => {
+        console.log("Datei an externen Service gesendet:", response);
+        this._snackBar.open('Datei erfolgreich gesendet', 'OK', { duration: 3000 });
+      },
+      error => {
+        console.error("Fehler beim Senden an API:", error);
+        this._snackBar.open('Fehler beim Senden', 'Fehler', { duration: 3000 });
+      }
+    );
+  }
 
   public showProductDetails: boolean = false;
 }

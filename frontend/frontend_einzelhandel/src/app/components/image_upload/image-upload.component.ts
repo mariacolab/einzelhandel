@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { NgxFileDropModule } from 'ngx-file-drop';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { CookieService } from 'ngx-cookie-service';
+import {environment} from '../../../environment';
 
 @Component({
   selector: 'app-image-upload',
@@ -53,15 +54,11 @@ export class ImageUploadComponent {
     formData.append('type', 'ProcessFiles');
     formData.append('filename', file);
 
-
-
     const sessionCookie = this.cookieService.get('session');
-
-    const headers = new HttpHeaders({
+    new HttpHeaders({
       'Cookie': `session=${sessionCookie}`
     });
-
-    this.http.post('http://localhost/eventing-service/publish/ImageUploaded', formData, {
+    this.http.post( environment.apiUrls.eventingService.imageUploaded, formData, {
       withCredentials: true
     }).subscribe(
       response => {

@@ -1,15 +1,20 @@
+import eventlet
+eventlet.monkey_patch()
 import json
 import asyncio
 import aio_pika
 import logging
 from flask import Flask, request
 from flask_socketio import SocketIO
+from flask_cors import CORS
 
 # Logging einrichten
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
+CORS(app, resources={r"/*": {"origins": ["http://localhost:4200", "http://192.168.2.58:4200", "https://localhost:4200", "https://192.168.2.58:4200"]}})
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+#socketio = SocketIO(app, cors_allowed_origins="*", transports=["websocket"], async_mode="eventlet")
 
 # RabbitMQ Verbindung
 RABBITMQ_URL = "amqp://guest:guest@rabbitmq:5672"

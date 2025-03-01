@@ -87,7 +87,7 @@ def retrain(): #trainiert ein neues Modell, testet ob dieses besser ist und setz
     save_path= f"{SharedFolders.KI_MODELLE_GESAMT_NEW.value}"
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    model.train(data=f"{SharedFolders.DATASETS_FFv3.value}/data.yaml", project=save_path, device=0, workers=0, epochs=200, imgsz=224, batch=64, patience=40, pretrained=True)
+    model.train(data=f"{SharedFolders.DATASETS_FFv3.value}/data.yaml", project=save_path, workers=0, epochs=200, imgsz=224, batch=64, patience=40, pretrained=True)
     # map50 und Anzahl korrekt klassifizierter Testbilder ermitteln bei neuem Modell
     correct_new = yolotest(f"{SharedFolders.KI_MODELLE_GESAMT_BEST_GEWICHT.value}/best.pt")
     metrics_new = model.val(project=f"{SharedFolders.KI_MODELLE_TRAIN_GESAMT.value}", name="newVal")

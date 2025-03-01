@@ -1,6 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { PhotoComponent } from './photo.component';
+import {PhotoComponent} from './photo.component';
 
 describe('PhotoComponent', () => {
   let component: PhotoComponent;
@@ -10,7 +10,7 @@ describe('PhotoComponent', () => {
     await TestBed.configureTestingModule({
       imports: [PhotoComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(PhotoComponent);
     component = fixture.componentInstance;

@@ -27,6 +27,7 @@
         <mat-select formControlName="role">
           <mat-option value="Kunde">Customer</mat-option>
           <mat-option value="Mitarbeiter">Employee</mat-option>
+          <mat-option value="Admin">Admin</mat-option>
         </mat-select>
         @if (loginForm.get('role')?.hasError('required')) {
           <mat-error>Role is required</mat-error>

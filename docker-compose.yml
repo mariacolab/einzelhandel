@@ -127,41 +127,6 @@ services:
       - shared_uploads:/shared/uploads
     command: ["python3", "subscriber.py"]
 
-  eventing-service:
-    build:
-      target: production
-      context: ./backend/eventing
-      dockerfile: Dockerfile
-    container_name: eventing_service
-    privileged: true
-    cap_add:
-      - SYS_ADMIN
-    devices:
-      - /dev/fuse
-    environment:
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      FLASK_APP: backend/eventing/producer.py
-      PYTHONPATH: /app
-      RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
-      GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
-    ports:
-      - "5005:5000"
-    depends_on:
-      - database-management
-      - rabbitmq
-      - user-management
-    secrets:
-      - github_credentials
-    volumes:
-      - ./secrets:/app/common/secrets
-      - ./common:/app/common
-      - ./secrets:/app/secrets
-      - shared_uploads:/shared/uploads
-      - training_data_yolo:/mnt/shared_training/ki/YoloErgebnisse
-      - training_data_tf:/mnt/shared_training/ki/kleinesModell
-
   ki:
     build:
       context: ./ki
@@ -195,11 +160,44 @@ services:
       - ./common:/workspace/common
       - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
-      - training_data_yolo:/mnt/shared_training/ki/YoloErgebnisse
+      - training_data_tf:/workspace/shared/TRAININGSSATZ/kleinesModell
+      - labeled_tf:/mnt/labeled_tf
+    command: ["python3", "subscriber.py"]
+
+  eventing-service:
+    build:
+      target: production
+      context: ./backend/eventing
+      dockerfile: Dockerfile
+    container_name: eventing_service
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      FLASK_APP: backend/eventing/producer.py
+      PYTHONPATH: /app
+      RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
+    ports:
+      - "5005:5000"
+    depends_on:
+      - database-management
+      - rabbitmq
+      - user-management
+    secrets:
+      - github_credentials
+    volumes:
+      - ./secrets:/app/common/secrets
+      - ./common:/app/common
+      - ./secrets:/app/secrets
+      - shared_uploads:/shared/uploads
       - training_data_tf:/mnt/shared_training/ki/kleinesModell
       - labeled_tf:/mnt/labeled_tf
-      - labeled_yolo:/mnt/labeled_yolo
-    command: ["python3", "subscriber.py"]
 
   webhook-service:
     build:
@@ -233,9 +231,12 @@ services:
     container_name: frontend
     ports:
       - "4200:4200"
+    volumes:
+      - ./nginx/ssl:/certs
     depends_on:
       - webhook-service
-    command: ["npx", "http-server", "dist/frontend_einzelhandel/browser", "-p", "4200"]
+    command: ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--disable-host-check"]
+
 
 
   rabbitmq:
@@ -284,7 +285,6 @@ services:
       - ./common:/app/common
       - ./secrets:/app/secrets
       - shared_uploads:/shared/uploads
-      - training_data_yolo:/mnt/shared_training/ki/YoloErgebnisse
       - training_data_tf:/mnt/shared_training/ki/kleinesModell
     command: ["python3", "subscriber.py"]
 
@@ -292,9 +292,11 @@ services:
     image: nginx:latest
     container_name: nginx-proxy
     ports:
+      - "443:443"
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl
     depends_on:
       - database-management
       - admin-service
@@ -304,20 +306,6 @@ services:
       - frontend
       - eventing-service
 
-  watchdogyolo:
-    build:
-      context: ./watchdogyolo
-    container_name: watchdogyolo
-    volumes:
-      - training_data_yolo:/watched_data
-    environment:
-      - FILE_THRESHOLD=20
-      - TARGET_URL=http://eventing-service:5005/Trainingsdata
-      - WEBSOCKET_SERVER=http://watchdog-controller:5010
-    depends_on:
-      - webhook-service
-    command: [ "python3", "watch_folder.py" ]
-
   watchdogtf:
     build:
       context: ./watchdogtf
@@ -325,9 +313,10 @@ services:
     volumes:
       - training_data_tf:/watched_data
     environment:
-      - FILE_THRESHOLD=20
-      - TARGET_URL=http://eventing-service:5005/Trainingsdata
-      - WEBSOCKET_SERVER=http://watchdog-controller:5011
+      - FILE_THRESHOLD=3
+      - KI_TYPE=tf
+    ports:
+      - "5015:5015"
     depends_on:
       - webhook-service
     command: [ "python3", "watch_folder.py" ]
@@ -348,8 +337,6 @@ volumes:
   redis_data:
   shared_uploads:
   training_data_tf:
-  training_data_yolo:
-  labeled_yolo:
   labeled_tf:
 
 

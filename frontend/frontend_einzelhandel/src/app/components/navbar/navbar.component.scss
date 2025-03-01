@@ -1,8 +1,19 @@
-mat-toolbar {
-  margin-bottom: 10px;
-  border-radius: 10px;
-}
 
 .spacer {
 	flex: 1 1 auto;
+}
+
+mat-toolbar {
+  display: flex;
+  justify-content: space-between;
+}
+
+.clickable {
+  cursor: pointer;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.clickable:hover {
+  color: #ffcc00; // Gelb beim Hover
 }

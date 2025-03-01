@@ -177,7 +177,7 @@
       "vhost": "/",
       "destination": "process_labeleddata_queue",
       "destination_type": "queue",
-      "routing_key": "labeledTrainingdata"
+      "routing_key": "LabeledTrainingdata"
     }
   ]
 }

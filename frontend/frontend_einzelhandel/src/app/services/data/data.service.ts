@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import {environment} from '../../../environment';
 
 @Injectable({
   providedIn: 'root'
@@ -33,7 +34,7 @@ export class DataService {
   }
 
   postformData(img: File): Observable<any> {
-    const url = 'http://localhost/eventing-service/publish/ImageUploaded';
+    const url = environment.apiUrls.eventingService.imageUploaded;
     const formData = new FormData();
     formData.append('type', 'ProcessFiles');
     // formData.append('filename', file, file.name);

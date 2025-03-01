@@ -1,32 +1,97 @@
 <!-- <p>qrcode works!</p> -->
 
+<!--<div class="container">-->
+<!--  &lt;!&ndash; <div class="frame"> &ndash;&gt;-->
+<!--  &lt;!&ndash; <span class="helper"></span> &ndash;&gt;-->
+<!--  &lt;!&ndash; <zxing-scanner [enable]="scannerEnabled" (scanSuccess)="scanSuccessHandler($event)"-->
+<!--    (scanError)="scanErrorHandler($event)" (scanFailure)="scanFailureHandler($event)"-->
+<!--    (scanComplete)="scanCompleteHandler($event)"></zxing-scanner> &ndash;&gt;-->
+
+<!--  &lt;!&ndash; <div style="width:100%; height:0; padding-top:100%; position:relative; background-color: green;"> &ndash;&gt;-->
+<!--  <div class="frame">-->
+<!--    <zxing-scanner [enable]="scannerEnabled" (scanSuccess)="scanSuccessHandler($event)"-->
+<!--      (scanError)="scanErrorHandler($event)" (scanFailure)="scanFailureHandler($event)"-->
+<!--      (scanComplete)="scanCompleteHandler($event)"></zxing-scanner>-->
+<!--  </div>-->
+
+<!--  <div>-->
+<!--    <button mat-flat-button (click)="scannerEnabled = !scannerEnabled;">-->
+<!--      &lt;!&ndash;mat-icon>qr_code_scanner</mat-icon&ndash;&gt;-->
+<!--      Toggle scanner-->
+<!--    </button>-->
+<!--  </div>-->
+<!--</div>-->
+
+<!--<div>-->
+<!--  <button mat-flat-button (click)="scannerEnabled = !scannerEnabled;">-->
+<!--    &lt;!&ndash;mat-icon>qr_code_scanner</mat-icon&ndash;&gt;-->
+<!--    Toggle scanner-->
+<!--  </button>-->
+<!--</div>-->
+
+
+<!--<div *ngIf="qrCodeImage">-->
+<!--  <h2>Generierter QR-Code</h2>-->
+<!--  <img #qrImage [src]="qrCodeImage" alt="QR Code">-->
+<!--  <button mat-button (click)="decodeQRCode()">QR-Code scannen</button>-->
+<!--</div>-->
+
+<!--<div *ngIf="sendQrCodeResult">-->
+<!--  <h2>Produktdaten</h2>-->
+<!--  <p><strong>Produkt:</strong> {{ sendQrCodeResult.product }}</p>-->
+<!--  <p><strong>Infos:</strong> {{ sendQrCodeResult.info }}</p>-->
+<!--  <p><strong>Regal:</strong> {{ sendQrCodeResult.shelf }}</p>-->
+<!--  <p><strong>Preis pro Stück:</strong> {{ sendQrCodeResult.price_piece }}</p>-->
+<!--  <p><strong>Preis pro Kg:</strong> {{ sendQrCodeResult.price_kg }}</p>-->
+<!--</div>-->
+
 <div class="container">
-  <!-- <div class="frame"> -->
-  <!-- <span class="helper"></span> -->
-  <!-- <zxing-scanner [enable]="scannerEnabled" (scanSuccess)="scanSuccessHandler($event)"
-    (scanError)="scanErrorHandler($event)" (scanFailure)="scanFailureHandler($event)"
-    (scanComplete)="scanCompleteHandler($event)"></zxing-scanner> -->
+  <!-- QR-Code Scanner -->
+  <mat-card class="scanner-card">
+    <mat-card-header>
+      <mat-card-title>QR-Code Scanner</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="frame">
+        <zxing-scanner [enable]="scannerEnabled" (scanSuccess)="scanSuccessHandler($event)"
+                       (scanError)="scanErrorHandler($event)" (scanFailure)="scanFailureHandler($event)"
+                       (scanComplete)="scanCompleteHandler($event)">
+        </zxing-scanner>
+      </div>
+    </mat-card-content>
+    <mat-card-actions class="button-group">
+      <button mat-raised-button color="primary" (click)="scannerEnabled = !scannerEnabled;">
+         Scanner umschalten
+      </button>
+    </mat-card-actions>
+  </mat-card>
 
-  <!-- <div style="width:100%; height:0; padding-top:100%; position:relative; background-color: green;"> -->
-  <div class="frame">
-    <zxing-scanner [enable]="scannerEnabled" (scanSuccess)="scanSuccessHandler($event)"
-      (scanError)="scanErrorHandler($event)" (scanFailure)="scanFailureHandler($event)"
-      (scanComplete)="scanCompleteHandler($event)"></zxing-scanner>
-  </div>
+  <!-- Generierter QR-Code -->
+  <mat-card *ngIf="qrCodeImage" class="qr-code-card">
+    <mat-card-header>
+      <mat-card-title>Generierter QR-Code</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="qr-code-content">
+      <img #qrImage [src]="qrCodeImage" alt="QR Code" class="qr-code-image">
+    </mat-card-content>
+    <mat-card-actions class="button-group">
+      <button mat-raised-button color="accent" (click)="decodeQRCode()">
+        QR-Code scannen
+      </button>
+    </mat-card-actions>
+  </mat-card>
 
-  <div>
-    <button mat-flat-button (click)="scannerEnabled = !scannerEnabled;">
-      <!--mat-icon>qr_code_scanner</mat-icon-->
-      Toggle scanner
-    </button>
-  </div>
+  <!-- Produktdaten-Anzeige -->
+  <mat-card *ngIf="sendQrCodeResult" class="product-info-card">
+    <mat-card-header>
+      <mat-card-title>Produktdaten</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p><strong>Produkt:</strong> {{ sendQrCodeResult.product }}</p>
+      <p><strong>Infos:</strong> {{ sendQrCodeResult.info }}</p>
+      <p><strong>Regal:</strong> {{ sendQrCodeResult.shelf }}</p>
+      <p><strong>Preis pro Stück:</strong> {{ sendQrCodeResult.price_piece }} €</p>
+      <p><strong>Preis pro Kg:</strong> {{ sendQrCodeResult.price_kg }} €</p>
+    </mat-card-content>
+  </mat-card>
 </div>
-
-<!-- <div>
-  <button mat-flat-button (click)="showProductDetails = !showProductDetails;">
-    Show product details
-  </button>
-</div>
-<div>
-  <button mat-flat-button routerLink="/product-details">Show product details on new page</button>
-</div> -->

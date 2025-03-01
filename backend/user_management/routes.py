@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 def register_routes(app):
     @app.route('/auth/register', methods=['POST'])
-    @cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
+    @cross_origin(origins=["http://localhost:4200", "http://192.168.2.58:4200", "https://localhost:4200", "https://192.168.2.58:4200"], supports_credentials=True)
     def register():
         data = request.json
         hashed_password, salt = hash_password(data['password'])
@@ -45,7 +45,7 @@ def register_routes(app):
             return jsonify({"error": "Service unavailable", "details": str(e)}), 500
 
     @app.route('/auth/login', methods=['POST'])
-    @cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
+    @cross_origin(origins=["http://localhost:4200", "http://192.168.2.58:4200", "https://localhost:4200", "https://192.168.2.58:4200"], supports_credentials=True)
     def login():
         data = request.json
         response = requests.get(f"http://database-management:5001/users/{data['username']}")
@@ -86,7 +86,7 @@ def register_routes(app):
 
 
     @app.route('/auth/logout', methods=['POST'])
-    @cross_origin(origins=["http://localhost:4200"], supports_credentials=True)
+    @cross_origin(origins=["http://localhost:4200", "http://192.168.2.58:4200", "https://localhost:4200", "https://192.168.2.58:4200"], supports_credentials=True)
     @token_required
     def logout():
         token = session.get('token')
@@ -115,5 +115,20 @@ def register_routes(app):
             return jsonify({"message": "Token is invalid or expired"}), 401
         return jsonify({"message": "Token is valid"}), 200
 
+    @app.route('/auth/role', methods=['GET'])
+    @cross_origin(origins=["http://localhost:4200", "http://192.168.2.58:4200", "https://localhost:4200", "https://192.168.2.58:4200"], supports_credentials=True)
+    @token_required
+    def role():
+        role = session.get('role')
+        if role is None:
+            return jsonify({"message": "Role is invalid"}), 401
+        return jsonify({"role": role}), 200
+
+    @app.route('/auth/session', methods=['GET'])
+    @cross_origin(origins=["http://localhost:4200", "http://192.168.2.58:4200", "https://localhost:4200", "https://192.168.2.58:4200"], supports_credentials=True)
+    def session_status():
+        if session.get('logged_in'):
+            return jsonify({"loggedIn": True}), 200
+        return jsonify({"loggedIn": False}), 401
 
 routes = Blueprint('routes', __name__)

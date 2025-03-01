@@ -74,18 +74,6 @@ async def on_message(message: aio_pika.IncomingMessage):
                 # Fall 1 er ist nicht vorhanden
                 if body == expected_json:
 
-                    # json_data = load_json("class.json")
-                    # logging.info(f"json_data: {json_data}")
-                    # item = get_item_by_class_name(json_data, event_result)
-                    # logging.info(f"item: {item}")
-                    # data = {
-                    #     "Produkt": item["class_name"],
-                    #     "Informationen": item.get("info"),
-                    #     "Regal": item.get("regal"),
-                    #     "Preis_pro_stueck": item["preis"].get("pro_stueck"),
-                    #     "Preis_pro_kg": item["preis"].get("pro_kg")
-                    # }
-                    # logging.info(f"item_data: {data}")
                     data = get_product_with_data(event_result) or {}
 
                     produkt = data['Produkt']
@@ -222,13 +210,12 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                 # Datensatz wird verschlüsselt
                 cipher = Fernet(key)
-                encrypted_data = base64.b64decode(event_result)
-                decrypted_data = cipher.decrypt(encrypted_data).decode()
+                #encrypted_data = base64.b64decode(event_result)
+                decrypted_data = cipher.decrypt(event_result).decode()
 
                 url = f"http://nginx-proxy/database-management/products/{decrypted_data}"
                 headers = {
                     'Content-Type': 'application/json',
-                    "Cookie": f"{event_cookie}",
                 }
                 logging.info(f"Data: {headers}")
 
@@ -239,14 +226,18 @@ async def on_message(message: aio_pika.IncomingMessage):
 
                 produkt = product_body.get("name")
                 info = product_body.get("description")
-                regal = product_body.get("regal")
-                preis_pro_stueck = product_body.get("preis_pro_stueck")
-                preis_pro_kg = product_body.get("preis_pro_kg")
+                regal = product_body.get("shelf")
+                preis_pro_stueck = product_body.get("price_piece")
+                preis_pro_kg = product_body.get("price_kg")
+
+                logging.info(f"Response produkt: {produkt}")
+                logging.info(f"Response info: {info}")
+                logging.info(f"Response regal: {regal}")
+                logging.info(f"Response preis_pro_stueck: {preis_pro_stueck}")
+                logging.info(f"Response preis_pro_kg: {preis_pro_kg}")
 
                 url = " http://nginx-proxy/eventing-service/qrcode/send/result"
-                headers = {
-                    "Cookie": f"{event_cookie}",
-                }
+
                 files = {
                     "type": (None, "sendQrCodeResult"),
                     "name": (None, produkt),
@@ -255,7 +246,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                     "price_piece": (None, str(preis_pro_stueck)),
                     "price_kg": (None, str(preis_pro_kg)),
                 }
-                response = requests.post(url, headers=headers, files=files)
+                logging.info(f"Response: {files}")
+                response = requests.post(url, files=files)
                 logging.info(f"Response: {response}")
 
 

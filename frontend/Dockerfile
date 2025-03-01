@@ -19,7 +19,8 @@ RUN npm install --legacy-peer-deps ngx-file-drop
 RUN npm install --legacy-peer-deps \
     @angular/material @angular/cdk @angular/animations \
     ngx-webcam @zxing/ngx-scanner @zxing/browser @zxing/library
-
+RUN npm install @angular/platform-server@ --legacy-peer-deps
+RUN npm install @angular/ssr --legacy-peer-deps
 
 
 # Kopiere den gesamten Code ins Arbeitsverzeichnis
@@ -32,4 +33,6 @@ RUN npm run build
 RUN npm install -g http-server
 
 # Serve the Angular app
-CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "4200"]
+CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--disable-host-check"]
+
+

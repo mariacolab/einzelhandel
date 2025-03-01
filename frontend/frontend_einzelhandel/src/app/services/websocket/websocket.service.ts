@@ -2,23 +2,43 @@ import { isPlatformBrowser } from '@angular/common';
 import { Injectable } from '@angular/core';
 import { Observable, Subject  } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
+import {environment} from '../../../environment';
 
 @Injectable({
   providedIn: 'root'
 })
 
 export class WebsocketService {
-  private socket!: Socket;
+  socket!: Socket;
+  private socketTF!: Socket;
   private qrCodeSubject = new Subject<string>();
   private classifiedFilesubject = new Subject<any>();
-  private trainingSubject = new Subject<any>();
   private sendQrCodeResultSubject = new Subject<any>();
-  private socket2 = io('http://watchdog-controller:5010');
-  private socket3 = io('http://watchdog-controller:5011');
-
+  private labeledTrainingAckSubject = new Subject<any>();
+  private trainingSubjectTF = new Subject<any>();
 
   constructor() {
-      this.socket = io('http://localhost:5008');
+      this.socket = io(environment.apiUrls.externalServices.service5008, {
+        transports: ['websocket']
+      });
+
+      this.socketTF = io(environment.apiUrls.externalServices.service5015, {
+        //path: "/socket-tf/",
+        transports: ['websocket']
+      });
+
+
+      this.socketTF.on('connect', () => {
+        console.log('TF Verbindung erfolgreich mit WebSockets!');
+      });
+
+      this.socketTF.on('connect_error', (error: any) => {
+        console.error('TF WebSocket-Verbindungsfehler:', error);
+      });
+
+      this.socketTF.on('disconnect', () => {
+        console.log('TF WebSocket-Verbindung getrennt.');
+      });
 
       this.socket.on('new_message', (msg: any) => {
         console.log("Neues Event erhalten:", msg);
@@ -31,27 +51,44 @@ export class WebsocketService {
         console.log("ClassifiedFiles Datei erhalten:", msg);
         this.classifiedFilesubject.next(msg);
       }
-      else if (msg.type === "Trainingdata") {
-        console.log("Trainingdata erhalten:", msg);
-        this.trainingSubject.next(msg);
-      }
+
       else if (msg.type === "sendQrCodeResult") {
-              console.log("sendQrCodeResult erhalten:", msg);
-              this.sendQrCodeResultSubject.next(msg);
+        console.log("sendQrCodeResult erhalten:", msg);
+        this.sendQrCodeResultSubject.next(msg);
       }
+
+      this.socketTF.on('Trainingdata', (msg: any) => {
+        console.log("Trainingdata (TF) erhalten:", msg);
+        this.trainingSubjectTF.next(msg);
+      });
+
+      // Empfang der Bestätigung nach dem Labeln
+      this.socketTF.on('LabeledTrainingdataAck', (msg: any) => {
+        console.log("LabeledTrainingdataAck received:", msg);
+        this.labeledTrainingAckSubject.next(msg);
+      });
     });
   }
 
-  startWatchdog() {
-    this.socket2.emit('start_watchdog');
-    this.socket3.emit('start_watchdog');
+  ngOnInit(){
+    console.log('WebSocket Service wird verbunden. Verbindungen werden geöffnet.');
+    this.socketTF.connect();
   }
 
-  stopWatchdog() {
-    this.socket2.emit('stop_watchdog');
-    this.socket3.emit('stop_watchdog');
+  ngOnDestroy() {
+    console.log(' WebSocket Service wird zerstört. Verbindungen werden geschlossen.');
+    this.socketTF.disconnect();
   }
 
+  // Observable für Empfang der Acknowledgment-Nachricht
+  getLabeledTrainingAck(): Observable<any> {
+    return this.labeledTrainingAckSubject.asObservable();
+  }
+
+  // Sendet das LabeledTrainingdata-Event mit den Labels
+  sendLabeledTrainingDataTf(data: any) {
+    this.socketTF.emit("LabeledTrainingdata", data);
+  }
   getQRCode(): Observable<string> {
     return this.qrCodeSubject.asObservable();
   }
@@ -60,8 +97,8 @@ export class WebsocketService {
     return this.classifiedFilesubject.asObservable();
   }
 
-  getTraining(): Observable<any> {
-    return this.trainingSubject.asObservable();
+  getTrainingDataTF(): Observable<any> {
+    return this.trainingSubjectTF.asObservable();
   }
 
   getSendQrCodeResult(): Observable<any> {

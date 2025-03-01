@@ -68,6 +68,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Event Product: {event_price_piece}")
                 event_price_kg = event.get("price_kg", "")
                 logging.info(f"Event Product: {event_price_kg}")
+                event_mixed_results = event.get("mixed_results", "")
+                logging.info(f"Event mixed_results: {mixed_results}")
                 # TODO Load the Image into a Viewer and submit if the classification is correct
                 logging.info("Processing files after ClassifiedFiles event.")
 
@@ -92,7 +94,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                                                             "shelf": event_product_shelf,
                                                             "price_piece": event_price_piece,
                                                             "price_kg": event_price_kg,
-                                                            "file": base64_encoded})
+                                                            "file": base64_encoded,
+                                                            "mixed_results": mixed_results})
                 logging.info(f"Webhook response: {response.status_code}, {response.text}")
 
                 url = " http://nginx-proxy/eventing-service/publish/CorrectedClassification"
@@ -114,9 +117,12 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info("Processing files after Trainingdata event.")
                 event_ki = event.get("ki", "")
                 base64_encoded = []
+                filenames = []
+
                 for file in event_files:
                     try:
                         with open(file, "rb") as file:
+                            filenames.append(os.path.basename(f.name))
                             file_data = file.read()
                             base64_encoded.append(base64.b64encode(file_data).decode("utf-8"))
                         logging.info("Datei erfolgreich in Base64 umgewandelt")
@@ -125,7 +131,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                         logging.info(f"Fehler: Datei konnte nicht verarbeitet werden. {str(e)}")
                 response = requests.post(WEBHOOK_URL, json={"type": "Trainingdata",
                                                             "ki": event_ki,
-                                                            "files": base64_encoded})
+                                                            "files": base64_encoded,
+                                                            "filenames": filename})
                 logging.info(f"Webhook response: {response.status_code}, {response.text}")
             elif "sendQrCodeResult" == event_type:
                 logging.info("Processing files after sendQrCodeResult event.")
@@ -170,6 +177,10 @@ async def main():
             queue_trainingdata = await channel.declare_queue("process_trainingdata_queue", durable=True)
             await queue_trainingdata.bind(exchange, routing_key="Trainingdata")
 
+            queue_sendresult = await channel.declare_queue("process_sendresult_queue", durable=True)
+            await queue_sendresult.bind(exchange, routing_key="sendQrCodeResult")
+
+            await queue_sendresult.consume(on_message)
             await queue_trainingdata.consume(on_message)
             await queue_mis.consume(on_message)
             await queue_qrcode.consume(on_message)

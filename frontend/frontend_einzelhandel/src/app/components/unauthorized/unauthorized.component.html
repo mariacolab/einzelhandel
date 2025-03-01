@@ -1,0 +1,17 @@
+<div class="container">
+  <h2>🚫 Zugriff verweigert!</h2>
+  <p>Du hast keine Berechtigung für diese Seite.</p>
+
+  <h3>🔹 QR-Code scannen, um Zugriff zu beantragen:</h3>
+  <img *ngIf="qrCodeUrl" [src]="qrCodeUrl" alt="QR Code">
+
+  <h3>🔍 QR-Code scannen:</h3>
+  <zxing-scanner
+    [enable]="scannerEnabled"
+    (scanSuccess)="scanSuccessHandler($event)">
+  </zxing-scanner>
+
+  <p *ngIf="scannedData">📌 Gescannt: {{ scannedData }}</p>
+
+  <button (click)="scannerEnabled = !scannerEnabled">Scanner ein-/ausschalten</button>
+</div>

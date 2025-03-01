@@ -1,0 +1,17 @@
+<div class="dashboard-container">
+  <h1>Dashboard</h1>
+
+  <p>Willkommen, {{ userRole }}!</p>
+
+  <!-- Foto-Upload für alle Benutzer -->
+  <button mat-button color="primary" (click)="openPhotoComponent()">Foto hochladen</button>
+
+  <!-- QR-Code Scanner für alle Benutzer -->
+  <button mat-button color="accent" (click)="openQrScanner()">QR-Code scannen</button>
+
+  <!-- Klassifikation nur für Employees  -->
+  <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" mat-button color="warn" (click)="openClassification()">Klassifikation</button>
+
+  <!-- Klassifikation nur für Employees "-->
+  <button *ngIf="userRole === 'Admin'" mat-button color="warn" (click)="openTraining()">Nachtraining</button>
+</div>

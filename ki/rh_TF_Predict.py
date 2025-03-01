@@ -1,8 +1,16 @@
+# Ralf Hager
+# Matr. Nr. 3924238
+#
+# Funktion zur Vorhersage einzelner Klassen
+# Die Formatierung der Bilder auf 128 x 128 geschieht im Modul subscryber.py im ki-Server
+# Die Vorhersage verwendet ein vortrainiertes Modell, welches mit der Funktion train_TF_Modell() 
+# trainiert werden kann (im Modul: rh_TF_Training)
+# 
+
 import tensorflow as tf
 import numpy as np
 
 from common.SharedFolders import SharedFolders
-
 
 def predict_object_TF(img):
 

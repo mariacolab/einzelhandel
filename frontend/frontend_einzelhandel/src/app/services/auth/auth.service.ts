@@ -2,50 +2,66 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { tap } from 'rxjs/operators';
 import { DataService } from '../data/data.service';
+import {Router} from '@angular/router';
+import {map, Observable, pipe} from 'rxjs';
+import {environment} from '../../../environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // constructor() { }
-  dataService = inject(DataService);
-  httpClient = inject(HttpClient);
+  constructor(private http: HttpClient, private router: Router) {}
 
-  // baseUrl = 'http://localhost:3000/api';
-  baseUrl = 'http://localhost/user-management/auth';
+  baseUrl = environment.apiUrls.userManagement;
 
   signUp(data: any) {
-    return this.httpClient.post(`${this.baseUrl}/register`, data)
-      .pipe(tap((result) => {
-        console.log(result);
+    return this.http.post(`${this.baseUrl}/register`, data)
+      .pipe(tap((response ) => {
+        console.log(response );
       }));
   }
 
-  login(data: any) {
-    return this.httpClient.post(`${this.baseUrl}/login`, data, {
-      withCredentials: true  // Wichtig! Cookies für die Session senden
-    })
-      .pipe(tap((result) => {
-        localStorage.setItem('authUser', JSON.stringify(result));
-        console.log(result);
-        console.log(JSON.stringify(result));
-        //this.dataService.setToken(JSON.stringify(result));
-      }));
+  login(data: any): Observable<any> {
+    return this.http.post<{ role: string}>(`${this.baseUrl}/login`, data, {
+      withCredentials: true,
+      observe: 'response'
+    }).pipe(
+        tap((response: any) => {
+          console.log("Login Response:", response);
+          if (response && response.status === 200) {
+            this.router.navigate(['/dashboard']);
+          } else {
+            console.error("Login fehlgeschlagen, falsche Credentials!");
+          }
+        })
+      );
   }
 
-  logout() {
-    localStorage.removeItem('authUser');
+  isLoggedIn(): Observable<boolean> {
+    return this.http.get<{ loggedIn: boolean }>(`${this.baseUrl}/session`, { withCredentials: true })
+      .pipe(map(response => response.loggedIn));
   }
 
-  isLoggedIn() {
-    return localStorage.getItem('authUser') !== null;
+  getUserRole(): Observable<string> {
+    return this.http.get<{ role: string }>(`${this.baseUrl}/role`, { withCredentials: true })
+      .pipe(map(response => response.role));
   }
 
-  isLoggedInAsCustomer() {
-    return ((localStorage.getItem('authUser') !== null) && (JSON.parse(localStorage.getItem('authUser')!).role == 'Kunde'));  // FIXME avoid non-null assertion operator?
+  isLoggedInAsCustomer(): Observable<boolean> {
+    return this.getUserRole().pipe(map(role => role === 'Kunde'));
   }
 
-  isLoggedInAsEmployee() {
-    return ((localStorage.getItem('authUser') !== null) && (JSON.parse(localStorage.getItem('authUser')!).role == 'Mitarbeiter')); // FIXME non-null assertion operator?
+  isLoggedInAsEmployee(): Observable<boolean> {
+    return this.getUserRole().pipe(map(role => role === 'Mitarbeiter'));
+  }
+
+  isLoggedInAsAdmin(): Observable<boolean> {
+    return this.getUserRole().pipe(map(role => role === 'Admin'));
+  }
+
+  logout(): void {
+    this.http.post(`${this.baseUrl}/logout`, {}, { withCredentials: true }).subscribe(() => {
+      this.router.navigate(['/login']);
+    });
   }
 }

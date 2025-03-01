@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import timedelta
-
 from flask import Flask, jsonify, session
 from flask_jwt_extended import JWTManager
 import redis

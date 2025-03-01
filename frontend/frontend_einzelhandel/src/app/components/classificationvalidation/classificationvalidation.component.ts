@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Injectable  } from '@angular/core';
+import {Component, OnInit, OnDestroy, Injectable, ChangeDetectorRef} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WebsocketService } from '../../services/websocket/websocket.service';
 import { Subscription } from 'rxjs';
@@ -9,8 +9,10 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {environment} from '../../../environment';
 
 interface ImageCards {
   avatar: string;
@@ -29,29 +31,58 @@ interface ImageCards {
 export class ClassificationValidationComponent implements OnInit, OnDestroy {
 
    private subscriptions: Subscription[] = [];
-   selectedOptions: string[] = [];
-      training: any = null;
+   selectedOptions: { [key: number]: string } = {};
+  training: any = null;
 
-      constructor(private websocketService: WebsocketService, private http: HttpClient) {}
+      constructor(private snackBar: MatSnackBar,
+                  private websocketService: WebsocketService,
+                  private http: HttpClient,
+                  private cdRef: ChangeDetectorRef) {}
 
       ngOnInit() {
-        this.subscriptions.push(
-          this.websocketService.getTraining().subscribe(data => {
-            console.log("Empfangene Trainingsdaten:", data);  // Debugging
+        this.websocketService.ngOnInit();
 
+        this.subscriptions.push(
+          this.websocketService.getTrainingDataTF().subscribe(data => {
             if (data && data.files) {
+              console.log("Empfangene Trainingsdaten (TF):", data);
               this.training = data;
-              this.selectedOptions = new Array(data.files.length).fill('Unclassified'); // Standardwert setzen
+              this.cdRef.detectChanges();
+              this.selectedOptions = new Array(data.files.length).fill('Unclassified');
             }
-          }) // <--- Stelle sicher, dass hier KEIN unnötiges `,` oder fehlendes `;` ist
+          })
         );
 
-        this.websocketService.startWatchdog();
+        this.websocketService.getLabeledTrainingAck().subscribe(msg => {
+          console.log("Labeling abgeschlossen:", msg);
+          // Hier könntest du z. B. eine Benachrichtigung anzeigen
+        });
+
+        console.log('Training Data:', this.training);
+        console.log('Object Classes:', this.objectClasses);
+        console.log('Selected Options:', this.selectedOptions);
       }
 
-      isValidBase64Image(base64String: string): boolean {
-          return base64String.startsWith("/9j/") || base64String.startsWith("iVBOR");
+      isValidBase64Image(base64String: unknown): boolean {
+        if (typeof base64String !== "string") {
+          return false;
         }
+        return base64String.startsWith("/9j/") || base64String.startsWith("iVBOR");
+      }
+
+      submitLabels() {
+        this.websocketService.socket.on('connect', () => {
+          console.log('WebSocket connected');
+        });
+
+        const payload = {
+          ki: this.training.ki,
+          fileNames: this.training.files,
+          labels: this.selectedOptions
+        };
+        console.log("Label payload erhalten: ", payload)
+          this.websocketService.sendLabeledTrainingDataTf(payload);
+      }
 
         getMimeType(base64String: string): string {
           if (base64String.startsWith("/9j/")) {
@@ -65,22 +96,31 @@ export class ClassificationValidationComponent implements OnInit, OnDestroy {
         }
 
   sendData() {
-    const requestData = this.training.files.map((file: string, index: number) => ({
-      image: file,
-      classification: this.selectedOptions[index] || 'Unclassified'
-    }));
-
-    this.http.post<any>('https://example.com/api/save-data', requestData).subscribe((response: any) => {
-      console.log('Daten erfolgreich gesendet:', response);
-    }, error => {
-      console.error('Fehler beim Senden der Daten:', error);
-    });
+    const formData = new FormData();
+    formData.append('type', 'LabeledTrainingdata');
+    formData.append('files', this.training.files);
+    formData.append('labels', JSON.stringify(this.selectedOptions));
+    formData.append('ki', this.training.ki);
+    console.log("Selected Labels:", formData);
+    this.http.post(environment.apiUrls.eventingService.labeledTrainingData, formData, {
+      withCredentials: true
+    }).subscribe(
+      response => {
+        console.log("Datei an externen Service gesendet:", response);
+        this.snackBar.open('Datei erfolgreich gesendet', 'OK', { duration: 3000 });
+      },
+      error => {
+        console.error("Fehler beim Senden an API:", error);
+        this.snackBar.open('Fehler beim Senden', 'Fehler', { duration: 3000 });
+      }
+    );
+  }
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    console.log('Klassifikation wird verlassen. WebSockets schließen.');
+    this.websocketService.ngOnDestroy();
   }
 
-      ngOnDestroy() {
-        this.websocketService.stopWatchdog();
-        this.subscriptions.forEach(sub => sub.unsubscribe());
-      }
   imageCards: ImageCards[] = [
     { avatar: 'apple', class: 'apple' },
     { avatar: 'banana', class: 'banana' },
@@ -89,7 +129,10 @@ export class ClassificationValidationComponent implements OnInit, OnDestroy {
     { avatar: 'banana', class: 'banana' },
   ];
   objectClasses: string[] = [
-    'Apfel', 'Aubergine', 'Avocado', 'Banane', 'Birne', 'Bohnen', 'Cerealien', 'Chips', 'Essig', 'Fisch', 'Gewuerze', 'Granatapfel', 'Honig', 'Kaffee', 'Kaki', 'Karotte', 'Kartoffel', 'Kiwi', 'Knoblauch', 'Kuchen', 'Mais', 'Mandarine', 'Mango', 'Marmelade', 'Mehl', 'Milch', 'Nudeln', 'Nuss', 'Oel', 'Orange', 'Pampelmuse', 'Paprika', 'Pflaume', 'Reis', 'Saft', 'Schokolade', 'Soda', 'Suessigkeit', 'Tee', 'Tomate', 'Tomatensauce', 'Wasser', 'Zitrone', 'Zucchini', 'Zucker', 'Zwiebel'
+    'Apfel', 'Aubergine', 'Avocado', 'Birne',
+    'Granatapfel', 'Kaki', 'Kartoffel', 'Kiwi',
+    'Mandarine', 'Orange', 'Pampelmuse', 'Paprika',
+    'Tomate', 'Zitrone', 'Zucchini', 'Zwiebel'
   ];
   selected = 'option2';
 }

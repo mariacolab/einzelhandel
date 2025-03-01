@@ -20,7 +20,7 @@ from common.product_data import get_product_with_data
 from common.shared_drive import copy_file_to_folder
 from detectYOLO11 import detect, pfad_zerlegen, retrain
 from common.utils import load_secrets
-from rh_TF_Update import update_model_TF
+from rh_TF_Update import update_model_TF, move_Data_TF
 from rh_TF_Predict import predict_object_TF
 
 # Setup logging
@@ -78,20 +78,6 @@ async def on_message(message: aio_pika.IncomingMessage):
                     result = result1
                 logging.info(f"result from image: {result}")
 
-                #einlesen der Produktdaten aus einem JSON um sie als Rückgabewert mit zu senden
-                product_data = get_product_with_data(result) or {}
-
-                produkt = product_data['Produkt']
-                info = product_data['Informationen']
-                regal = product_data['Regal']
-                preis_pro_stueck = product_data['Preis_pro_stueck']
-                preis_pro_kg = product_data['Preis_pro_kg']
-
-                logging.info(f"Produkt: {produkt}")
-                logging.info(f"Informationen: {info}")
-                logging.info(f"Regal: {regal}")
-                logging.info(f"Preis pro Stück: {preis_pro_stueck} €")
-                logging.info(f"Preis pro kg: {preis_pro_kg} €")
 
                 if event_role == "Kunde":
                     """
@@ -106,25 +92,66 @@ async def on_message(message: aio_pika.IncomingMessage):
                         img_small.save(f"{SharedFolders.TRAININGSSATZ.value}/kleinesModell/{name}{endung}")
 #Abschnitt von Sonja Schwabe - Ende
 
-                    url = " http://nginx-proxy/eventing-service/publish/ClassificationReported"
+                    # prüft ob der Datensatz in der Datenbank vorhanden ist
+                    url = f"http://nginx-proxy/database-management/products/{result}"
                     headers = {
+                        'Content-Type': 'application/json',
                         "Cookie": f"{event_cookie}",
                     }
-                    files = {
-                        "type": (None, "ClassifiedFiles"),
-                        "classification": (None, result),
-                        "filename": (None, event_filename),
-                         "product": (None, produkt),
-                        "info": (None, info),
-                        "shelf": (None, regal),
-                        "price_piece": (None, str(preis_pro_stueck)),
-                        "price_kg": (None, str(preis_pro_kg)),
-                        "role": (None, event_role),
-                        "mixed_results": (None, mixed_results)
+                    logging.info(f"Header get Product: {headers}")
 
-                    }
-                    response = requests.post(url, headers=headers, files=files)
-                    logging.info(f"Response: {response}")
+                    # POST-Anfrage senden
+                    response = requests.get(url, headers=headers)
+                    body = response.json()
+                    logging.info(f"Product response: {body}")
+                    expected_json = {"error": "Product not found"}
+
+                    if body == expected_json:
+                        url = " http://nginx-proxy/eventing-service/publish/ClassificationReported"
+                        headers = {
+                            "Cookie": f"{event_cookie}",
+                        }
+                        files = {
+                            "type": (None, "ClassifiedFiles"),
+                            "classification": (None, result),
+                            "filename": (None, event_filename),
+                            "product": (None, "Das Produkt ist leider nicht im Supermarkt vorhanden."),
+                            "info": (None, None),
+                            "shelf": (None, None),
+                            "price_piece": (None, None),
+                            "price_kg": (None, None),
+                            "role": (None, event_role),
+                            "mixed_results": (None, mixed_results)
+                        }
+
+                        response = requests.post(url, headers=headers, files=files)
+                        logging.info(f"Response: {response}")
+                    else:
+                        produkt = body.get("name")
+                        info = body.get("description")
+                        regal = body.get("shelf")
+                        preis_pro_stueck = body.get("price_piece")
+                        preis_pro_kg = body.get("price_kg")
+
+                        url = " http://nginx-proxy/eventing-service/publish/ClassificationReported"
+                        headers = {
+                            "Cookie": f"{event_cookie}",
+                        }
+                        files = {
+                            "type": (None, "ClassifiedFiles"),
+                            "classification": (None, result),
+                            "filename": (None, event_filename),
+                             "product": (None, produkt),
+                            "info": (None, info),
+                            "shelf": (None, regal),
+                            "price_piece": (None, str(preis_pro_stueck)),
+                            "price_kg": (None, str(preis_pro_kg)),
+                            "role": (None, event_role),
+                            "mixed_results": (None, mixed_results)
+
+                        }
+                        response = requests.post(url, headers=headers, files=files)
+                        logging.info(f"Response: {response}")
                 else:
 
                     """
@@ -132,6 +159,16 @@ async def on_message(message: aio_pika.IncomingMessage):
                         - falls ja Klassifizierung weitergegeben
                         - falls nein labeln für das Nachtraining
                     """
+
+                    # einlesen der Produktdaten aus einem JSON um sie als Rückgabewert mit zu senden
+                    product_data = get_product_with_data(result) or {}
+
+                    produkt = product_data['Produkt']
+                    info = product_data['Informationen']
+                    regal = product_data['Regal']
+                    preis_pro_stueck = product_data['Preis_pro_stueck']
+                    preis_pro_kg = product_data['Preis_pro_kg']
+
                     url = " http://nginx-proxy/eventing-service/publish/ClassificationReported"
                     headers = {
                         "Cookie": f"{event_cookie}",
@@ -218,6 +255,25 @@ async def on_message(message: aio_pika.IncomingMessage):
 #Abschnitt von Sonja Schwabe - Ende
                     logging.info("Fehlerhafte Klassifizierung")
 
+            if "LabeledTrainingdata" in event_type:
+                logging.info("LabeledTrainingdata")
+# Abschnitt von Ralf Hager - Beginn
+#    Ein Vorbereitungsschritt für das Nachlernen des Modells wird angestossen
+#    Es wird dabei eine Liste von Files vom Front-End durchgereicht,
+#    beim 'kleinen' Modell noch zusätzlich die Labels, damit die Dateien
+#    in die richtigen Verzeichnisse verschoben werden können.
+                event_filepath = f'../mnt/'
+                event_ki = event.get("ki", "")
+                event_labels = event.get("labels","")
+                event_files = event.get("files","")
+                if "yolo" in event_ki:
+                    file_path = f'{event_filepath}/labeled_yolo'
+                    # ToDo Aufruf Nachlernen YOLO
+                if "tf" in event_ki:
+                    file_path = f'../mnt/labeled_tf'
+                    logging.info(f"LabeledTrainingdata tf: {file_path}, {event_labels}, {event_files}")
+                    move_Data_TF(file_path,event_labels, event_files)
+# Abschnitt von Ralf Hager - Ende
             if "TrainYOLO" in event_type:
                 retrain()
             if "TrainTF" in event_type:
@@ -244,9 +300,13 @@ async def main():
             queue_tf = await channel.declare_queue("process_tf_queue", durable=True)
             await queue_tf.bind(exchange, routing_key="TrainTF")
 
+            queue_label = await channel.declare_queue("process_labeleddata_queue", durable=True)
+            await queue_label.bind(exchange, routing_key="LabeledTrainingdata")
+
             queue_yolo = await channel.declare_queue("process_yolo_queue", durable=True)
             await queue_yolo.bind(exchange, routing_key="TrainYolo")
 
+            await queue_label.consume(on_message)
             await queue_corrected.consume(on_message)
             await queue_tf.consume(on_message)
             await queue_yolo.consume(on_message)

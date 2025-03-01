@@ -85,6 +85,8 @@ def get_role_by_name(role):
 
 
 @app.route('/roles/<int:role_id>', methods=['PUT'])
+@token_required
+@role_required('Admin')
 def update_role_info(role_id):
     data = request.json
     roles = update_role(db.session, role_id=role_id, new_role_name=data['role_name'])
@@ -131,6 +133,8 @@ def get_user_by_name(username):
 
 
 @app.route('/users/<int:user_id>', methods=['PUT'])
+@token_required
+@role_required('Admin')
 def update_user_info(user_id):
     data = request.json
     users = update_user(db.session, user_id=user_id, **data)
@@ -188,7 +192,6 @@ def get_product_by_name(name):
 
 
 @app.route('/products/<int:product_id>', methods=['GET'])
-@token_required
 def get_product(product_id):
     products = read_product(db.session, product_id=product_id)
     if products:
@@ -234,7 +237,6 @@ def add_qrcode():
 
 
 @app.route('/qrcodes/<int:qrcode_id>', methods=['GET'])
-@token_required
 def get_qrcode(qrcode_id):
     qrcodes = read_qrcode(db.session, qr_code_id=qrcode_id)
     if qrcodes:
@@ -267,7 +269,6 @@ def add_failed_classification():
 
 
 @app.route('/failed-classifications', methods=['GET'])
-@token_required
 def get_failed_classifications():
     failed_classifications = read_failed_classifications(db.session)
     return jsonify([{"id": fc.id, "reason": fc.reason} for fc in failed_classifications]), 200
