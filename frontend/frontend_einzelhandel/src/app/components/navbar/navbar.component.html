@@ -1,49 +1,55 @@
 <!-- <p>navbar works!</p> -->
 
-<!--<mat-toolbar>-->
-<!--  @if (authService.isLoggedInAsCustomer()) {-->
-<!--    &lt;!&ndash; <button mat-icon-button routerLink="/dashboard" aria-label="Example icon-button with menu icon"> &ndash;&gt;-->
-<!--    <button mat-button (click)="navigateToCustomer()" aria-label="Example icon-button with menu icon">-->
-<!--      &lt;!&ndash;mat-icon>storefront</mat-icon&ndash;&gt;-->
-<!--      App-->
-<!--    </button>-->
-<!--    <span class="spacer"></span>-->
-<!--    <button mat-button aria-label="Example icon-button with share icon" (click)="logout()">-->
-<!--      &lt;!&ndash;mat-icon>logout</mat-icon&ndash;&gt;-->
-<!--      Logout-->
-<!--    </button>-->
-<!--  } @else if (authService.isLoggedInAsEmployee()) {-->
-<!--    &lt;!&ndash; <button mat-icon-button routerLink="/dashboard" aria-label="Example icon-button with menu icon"> &ndash;&gt;-->
-<!--      <button mat-button (click)="navigateToEmployee()" aria-label="Example icon-button with menu icon">-->
-<!--      &lt;!&ndash;mat-icon>storefront</mat-icon&ndash;&gt;-->
-<!--      App-->
-<!--    </button>-->
-<!--    <span class="spacer"></span>-->
-<!--    <button mat-button aria-label="Example icon-button with share icon" (click)="logout()">-->
-<!--      &lt;!&ndash;mat-icon>logout</mat-icon&ndash;&gt;-->
-<!--      Logout-->
-<!--    </button>-->
-<!--  } @else if (authService.isLoggedInAsAdmin()) {-->
-<!--  &lt;!&ndash; <button mat-icon-button routerLink="/dashboard" aria-label="Example icon-button with menu icon"> &ndash;&gt;-->
-<!--    <button mat-button (click)="navigateToEmployee()" aria-label="Example icon-button with menu icon">-->
-<!--    &lt;!&ndash;mat-icon>storefront</mat-icon&ndash;&gt;-->
-<!--    App-->
-<!--  </button>-->
-<!--  <span class="spacer"></span>-->
-<!--  <button mat-button aria-label="Example icon-button with share icon" (click)="logout()">-->
-<!--    &lt;!&ndash;mat-icon>logout</mat-icon&ndash;&gt;-->
-<!--    Logout-->
-<!--  </button>-->
-<!--  } @else {-->
-<!--    <button mat-button routerLink="/login" aria-label="Example icon-button with menu icon">-->
-<!--        &lt;!&ndash;mat-icon>storefront</mat-icon&ndash;&gt;-->
-<!--        App-->
-<!--    </button>-->
-<!--  }-->
-<!--</mat-toolbar>-->
+<!-- <mat-toolbar>
+  @if (authService.isLoggedInAsCustomer()) {
+    <button mat-button (click)="navigateToCustomer()" aria-label="Example icon-button with menu icon">
+      App
+    </button>
+    <span class="spacer"></span>
+    <button mat-button aria-label="Example icon-button with share icon" (click)="logout()">
+      Logout
+    </button>
+  } @else if (authService.isLoggedInAsEmployee()) {
+      <button mat-button (click)="navigateToEmployee()" aria-label="Example icon-button with menu icon">
+      App
+    </button>
+    <span class="spacer"></span>
+    <button mat-button aria-label="Example icon-button with share icon" (click)="logout()">
+      Logout
+    </button>
+  } @else {
+    <button mat-button routerLink="/login" aria-label="Example icon-button with menu icon">
+        App
+    </button>
+  }
+</mat-toolbar> -->
 
-<mat-toolbar color="primary" *ngIf="showNavbar">
+<!-- <mat-toolbar color="primary" *ngIf="showNavbar">
   <span class="clickable" (click)="navigateToDashboard()">Dashboard</span>
   <span class="spacer"></span>
   <span class="clickable" (click)="logout()">Logout</span>
+</mat-toolbar> -->
+
+<mat-toolbar *ngIf="showNavbar">
+  <button mat-button (click)="navigateToDashboard()" aria-label="Example icon-button with menu icon">
+    <mat-icon>storefront</mat-icon>
+    App
+  </button>
+  <span class="spacer"></span>
+  <button mat-button aria-label="Example icon-button with share icon" (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    Logout
+  </button>
+</mat-toolbar>
+
+<mat-toolbar *ngIf="!showNavbar">
+  <button mat-button (click)="navigateToDashboard()" aria-label="Example icon-button with menu icon">
+    <mat-icon>storefront</mat-icon>
+    App
+  </button>
+  <!-- <span class="spacer"></span>
+  <button mat-button aria-label="Example icon-button with share icon" (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    Logout
+  </button> -->
 </mat-toolbar>
