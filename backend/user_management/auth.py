@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   Passwort Hash erstellen und verifizieren
+"""
 import bcrypt
 from common.utils import load_pepper
 from config import Config

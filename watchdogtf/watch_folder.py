@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+"""
+   von Maria Schuster
+   Überwachung der TRAININGSSATZ/kleinesModell
+"""
 import eventlet
 eventlet.monkey_patch()
 import logging

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, EventEmitter, Output} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgxFileDropEntry, FileSystemFileEntry, FileSystemDirectoryEntry } from 'ngx-file-drop';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -15,6 +15,7 @@ import {environment} from '../../../environment';
   styleUrls: ['./image-upload.component.scss']
 })
 export class ImageUploadComponent {
+  @Output() fileUploaded: EventEmitter<void> = new EventEmitter();
   public file: NgxFileDropEntry[] = [];
   public uploadedFileName: string = "";
 
@@ -39,6 +40,7 @@ export class ImageUploadComponent {
         console.log(droppedFile.relativePath, fileEntry);
       }
     }
+    this.fileUploaded.emit();
   }
 
   public fileOver(event: Event){
@@ -70,5 +72,7 @@ export class ImageUploadComponent {
         this.snackBar.open('Fehler beim Senden', 'Fehler', { duration: 3000 });
       }
     );
+    this.fileUploaded.emit();
   }
+
 }

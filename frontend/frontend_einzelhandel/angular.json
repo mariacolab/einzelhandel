@@ -37,7 +37,9 @@
               "debug",
               "engine.io-client",
               "socket.io-parser",
-              "xmlhttprequest-ssl"
+              "xmlhttprequest-ssl",
+              "qrcode-decoder",
+              "qrcode"
             ]
           },
           "configurations": {

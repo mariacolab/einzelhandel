@@ -1,3 +1,4 @@
+//von Maria Schuster
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth/auth.service';

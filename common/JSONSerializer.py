@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   Serialisieren der Sitzung
+"""
 import json
 
 

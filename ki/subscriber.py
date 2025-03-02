@@ -17,7 +17,7 @@ import requests
 import json
 import logging
 from common.product_data import get_product_with_data
-from common.shared_drive import copy_file_to_folder
+from common.shared_drive import copy_file_to_folder, del_file
 from detectYOLO11 import detect, pfad_zerlegen, retrain
 from common.utils import load_secrets
 from rh_TF_Update import update_model_TF, move_Data_TF
@@ -189,7 +189,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
 
-                    url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
+                    """ url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                     headers = {
                         "Cookie": f"{event_cookie}",
                     }
@@ -198,32 +198,45 @@ async def on_message(message: aio_pika.IncomingMessage):
                         "result": (None, result),
                     }
                     response = requests.post(url, headers=headers, files=files)
-                    logging.info(f"Response: {response}")
+                    logging.info(f"Response: {response}") """
 
             if "CorrectedFiles" in event_type:
                 event_classification = event.get("classification", "")
-                event_class_correct = event.get("is_classification_correct ", "")
+                event_class_correct = event.get("is_classification_correct", "")
                 event_filename = event.get("filename", "")
                 mixed_results = event.get("mixed_results","")
-                logging.info(f"Event file: {event_classification}")
-                logging.info(f"Event path: {event_class_correct}")
-                logging.info(f"Event path: {event_filename}")
+                event_host = event.get("host", "")
+                event_protocol = event.get("protocol", "")
+                logging.info(f"Event event_classification: {event_classification}")
+                logging.info(f"Event class_correct: {event_filename}")
+                logging.info(f"Event class_correct: {event_class_correct}")
+                logging.info(f"Event event_protocol: {event_protocol}")
+                logging.info(f"Event event_host: {event_host}")
 
 #Abschnitt von Sonja Schwabe - Anfang
                 class_names = ['Apfel', 'Aubergine', 'Avocado', 'Birne',
                                'Granatapfel', 'Kaki', 'Kartoffel', 'Kiwi',
                                'Mandarine', 'Orange', 'Pampelmuse', 'Paprika',
                                'Tomate', 'Zitrone', 'Zucchini', 'Zwiebel']
-                image = Image.open(event_filename)  # Lädt das Bild als NumPy-Array
+                if(SharedFolders.UPLOAD.value in event_filename):
+                    image = Image.open(event_filename)
+                else:
+                    image = Image.open(f"{SharedFolders.UPLOAD.value}/{event_filename}")  # Lädt das Bild als NumPy-Array
 
                 pfad, name, endung = pfad_zerlegen(event_filename)
-                if event_class_correct: #Bild wurde korrekt klassifiziert
+                if event_class_correct == "True" or event_class_correct == "true": #Bild wurde korrekt klassifiziert
+                    logging.info("event_class_correct == true")
                     if event_classification in class_names: #passend für kleines Modell
+                        logging.info("kleines Modell")
                         img_small = image.resize((128, 128))
-                        img_small.save(f"{SharedFolders.DATA_OBST_GEMUESE_NEU_1_TRAIN.value}/{event_classification}")
+                        logging.info("kleines Modell small")
+                        img_small.save(f"{SharedFolders.DATA_OBST_GEMUESE_NEU_1_TRAIN.value}/{event_classification}/{name}{endung}")
+                        logging.info("kleines Modellsmall saved")
                     if mixed_results == "False":
+                        logging.info("Yolo Modell")
                         img_small = image.resize((224, 224))
                         img_small.save(f"{SharedFolders.DATASETS_FFv3_TRAIN_IMAGES.value}/{name}{endung}")
+                        logging.info("Yolo resize saved")
                         if os.path.exists(f"{SharedFolders.TRAININGSSATZ.value}/{name}.txt"):
                             copy_file_to_folder(f"{SharedFolders.TRAININGSSATZ.value}/{name}.txt",
                                         SharedFolders.DATASETS_FFv3_TRAIN_LABELS.value,
@@ -232,7 +245,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                             if os.path.exists(f"{SharedFolders.TRAININGSSATZ.value}/{name}{endung}"):
                                 os.remove(f"{SharedFolders.TRAININGSSATZ.value}/{name}{endung}")
 #Abschnitt von Sonja Schwabe - Ende
-
+                    logging.info("create qrcode")
                     url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
                     headers = {
                         "Cookie": f"{event_cookie}",
@@ -240,9 +253,13 @@ async def on_message(message: aio_pika.IncomingMessage):
                     files = {
                         "type": (None, "ClassFiles"),
                         "result": (None, event_classification),
+                        "protocol": (None, event_protocol),
+                        "host": (None, event_host)
                     }
+                    logging.info(f"files ClassificationCompleted: {files}")
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
+
                 else:
                     logging.info(f"Event file: {event_classification}")
 
@@ -254,7 +271,11 @@ async def on_message(message: aio_pika.IncomingMessage):
 
 #Abschnitt von Sonja Schwabe - Ende
                     logging.info("Fehlerhafte Klassifizierung")
-
+                    """ #Datei wird aus Sharefolders.Uploade gelöscht
+                    if(SharedFolders.UPLOAD.value in event_filename):
+                        del_file(event_filename)
+                    else:
+                        del_file(f"{SharedFolders.UPLOAD.value}/{event_filename}") """
             if "LabeledTrainingdata" in event_type:
                 logging.info("LabeledTrainingdata")
 # Abschnitt von Ralf Hager - Beginn
@@ -273,6 +294,8 @@ async def on_message(message: aio_pika.IncomingMessage):
                     file_path = f'../mnt/labeled_tf'
                     logging.info(f"LabeledTrainingdata tf: {file_path}, {event_labels}, {event_files}")
                     move_Data_TF(file_path,event_labels, event_files)
+                    for file in event_files:
+                        del_file(f'../mnt/labeled_tf/{file}')
 # Abschnitt von Ralf Hager - Ende
             if "TrainYOLO" in event_type:
                 retrain()

@@ -1,3 +1,4 @@
+//von Maria Schuster
 import {Component, OnInit, OnDestroy, Injectable, ChangeDetectorRef} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WebsocketService } from '../../services/websocket/websocket.service';
@@ -107,6 +108,7 @@ export class ClassificationValidationComponent implements OnInit, OnDestroy {
     }).subscribe(
       response => {
         console.log("Datei an externen Service gesendet:", response);
+        this.training.data = {};
         this.snackBar.open('Datei erfolgreich gesendet', 'OK', { duration: 3000 });
       },
       error => {
@@ -114,6 +116,7 @@ export class ClassificationValidationComponent implements OnInit, OnDestroy {
         this.snackBar.open('Fehler beim Senden', 'Fehler', { duration: 3000 });
       }
     );
+
   }
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());

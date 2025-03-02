@@ -1,156 +1,3 @@
-<!--&lt;!&ndash; <p>photo works!</p> &ndash;&gt;-->
-
-<!--<div class="container">-->
-<!--  <div class="frame" [ngSwitch]="showWebcam">-->
-<!--    <webcam *ngSwitchCase="true" [height]="256" [width]="256" [trigger]="triggerObservable" (imageCapture)="handleImage($event)"-->
-<!--      [allowCameraSwitch]="allowCameraSwitch" [switchCamera]="nextWebcamObservable" [videoOptions]="videoOptions"-->
-<!--      [imageQuality]="1" (cameraSwitched)="cameraWasSwitched($event)" (initError)="handleInitError($event)">-->
-<!--    </webcam>-->
-<!--    <img *ngSwitchCase="false" [@enterTrigger]="'fadeIn'" [src]="webcamImage.imageAsDataUrl" />-->
-<!--  </div>-->
-
-<!--  <div [ngSwitch]="showWebcam">-->
-<!--    <button *ngSwitchCase="true" mat-flat-button (click)="triggerSnapshot();">-->
-<!--      &lt;!&ndash;mat-icon>photo_camera</mat-icon&ndash;&gt;-->
-<!--      Take photo-->
-<!--    </button>-->
-<!--    <button *ngSwitchCase="false" mat-flat-button (click)="triggerSnapshot();">-->
-<!--      &lt;!&ndash;mat-icon>videocam</mat-icon&ndash;&gt;-->
-<!--      Take another photo-->
-<!--    </button>-->
-<!--  </div>-->
-
-<!--  <div *ngIf="webcamImage">-->
-<!--    <button mat-flat-button (click)="handleCapturedImage(webcamImage);">-->
-<!--      Handle captured image-->
-<!--    </button>-->
-<!--  </div>-->
-
-<!--  <div *ngIf="webcamImage">-->
-<!--    <button mat-flat-button (click)="showProductDetails = !showProductDetails;">-->
-<!--      Show product details-->
-<!--    </button>-->
-<!--  </div>-->
-
-<!--  <div>-->
-<!--    <app-image-upload />-->
-<!--  </div>-->
-
-<!--  <div *ngIf="misclassifiedFile">-->
-<!--    <h2>Ich habe diese Klassifizierung erkannt: </h2>-->
-<!--    <img [src]="'data:image/png;base64,' + misclassifiedFile.file" alt="Fehlklassifiziertes Bild">-->
-<!--    <p><strong>Klassifikation:</strong> {{ misclassifiedFile.classification }}</p>-->
-<!--    <p><strong>Produkt:</strong> {{ misclassifiedFile.product }}</p>-->
-<!--    <p><strong>Infos:</strong> {{ misclassifiedFile.info }}</p>-->
-<!--    <p><strong>Regal:</strong> {{ misclassifiedFile.shelf }}</p>-->
-<!--    <p><strong>Preis pro Stück:</strong> {{ misclassifiedFile.price_piece }}</p>-->
-<!--    <p><strong>Preis pro Kg:</strong> {{ misclassifiedFile.price_kg }}</p>-->
-<!--  </div>-->
-
-<!--  &lt;!&ndash; Nur anzeigen, wenn abgelehnt wurde &ndash;&gt;-->
-<!--  <div *ngIf="showRejectionOptions && (userRole === 'Mitarbeiter' || userRole === 'Admin')">-->
-<!--    <select [(ngModel)]="selectedObjectClass">-->
-<!--      <option *ngFor="let objectClass of objectClasses" [value]="objectClass">-->
-<!--        {{ objectClass }}-->
-<!--      </option>-->
-<!--    </select>-->
-
-<!--    <button (click)="sendData()">Labels absenden</button>-->
-<!--  </div>-->
-
-<!--  &lt;!&ndash; Buttons für Bestätigung und Ablehnung &ndash;&gt;-->
-<!--  <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" (click)="confirm()">Bestätigen</button>-->
-<!--  <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" (click)="reject()">Ablehnen</button>-->
-
-
-<!--</div>-->
-
-<!--<div class="container">-->
-<!--  <mat-card>-->
-<!--    <mat-card-content>-->
-<!--      <div [ngSwitch]="showWebcam">-->
-<!--        &lt;!&ndash; Fall 1: Zeige die Webcam &ndash;&gt;-->
-<!--        <webcam *ngSwitchCase="true" [height]="256" [width]="256" [trigger]="triggerObservable"-->
-<!--                (imageCapture)="handleImage($event)" [allowCameraSwitch]="allowCameraSwitch"-->
-<!--                [switchCamera]="nextWebcamObservable" [videoOptions]="videoOptions"-->
-<!--                [imageQuality]="1" (cameraSwitched)="cameraWasSwitched($event)"-->
-<!--                (initError)="handleInitError($event)">-->
-<!--        </webcam>-->
-
-<!--        &lt;!&ndash; Fall 2: Zeige das aufgenommene Bild &ndash;&gt;-->
-<!--        <img *ngSwitchCase="false" [@enterTrigger]="'fadeIn'" [src]="webcamImage.imageAsDataUrl" class="captured-image"/>-->
-<!--      </div>-->
-<!--    </mat-card-content>-->
-<!--  </mat-card>-->
-
-<!--  &lt;!&ndash;  Fehlerbehebung: `ngSwitch` für Buttons hinzugefügt &ndash;&gt;-->
-<!--  <div [ngSwitch]="showWebcam" class="button-group">-->
-<!--    <button *ngSwitchCase="true" mat-flat-button color="primary" (click)="triggerSnapshot();">-->
-<!--      <mat-icon>photo_camera</mat-icon> Foto aufnehmen-->
-<!--    </button>-->
-<!--    <button *ngSwitchCase="false" mat-flat-button color="accent" (click)="triggerSnapshot();">-->
-<!--      <mat-icon>photo_camera</mat-icon> Neues Foto aufnehmen-->
-<!--    </button>-->
-<!--  </div>-->
-
-<!--  &lt;!&ndash;  Bildverarbeitung &ndash;&gt;-->
-<!--  <div *ngIf="webcamImage">-->
-<!--    <button mat-flat-button color="primary" (click)="handleCapturedImage(webcamImage);">-->
-<!--      <mat-icon>save</mat-icon> Bild verarbeiten-->
-<!--    </button>-->
-<!--    <button mat-flat-button color="warn" (click)="showProductDetails = !showProductDetails;">-->
-<!--      <mat-icon>info</mat-icon> Produktdetails anzeigen-->
-<!--    </button>-->
-<!--  </div>-->
-
-<!--  &lt;!&ndash;  Bild-Upload-Komponente &ndash;&gt;-->
-<!--  <div>-->
-<!--    <app-image-upload></app-image-upload>-->
-<!--  </div>-->
-
-<!--  &lt;!&ndash;  Fehlklassifizierte Bilder &ndash;&gt;-->
-<!--  <mat-card *ngIf="misclassifiedFile" class="misclassified-card">-->
-<!--    <mat-card-header>-->
-<!--      <mat-card-title>Ich habe diese Klassifizierung erkannt:</mat-card-title>-->
-<!--    </mat-card-header>-->
-<!--    <mat-card-content>-->
-<!--      <img [src]="'data:image/png;base64,' + misclassifiedFile.file" alt="Fehlklassifiziertes Bild" class="misclassified-image">-->
-<!--      <p><strong>Klassifikation:</strong> {{ misclassifiedFile.classification }}</p>-->
-<!--      <p><strong>Produkt:</strong> {{ misclassifiedFile.product }}</p>-->
-<!--      <p><strong>Infos:</strong> {{ misclassifiedFile.info }}</p>-->
-<!--      <p><strong>Regal:</strong> {{ misclassifiedFile.shelf }}</p>-->
-<!--      <p><strong>Preis pro Stück:</strong> {{ misclassifiedFile.price_piece }}€</p>-->
-<!--      <p><strong>Preis pro Kg:</strong> {{ misclassifiedFile.price_kg }}€</p>-->
-<!--    </mat-card-content>-->
-<!--  </mat-card>-->
-
-<!--  &lt;!&ndash;  Ablehnungsoptionen &ndash;&gt;-->
-<!--  <mat-card *ngIf="showRejectionOptions && (userRole === 'Mitarbeiter' || userRole === 'Admin')" class="rejection-card">-->
-<!--    <mat-card-content>-->
-<!--      <mat-form-field appearance="fill">-->
-<!--        <mat-label>Neue Klassifikation</mat-label>-->
-<!--        <mat-select [(ngModel)]="selectedObjectClass">-->
-<!--          <mat-option *ngFor="let objectClass of objectClasses" [value]="objectClass">-->
-<!--            {{ objectClass }}-->
-<!--          </mat-option>-->
-<!--        </mat-select>-->
-<!--      </mat-form-field>-->
-<!--      <button mat-raised-button color="primary" (click)="sendData()">Labels absenden</button>-->
-<!--    </mat-card-content>-->
-<!--  </mat-card>-->
-
-<!--  &lt;!&ndash;  Buttons für Bestätigung und Ablehnung &ndash;&gt;-->
-<!--  <div class="button-group">-->
-<!--    <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" mat-raised-button color="primary" (click)="confirm()">-->
-<!--      <mat-icon>check</mat-icon> Bestätigen-->
-<!--    </button>-->
-<!--    <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" mat-raised-button color="warn" (click)="reject()">-->
-<!--      <mat-icon>cancel</mat-icon> Ablehnen-->
-<!--    </button>-->
-<!--  </div>-->
-<!--</div>-->
-
-
 <div class="container">
   <!-- Buttons für Webcam-Steuerung -->
   <div class="button-group">
@@ -191,11 +38,11 @@
   <!-- Bild-Upload-Komponente -->
   <mat-card class="upload-card">
     <mat-card-content>
-      <app-image-upload></app-image-upload>
+      <app-image-upload (fileUploaded)="resetState()"></app-image-upload>
     </mat-card-content>
   </mat-card>
 
-  <!-- Fehlklassifizierte Bilder -->
+  <!-- Klassifizierte Bilder -->
   <mat-card *ngIf="misclassifiedFile" class="misclassified-card">
     <mat-card-header>
       <mat-card-title>Ich habe diese Klassifizierung erkannt:</mat-card-title>
@@ -223,7 +70,7 @@
   </mat-card>
 
   <!-- Ablehnungsoptionen -->
-  <mat-card *ngIf="showRejectionOptions && (userRole === 'Mitarbeiter' || userRole === 'Admin')" class="rejection-card">
+  <mat-card *ngIf="showRejectionOptions && qrCodeVisible && (userRole === 'Mitarbeiter' || userRole === 'Admin')" class="rejection-card">
     <mat-card-header>
       <mat-card-title>Generierter QR-Code</mat-card-title>
     </mat-card-header>
@@ -252,7 +99,7 @@
   </mat-card>
 
   <!-- Buttons für Bestätigung und Ablehnung -->
-  <div class="button-group">
+  <div *ngIf="misclassifiedFile"  class="button-group">
     <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" mat-raised-button color="primary" (click)="confirm()">
       Bestätigen
     </button>
@@ -260,4 +107,11 @@
        Ablehnen
     </button>
   </div>
+
+  <div class="button-group">
+    <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin' && showQROptions" mat-raised-button color="primary" (click)="sendData()">
+      QR-Code laden
+    </button>
+  </div>
+
 </div>

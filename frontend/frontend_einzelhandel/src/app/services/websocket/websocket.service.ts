@@ -1,3 +1,4 @@
+//von Maria Schuster
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable } from '@angular/core';
 import { Observable, Subject  } from 'rxjs';

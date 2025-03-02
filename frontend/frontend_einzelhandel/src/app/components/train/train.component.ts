@@ -1,3 +1,4 @@
+//von Maria Schuster
 import {Component} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {transition} from '@angular/animations';

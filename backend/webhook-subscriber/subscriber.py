@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   Events die dem Frontend bereitgestellt werden müssen
+"""
 import base64
 import json
 import os

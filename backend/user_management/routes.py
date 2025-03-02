@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   Endpunkte zum registrien, einloggen und abmelden
+"""
 import json
 import logging
 import os

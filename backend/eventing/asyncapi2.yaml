@@ -134,6 +134,113 @@ components:
             type: array
             description: Der Ablagepfad des Bilds.
 
+    TrainingsDataUploaded:
+      name: TrainingsDataUploaded
+      title: Trainingsdaten hochgeladen
+      description: Enthält hochgeladene Trainingsbilder für die Validierung und Labeling.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            default: Trainingdata
+          ki:
+            type: string
+            description: Gibt an, ob Tensorflow oder Yolo verwendet wird.
+          files:
+            type: array
+            items:
+              type: string
+            description: Liste der hochgeladenen Dateipfade.
+
+      LabeledTrainingData:
+        name: LabeledTrainingData
+        title: Gelabelte Trainingsdaten
+        description: Enthält die vom Backend validierten Trainingsdaten.
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              default: LabeledTrainingdata
+            ki:
+              type: string
+              description: Gibt an, ob Tensorflow oder Yolo verwendet wird.
+            labels:
+              type: array
+              items:
+                type: string
+              description: Labels für die Trainingsdaten.
+            files:
+              type: array
+              items:
+                type: string
+              description: Liste der Dateinamen.
+
+      TrainTF:
+        name: TrainTF
+        title: TensorFlow Training starten
+        description: Startet das Nachtraining für TensorFlow.
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              default: TrainTF
+
+      TrainYOLO:
+        name: TrainYOLO
+        title: YOLO Training starten
+        description: Startet das Nachtraining für YOLO.
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              default: TrainYOLO
+
+      QRCodeScan:
+        name: QRCodeScan
+        title: QR-Code-Scan
+        description: Enthält die Daten eines gescannten QR-Codes.
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              default: ReadQrCode
+            qrdata:
+              type: string
+              description: Enthält die aus dem QR-Code gelesenen Daten.
+
+      $ref:
+      QRCodeSendResult:
+        name: QRCodeSendResult
+        title: QR-Code-Scan-Ergebnis senden
+        description: Sendet die extrahierten QR-Code-Daten.
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              default: sendQrCodeResult
+            name:
+              type: string
+            description:
+              type: string
+            shelf:
+              type: string
+            price_piece:
+              type: string
+            price_kg:
+              type: string
+
 channels:
   image_uploaded:
     description: Event, das gesendet wird, wenn ein Bild vom Frontend hochgeladen wurde und vom Backend empfangen werden soll.

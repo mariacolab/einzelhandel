@@ -21,7 +21,7 @@ import {FormsModule} from '@angular/forms';
 import {MatIconModule} from '@angular/material/icon';
 import {MatOptionModule} from '@angular/material/core';
 import {environment} from '../../../environment';
-import QRCodeDecoder from 'qrcode-decoder';
+import * as QRCodeDecoder from 'qrcode-decoder';
 import {CookieService} from 'ngx-cookie-service';
 
 
@@ -68,6 +68,7 @@ export class PhotoComponent implements OnInit, OnDestroy {
    private subscriptions: Subscription[] = [];
     private scannedString: string = '';
       misclassifiedFile: any = null;
+      qrCodeVisible = false;
       userRole: string = '';
       classification: string = '';
       filename: string = '';
@@ -76,6 +77,7 @@ export class PhotoComponent implements OnInit, OnDestroy {
       sendQrCodeResult: any = null;
       @ViewChild('qrImage', {static: false}) qrImage!: ElementRef<HTMLImageElement>;
       showRejectionOptions: boolean = false;
+      showQROptions: boolean = false;
 
       constructor(private authService: AuthService,
                   private dataService: DataService,
@@ -144,17 +146,9 @@ export class PhotoComponent implements OnInit, OnDestroy {
   // switch to next / previous / specific webcam; true/false: forward/backwards, string: deviceId
   private nextWebcam: Subject<boolean | string> = new Subject<boolean | string>();
 
-//   public ngOnInit(): void {
-//     WebcamUtil.getAvailableVideoInputs()
-//       .then((mediaDevices: MediaDeviceInfo[]) => {
-//         this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
-//       });
-//   }
-
   public triggerSnapshot(): void {
     this.trigger.next();
     this.showWebcam = !this.showWebcam;
-
   }
 
   public handleInitError(error: WebcamInitError): void {
@@ -198,6 +192,7 @@ export class PhotoComponent implements OnInit, OnDestroy {
   public imageName = 'test.jpg';
   public imageFormat = 'image/jpeg/';
   handleCapturedImage(webcamImage: WebcamImage) {
+    this.resetState();
     this.webcamImage = webcamImage;
     const arr = this.webcamImage.imageAsDataUrl.split(",");
     const bstr = atob(arr[1]);
@@ -207,19 +202,7 @@ export class PhotoComponent implements OnInit, OnDestroy {
       u8arr[n] = bstr.charCodeAt(n);
     }
     const file: File = new File([u8arr], this.imageName, { type: this.imageFormat })
-    // console.log(file);
-    // // return file;
-    // this.dataService.postformData(file).subscribe(
-    //   data => this.item = data,
-    //   error => {
-    //     console.error(error);
-    //     this.snackBar.open('Handle failed', 'Dismiss', {
-    //       duration: 3000
-    //     });
-    //   },
-    //   // () => console.log('Image posted')
-    //   () => console.log(this.item)
-    // );
+
     const formData = new FormData();
     formData.append('type', 'ProcessFiles');
     formData.append('filename', file);
@@ -242,30 +225,29 @@ export class PhotoComponent implements OnInit, OnDestroy {
     );
   }
 
+  //von Maria Schuster
   confirm() {
     this.showRejectionOptions = true;
-    this.sendData();
+    console.log(this.showRejectionOptions)
     console.log('Bestätigung ausgeführt.');
+    setTimeout(() => {
+      this.showQROptions = true;
+    }, 3000);
   }
 
   reject() {
     this.showRejectionOptions = false;
-    this.sendData();
     console.log('Ablehnung ausgeführt. Bitte neue Klassifizierung auswählen.');
-  }
-
-  capitalizeBoolean(value: boolean): string {
-    return value ? 'True' : 'False'; // Wandelt Boolean in String mit großem Anfangsbuchstaben um
   }
 
   sendData() {
     const formData = new FormData();
-    formData.append('is_classification_correct', this.capitalizeBoolean(this.showRejectionOptions));
+    formData.append('is_classification_correct', this.showRejectionOptions.toString());
     formData.append('classification', this.misclassifiedFile.classification);
     formData.append('type', "CorrectedFiles");
-    formData.append('filename', this.misclassifiedFile.file);
+    formData.append('filename', this.misclassifiedFile.filename);
     formData.append('mixed_results', this.misclassifiedFile.mixed_results);
-
+    console.log('Erfolgreiche Antwort:', this.showRejectionOptions.toString())
     // Mit withCredentials werden vorhandene Cookies (z. B. die Session) automatisch mitgesendet.
     this.http.post(environment.apiUrls.eventingService.publishCorrectedClassification, formData, { withCredentials: true })
       .subscribe(
@@ -276,9 +258,10 @@ export class PhotoComponent implements OnInit, OnDestroy {
           console.error('Fehler beim Absenden:', error);
         }
       );
+    this.qrCodeVisible = true;
   }
 
-  async decodeQRCode() {
+  /*async decodeQRCode() {
     if (!this.qrImage || !this.qrImage.nativeElement || !this.qrImage.nativeElement.src) {
       this._snackBar.open('Kein QR-Code-Bild gefunden!', 'OK', { duration: 3000 });
       return;
@@ -297,7 +280,37 @@ export class PhotoComponent implements OnInit, OnDestroy {
       console.error('Fehler beim Decodieren des QR-Codes:', error);
       this._snackBar.open('Fehler beim Decodieren des QR-Codes', 'OK', { duration: 3000 });
     }
+  }*/
+
+  async decodeQRCode() {
+    if (!this.qrImage || !this.qrImage.nativeElement || !this.qrImage.nativeElement.src) {
+      this._snackBar.open('Kein QR-Code-Bild gefunden!', 'OK', { duration: 3000 });
+      return;
+    }
+    console.log('QRCodeDecoder:', QRCodeDecoder);
+    const decoder = new QRCodeDecoder.default();
+
+    try {
+      const result = await decoder.decodeFromImage(this.qrImage.nativeElement);
+      this.scannedString = result?.data || 'Kein QR-Code erkannt';
+
+      if (!this.scannedString.startsWith('http')) {
+        this._snackBar.open('Kein gültiger URL-QR-Code erkannt', 'OK', { duration: 3000 });
+        return;
+      }
+
+      this._snackBar.open(`Erkannte URL: ${this.scannedString}`, 'OK', { duration: 3000 });
+      console.info('Decodierte QR-Code-URL:', this.scannedString);
+
+      //Direkt die erkannte URL aufrufen
+      window.open(this.scannedString, '_blank'); // Öffnet die URL in einem neuen Tab
+    } catch (error) {
+      console.error('Fehler beim Decodieren des QR-Codes:', error);
+      this._snackBar.open('Fehler beim Decodieren des QR-Codes', 'OK', { duration: 3000 });
+    }
   }
+
+
 
   private apiUrl = environment.apiUrls.eventingService.qrcodeScanResult;
 
@@ -318,6 +331,28 @@ export class PhotoComponent implements OnInit, OnDestroy {
       }
     );
   }
+
+  resetState(): void {
+    // Webcam-Zustände
+    this.showWebcam = false;
+    this.webcamImage = null!;
+
+    // Fehlklassifizierte Datei und zugehörige Daten
+    this.misclassifiedFile = null;
+    this.classification = '';
+    this.filename = '';
+    this.mixed_results = '';
+
+    // QR-Code-bezogene Variablen
+    this.qrCodeVisible = false;
+    this.sendQrCodeResult = null;
+
+    // Anzeige-Flags
+    this.showRejectionOptions = false;
+    this.showQROptions = false;
+
+  }
+
 
   public showProductDetails: boolean = false;
 }

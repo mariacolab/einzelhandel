@@ -1,3 +1,4 @@
+//von Maria Schuster
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -27,6 +28,7 @@ import {DashboardComponent} from './components/dashboard/dashboard.component';
 import {TrainComponent} from './components/train/train.component';
 import {MatListModule} from '@angular/material/list';
 import {MatOptionModule} from '@angular/material/core';
+import {ImageUploadComponent} from './components/image_upload/image-upload.component';
 
 @NgModule({
   declarations: [
@@ -56,7 +58,8 @@ import {MatOptionModule} from '@angular/material/core';
     WebcamModule,
     NgxFileDropModule,
     NgIf,
-    ZXingScannerModule
+    ZXingScannerModule,
+    ImageUploadComponent
   ],
   exports: [WebsocketService, MatIconModule],
   providers: [],

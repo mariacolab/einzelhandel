@@ -1,3 +1,6 @@
+"""
+   von Maria Schuster
+"""
 import os
 
 import requests

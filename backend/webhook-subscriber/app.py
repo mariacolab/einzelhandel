@@ -1,3 +1,6 @@
+"""
+   von Maria Schuster
+"""
 import logging
 import os
 import redis

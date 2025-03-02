@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   laden der Passwörter aus der secrets Datei
+"""
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

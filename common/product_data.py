@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   Produktdaten nach der Klassifizierung übermitteln
+"""
 import json
 import logging
 

@@ -1,4 +1,4 @@
-<div *ngIf="training" class="training-container">
+<div *ngIf="training && training?.data" class="training-container">
   <h3>Training Data (KI: {{ training.ki }})</h3>
   <mat-list>
     <mat-card *ngFor="let entry of training.data | keyvalue; let i = index" class="training-item">
@@ -29,7 +29,7 @@
   </mat-list>
 
   <!-- Button zum Absenden der Labels -->
-  <button mat-raised-button color="primary" (click)="sendData()">Labels absenden</button>
+  <button *ngIf="training?.data" mat-raised-button color="primary" (click)="sendData()">Labels absenden</button>
 </div>
 
 <!-- Falls keine Bilder geladen wurden -->

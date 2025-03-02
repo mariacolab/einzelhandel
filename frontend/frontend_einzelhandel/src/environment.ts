@@ -1,10 +1,11 @@
-const protocol = window.location.protocol; // Liefert z. B. "http:" oder "https:"
+//von Maria Schuster
+const protocol = window.location.protocol; // Liefert "http:" oder "https:"
 const host = window.location.hostname;
 
 export const environment = {
   production: false,
 
-  // Dynamische API-URLs basierend auf dem aktuellen Protokoll und Host
+  // Dynamische API URLs basierend auf dem aktuellen Protokoll und Host
   apiUrls: {
     userManagement: `${protocol}//${host}/user-management/auth`,
     eventingService: {

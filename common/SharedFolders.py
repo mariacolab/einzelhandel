@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   Enum mit den Pfaden für KI
+"""
 import enum
 
 class SharedFolders(enum.Enum):

@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   erstellt einen QR-Code oder sendet einen bereits erstellten
+"""
 import json
 import aio_pika
 import asyncio
@@ -49,6 +53,8 @@ async def on_message(message: aio_pika.IncomingMessage):
             if "ClassFiles" in event_type:
                 logging.info("Processing files after ClassificationCompleted event.")
                 event_result = event.get("result", "")
+                event_protocol = event.get("protocol","")
+                event_host = event.get("host","")
                 logging.info(f"Event Data: {event_result}")
                 # TODO aufruf von Methoden um weiteren Code auszuführen
                 """Fälle:
@@ -58,7 +64,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     dann wird der Datensatz """
 
                 # prüft ob der Datensatz in der Datenbank vorhanden ist
-                url = f"http://nginx-proxy/database-management/products/{event_result}"
+                url = f"{event_protocol}://{event_host}/database-management/products/{event_result}"
                 headers = {
                     'Content-Type': 'application/json',
                     "Cookie": f"{event_cookie}",
@@ -120,9 +126,10 @@ async def on_message(message: aio_pika.IncomingMessage):
                     # Verschlüsseln der Daten
                     encrypted_data = cipher.encrypt(data_to_encrypt.encode())
                     logging.debug(f"Verschlüsselte Daten: {encrypted_data}")
-
+                    qrcode_url = f"{event_protocol}://{event_host}/qrcode/scan/result?type=ReadQrCode&qrdata={encrypted_data}"
+                    logging.info(f"QR-Code URl: {qrcode_url}")
                     # QR-Code Bild generieren (PIL Image)
-                    img = qrcode.make(encrypted_data)
+                    img = qrcode.make(qrcode_url)
                     # Bild in einen BytesIO-Stream speichern
                     buffer = BytesIO()
                     img.save(buffer, format="JPEG")
@@ -204,7 +211,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                 logging.info(f"Response: {response.status_code}")
 
             elif "ReadQrCode" in event_type:
-                logging.info("Processing files after ClassificationCompleted event.")
+                logging.info("Processing files after ReadQrCode event.")
                 event_result = event.get("qrdata", "")
                 logging.info(f"Event Data: {event_result}")
 

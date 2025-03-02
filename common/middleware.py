@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   JWT Token und Rolle bereitstellen
+"""
 import logging
 import os
 import jwt

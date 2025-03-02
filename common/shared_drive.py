@@ -55,11 +55,6 @@ def copy_file_to_folder(source_file, new_folder, filename):
     :param filename: Datei, die in das gemountete Verzeichnis gespeichert werden soll
     """
     os.makedirs(new_folder, exist_ok=True)
-
-    #source_datei = os.path.join(source_folder, filename)
-    #logging.info(f"Datei old {source_datei}")
-    #os.makedirs(new_folder, source_folder)
-
     shutil.copy2(source_file, new_folder)
 
 

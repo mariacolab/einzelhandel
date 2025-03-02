@@ -1,3 +1,7 @@
+"""
+   von Maria Schuster
+   Request Handler um sie ans Frontend weiter zu leiten
+"""
 import eventlet
 eventlet.monkey_patch()
 import json
@@ -39,7 +43,7 @@ async def rabbitmq_listener():
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    """ Empfängt Webhook-Events von externen Services und leitet sie an Angular weiter """
+    """ Empfängt Webhook-Events von webhook-subscriber und leitet sie an Angular weiter """
     try:
         data = request.json
         logging.info(f"Webhook received: {data}")

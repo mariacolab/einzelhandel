@@ -26,7 +26,6 @@ app = Flask(__name__)
 app.config.from_object(Config)  # Lade zentrale Config
 CORS(app, resources={r"/*": {"origins": ["http://localhost:4200", "http://192.168.2.58:4200", "https://localhost:4200", "https://192.168.2.58:4200"]}})
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
-#socketio = SocketIO(app, cors_allowed_origins="*", transports=["websocket"], async_mode="eventlet")
 
 Tf_SOURCE = "/mnt/shared_training/ki/kleinesModell"
 Labeled_Tf = "/mnt/labeled_tf"
@@ -176,6 +175,8 @@ def publish_event(event):
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
 
+            host = request.form.get('host', '')
+            protocol = request.form.get('protocol', '')
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             result = request.form.get('result', '')
@@ -185,7 +186,9 @@ def publish_event(event):
             message = {
                 "type": message_type,
                 "result": result,
-                "cookie": cookie
+                "cookie": cookie,
+                "protocol": protocol,
+                "host": host
             }
             logging.debug(f"Message ClassificationCompleted: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
@@ -256,6 +259,12 @@ def publish_event(event):
             logging.debug(f"Headers: {request.headers}")
             logging.debug(f"Form: {request.form}")
 
+            # Bestimmt automatisch das Protokoll (http/https) und die Herkunft (Host)
+            protocol = "https" if request.is_secure else "http"
+            host = request.host  # Holt den aktuellen Host (z. B. localhost:5000 oder 192.168.2.58:5000)
+            logging.debug(f"host: {host}")
+            logging.debug(f"protocol: {protocol}")
+
             cookie = request.headers.get('Cookie', '')
             message_type = request.form.get('type', '')
             classification = request.form.get('classification', '')
@@ -270,7 +279,9 @@ def publish_event(event):
                 "classification": classification,
                 "filename": filename,
                 "cookie": cookie,
-                "mixed_results": mixed_results
+                "mixed_results": mixed_results,
+                "host": host,
+                "protocol": protocol,
             }
             logging.debug(f"Message CorrectedClassification: {message}")
             # RabbitMQ Nachricht senden, um das Event zu veröffentlichen
@@ -325,54 +336,54 @@ def publish_trainingsdata():
         logging.debug(f"Error in publish_event: {e}")
         return jsonify({"message": "Internal server error", "details": str(e)}), 500
 
-@socketio.on('LabeledTrainingdata')
-def handle_labeled_trainingdata(data):
-    """
-    Erwartet ein JSON mit:
-      - ki: "tf"
-      - fileNames: Liste der Dateinamen
-      - labels: Parallele Liste der Dropdown-Werte
-    """
-    logging.info(f"LabeledTrainingdata socketio")
-    ki = data.get("ki", "").lower()
-    file_names = data.get("fileNames", [])
-    labels = data.get("labels", [])
-    logging.info(f"LabeledTrainingdata ki: {ki}")
-    logging.info(f"LabeledTrainingdata file_names: {file_names}")
-    logging.info(f"LabeledTrainingdata labels: {labels}")
-    if not file_names or not labels or len(file_names) != len(labels):
-        emit("LabeledTrainingdataAck", {"error": "Ungültige Daten"})
-        return
-
-    # Bestimme Quell- und Zielordner anhand des KI-Typs
-    if ki == "tf":
-        source_folder = Tf_SOURCE
-        target_folder = Labeled_Tf
-    else:
-        emit("LabeledTrainingdataAck", {"error": "Unbekannter KI-Typ"})
-        return
-
-    saved_files = []
-    for filename in file_names:
-        src_path = os.path.join(source_folder, filename)
-        dest_path = os.path.join(target_folder, filename)
-        try:
-            os.rename(src_path, dest_path)
-            saved_files.append({"file": dest_path})
-            logging.info(f"Verschoben: {src_path} -> {dest_path}")
-        except Exception as e:
-            logging.error(f"Fehler beim Verschieben der Datei {filename}: {e}")
-
-    message = {
-                "type": "LabeledTrainingdata",
-                "ki": ki,
-                "labels": labels,
-                "files": file_names,
-            }
-    logging.debug(f"Message LabeledTrainingdata Event: {message}")
-    asyncio.run(send_message(message))
-
-    emit("LabeledTrainingdataAck", {"files": saved_files})
+# @socketio.on('LabeledTrainingdata')
+# def handle_labeled_trainingdata(data):
+#     """
+#     Erwartet ein JSON mit:
+#       - ki: "tf"
+#       - fileNames: Liste der Dateinamen
+#       - labels: Parallele Liste der Dropdown-Werte
+#     """
+#     logging.info(f"LabeledTrainingdata socketio")
+#     ki = data.get("ki", "").lower()
+#     file_names = data.get("fileNames", [])
+#     labels = data.get("labels", [])
+#     logging.info(f"LabeledTrainingdata ki: {ki}")
+#     logging.info(f"LabeledTrainingdata file_names: {file_names}")
+#     logging.info(f"LabeledTrainingdata labels: {labels}")
+#     if not file_names or not labels or len(file_names) != len(labels):
+#         emit("LabeledTrainingdataAck", {"error": "Ungültige Daten"})
+#         return
+#
+#     # Bestimme Quell- und Zielordner anhand des KI-Typs
+#     if ki == "tf":
+#         source_folder = Tf_SOURCE
+#         target_folder = Labeled_Tf
+#     else:
+#         emit("LabeledTrainingdataAck", {"error": "Unbekannter KI-Typ"})
+#         return
+#
+#     saved_files = []
+#     for filename in file_names:
+#         src_path = os.path.join(source_folder, filename)
+#         dest_path = os.path.join(target_folder, filename)
+#         try:
+#             os.rename(src_path, dest_path)
+#             saved_files.append({"file": dest_path})
+#             logging.info(f"Verschoben: {src_path} -> {dest_path}")
+#         except Exception as e:
+#             logging.error(f"Fehler beim Verschieben der Datei {filename}: {e}")
+#
+#     message = {
+#                 "type": "LabeledTrainingdata",
+#                 "ki": ki,
+#                 "labels": labels,
+#                 "files": file_names,
+#             }
+#     logging.debug(f"Message LabeledTrainingdata Event: {message}")
+#     asyncio.run(send_message(message))
+#
+#     emit("LabeledTrainingdataAck", {"files": saved_files})
 
 @app.route('/LabeledTrainingdata', methods=['POST'])
 @cross_origin(origins=["http://localhost:4200", "http://192.168.2.58:4200", "https://localhost:4200", "https://192.168.2.58:4200"], supports_credentials=True)
@@ -437,6 +448,9 @@ def publish_labeledtrainingsdata():
 @token_required
 @role_required('Admin')
 def start_ai_tensorflow():
+    """
+        starten des Nachtrainings von Tensorflow
+    """
     try:
         logging.debug(f"Headers: {request.headers}")
         #logging.debug(f"Form: {request.form}")
@@ -444,19 +458,6 @@ def start_ai_tensorflow():
         event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
         if event_type != "TrainTF":
             return jsonify({"error": "Ungültiger Event-Typ"}), 400
-
-#         # Dateien abrufen
-#         files = request.files.getlist("files")  # Prüfen, ob Dateien vorhanden sind
-#         if not files:
-#             return jsonify({"error": "Keine Dateien hochgeladen!"}), 400
-#
-#         saved_files = []
-#         for file in files:
-#             file_path = os.path.join("/mnt/shared_training", file.filename)
-#             file.save(file_path)
-#             saved_files.append(file_path)
-#
-#         logging.debug(f"Gespeicherte Dateien: {saved_files}")
 
         message = {
             "type": event_type,
@@ -475,7 +476,9 @@ def start_ai_tensorflow():
 @token_required
 @role_required('Admin')
 def start_ai_yolo():
-
+    """
+        starten des Nachtrainings von Tensorflow
+    """
     try:
         logging.debug(f"Headers: {request.headers}")
         #logging.debug(f"Form: {request.form}")
@@ -483,19 +486,6 @@ def start_ai_yolo():
         event_type = request.form.get("type", "")  # Holt den Event-Typ aus der Form-Daten
         if event_type != "TrainYOLO":
             return jsonify({"error": "Ungültiger Event-Typ"}), 400
-
-#         # Dateien abrufen
-#         files = request.files.getlist("files")  # Prüfen, ob Dateien vorhanden sind
-#         if not files:
-#             return jsonify({"error": "Keine Dateien hochgeladen!"}), 400
-#
-#         saved_files = []
-#         for file in files:
-#             file_path = os.path.join("/mnt/shared_training", file.filename)
-#             file.save(file_path)
-#             saved_files.append(file_path)
-
-        #logging.debug(f"Gespeicherte Dateien: {saved_files}")
 
         message = {
             "type": event_type,
@@ -510,7 +500,7 @@ def start_ai_yolo():
         return jsonify({"message": "Internal server error", "details": str(e)}), 500
 
 
-@app.route('/qrcode/scan/result', methods=['POST'])
+""" @app.route('/qrcode/scan/result', methods=['POST'])
 @cross_origin(origins=["http://localhost:4200", "http://192.168.2.58:4200", "https://localhost:4200", "https://192.168.2.58:4200"], supports_credentials=True)
 def qrcode_scan_result():
     try:
@@ -535,11 +525,45 @@ def qrcode_scan_result():
 
     except Exception as e:
         logging.debug(f"Error in publish_event: {e}")
+        return jsonify({"message": "Internal server error", "details": str(e)}), 500 """
+
+@app.route('/qrcode/scan/result', methods=['GET'])
+@cross_origin(origins=["http://localhost:4200", "http://192.168.2.58:4200", "https://localhost:4200", "https://192.168.2.58:4200"], supports_credentials=True)
+def qrcode_scan_result():
+    """
+        scan QR Codes
+    """
+    try:
+        logging.debug(f"Headers: {request.headers}")
+        logging.debug(f"Args: {request.args}")
+
+        # Holt den Event-Typ aus den URL-Parametern
+        event_type = request.args.get('type')
+
+        if event_type != "ReadQrCode":
+            return jsonify({"error": "Ungültiger Event-Typ"}), 400
+
+        qrdata = request.args.get("qrdata", "")
+
+        message = {
+            "type": event_type,
+            "qrdata": qrdata,
+        }
+        logging.debug(f"Message qr-code Event: {message}")
+        asyncio.run(send_message(message))
+        return jsonify({"status": f"Type {event_type} uploaded successfully."}), 200
+
+    except Exception as e:
+        logging.debug(f"Error in publish_event: {e}")
         return jsonify({"message": "Internal server error", "details": str(e)}), 500
 
 @app.route('/qrcode/send/result', methods=['POST'])
 def qrcode_send_result():
+    """
+        senden der Daten die der QR-Code zurückgibt
+    """
     try:
+
         logging.debug(f"Headers: {request.headers}")
         logging.debug(f"Form: {request.form}")
 

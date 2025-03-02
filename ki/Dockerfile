@@ -1,3 +1,4 @@
+# von Maria Schuster
 # Basisimage
 FROM python:3.10-slim AS base
 
