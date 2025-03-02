@@ -12,6 +12,8 @@
 
 - [Docker starten und bauen der Container](#docker-starten-und-bauen-der-container)
 
+- [GPU unterstützung einrichten](#gpu-unterstützung-einrichten)
+
 - [Starten der Anwendung mit Frontend](#starten-der-anwendung-mit-frontend)
 
 - [Starten der Anwendung ohne Frontend](#starten-der-anwendung-ohne-frontend)
@@ -67,7 +69,7 @@
 # Docker starten und bauen der Container
 
 Voraussetzung: Docker muss installiert sein, entweder [Docker Desktop](https://www.docker.com/products/docker-desktop/) 
-oder per Terminal (ehr für Linux Nutzer, unter Windows recht umständlich umzusätzen) 
+oder per Terminal (für Linux Nutzer) 
 
    1. im Projektverzeichnis einen Ordner secrets anlegen und in diesem eine Datei github_credentials.txt
    2. in die Datei die folgenden Werte kopieren
@@ -104,11 +106,7 @@ oder per Terminal (ehr für Linux Nutzer, unter Windows recht umständlich umzus
     docker-compose -f docker-compose.yml build --parallel
     docker-compose -f docker-compose.yml up
     ````
-3. Erstellen und Starten der Docker-Container mit dem Befehl:
-    ````bash
-    docker-compose -f docker-compose.yml up
-    ````
-4. der Postgres Container muss manchmal noch mal gestartet werden, in dem Fall in Docker Desktop den Startbutton klicken
+3. der Postgres Container muss manchmal noch mal gestartet werden, in dem Fall in Docker Desktop den Startbutton klicken
 oder in der Konsole
     ````bash
     docker-compose up postgres_container
@@ -443,8 +441,8 @@ oder in der Konsole
     EOF
     ````
 6. in Docker Desktop in dne Einstellungen prüfen ob unter General -> 
-Use the WSL 2 based engine (Windows Home can only run the WSL 2 backend) ein häckchen gesetzt ist
-und unter Resources -> WSL integration -> Ubuntu schieberegler aktivieren 
+Use the WSL 2 based engine (Windows Home can only run the WSL 2 backend) ein Häckchen gesetzt ist
+und unter Resources -> WSL integration -> Ubuntu Schieberegler aktivieren 
 7. mit Apply & restart bestätigen
 8. Docker komplett schließen mit rechtsklick Quit Docker Desktop
 
@@ -486,7 +484,7 @@ einfügen und senden
      ````bash
     curl -b cookies.txt --location "http://localhost/eventing-service/publish/ImageUploaded" ^
     --form "type=ProcessFiles" ^
-    --form "filename=@Pfad\desBildes.jpg" ^
+    --form "filename=@Pfad\desBildes.jpg"
      ````
 
 # Docker aufräumen
