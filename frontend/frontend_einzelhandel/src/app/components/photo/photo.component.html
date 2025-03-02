@@ -153,17 +153,17 @@
 
 <div class="container">
   <!-- Buttons für Webcam-Steuerung -->
-  <div class="button-group">
-    <button mat-raised-button color="primary" (click)="toggleWebcam();">
-      Webcam
+  <!-- <div class="button-group">
+    <button mat-flat-button color="primary" (click)="toggleWebcam();">
+      Camera
     </button>
     <button *ngIf="showWebcam"  mat-raised-button color="primary" (click)="showWebcam = true; triggerSnapshot();">
       Foto aufnehmen
     </button>
-  </div>
+  </div> -->
 
   <!-- Webcam wird nur angezeigt, wenn showWebcam aktiv ist -->
-  <mat-card *ngIf="showWebcam" class="webcam-card">
+  <!-- <mat-card *ngIf="showWebcam" class="webcam-card">
     <mat-card-content>
       <webcam [height]="256" [width]="256" [trigger]="triggerObservable"
               (imageCapture)="handleImage($event)" [allowCameraSwitch]="allowCameraSwitch"
@@ -172,28 +172,68 @@
               (initError)="handleInitError($event)">
       </webcam>
     </mat-card-content>
-  </mat-card>
+  </mat-card> -->
+
+  <!-- <button mat-flat-button (click)="toggleWebcam();">
+    toggleWebcam()
+  </button> -->
+
+  <div class="frame" [ngSwitch]="showWebcam">
+    <webcam *ngSwitchCase="true" [height]="256" [width]="256" [trigger]="triggerObservable"
+      (imageCapture)="handleImage($event)" [allowCameraSwitch]="allowCameraSwitch" [switchCamera]="nextWebcamObservable"
+      [videoOptions]="videoOptions" [imageQuality]="1" (cameraSwitched)="cameraWasSwitched($event)"
+      (initError)="handleInitError($event)">
+    </webcam>
+    <img *ngSwitchCase="false" [@enterTrigger]="'fadeIn'" [src]="webcamImage.imageAsDataUrl" />
+    <!-- <img *ngIf="webcamImage" [@enterTrigger]="'fadeIn'" [src]="webcamImage.imageAsDataUrl" /> -->
+  </div>
+
+  <!-- <img *ngIf="webcamImage" [@enterTrigger]="'fadeIn'" [src]="webcamImage.imageAsDataUrl" /> -->
+
+  <div [ngSwitch]="showWebcam">
+    <button *ngSwitchCase="true" mat-flat-button (click)="triggerSnapshot();">
+      <!--mat-icon>photo_camera</mat-icon-->
+      Take photo
+    </button>
+    <div *ngSwitchCase="false">
+      <button *ngSwitchCase="false" mat-flat-button (click)="triggerSnapshot();">
+        <!--mat-icon>videocam</mat-icon-->
+        Take another photo
+      </button>
+      <div *ngIf="webcamImage">
+        <button mat-flat-button (click)="handleCapturedImage(webcamImage);">
+          Bild senden
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- <div *ngIf="webcamImage">
+    <button mat-flat-button (click)="fakeIt();">
+       Analyse photo
+    </button>
+  </div> -->
 
   <!-- Zeigt das aufgenommene Bild an -->
-  <mat-card *ngIf="showWebcam && webcamImage" class="image-card">
+  <!-- <mat-card *ngIf="showWebcam && webcamImage" class="image-card">
     <mat-card-content>
       <img [src]="webcamImage.imageAsDataUrl" alt="Aufgenommenes Bild" class="captured-image"/>
     </mat-card-content>
-  </mat-card>
+  </mat-card> -->
 
   <!-- Bildverarbeitung -->
-  <div *ngIf="showWebcam && webcamImage" class="button-group">
+  <!-- <div *ngIf="showWebcam && webcamImage" class="button-group">
     <button mat-raised-button color="primary" (click)="handleCapturedImage(webcamImage);">
       Bild senden
     </button>
-  </div>
+  </div> -->
 
   <!-- Bild-Upload-Komponente -->
-  <mat-card class="upload-card">
+  <!-- <mat-card class="upload-card">
     <mat-card-content>
       <app-image-upload></app-image-upload>
     </mat-card-content>
-  </mat-card>
+  </mat-card> -->
 
   <!-- Fehlklassifizierte Bilder -->
   <mat-card *ngIf="misclassifiedFile" class="misclassified-card">
@@ -201,7 +241,8 @@
       <mat-card-title>Ich habe diese Klassifizierung erkannt:</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <img [src]="'data:image/png;base64,' + misclassifiedFile.file" alt="Fehlklassifiziertes Bild" class="misclassified-image">
+      <img [src]="'data:image/png;base64,' + misclassifiedFile.file" alt="Fehlklassifiziertes Bild"
+        class="misclassified-image">
 
       <p><strong>Klassifikation:</strong> {{ misclassifiedFile.classification }}</p>
 
@@ -253,11 +294,13 @@
 
   <!-- Buttons für Bestätigung und Ablehnung -->
   <div class="button-group">
-    <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" mat-raised-button color="primary" (click)="confirm()">
+    <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" mat-raised-button color="primary"
+      (click)="confirm()">
       Bestätigen
     </button>
-    <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" mat-raised-button color="warn" (click)="reject()">
-       Ablehnen
+    <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" mat-raised-button color="warn"
+      (click)="reject()">
+      Ablehnen
     </button>
   </div>
 </div>

@@ -1,6 +1,6 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { NgIf, CommonModule } from '@angular/common';
-import {Component, inject, OnInit, OnDestroy, ViewChild, ElementRef} from '@angular/core';
+import { NgIf, CommonModule, NgSwitch, NgSwitchCase } from '@angular/common';
+import { Component, inject, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -15,19 +15,19 @@ import { DataService } from '../../services/data/data.service';
 import { ImageUploadComponent } from '../image_upload/image-upload.component';
 import { WebsocketService } from '../../services/websocket/websocket.service';
 import { Subscription } from 'rxjs';
-import {AuthService} from '../../services/auth/auth.service';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {FormsModule} from '@angular/forms';
-import {MatIconModule} from '@angular/material/icon';
-import {MatOptionModule} from '@angular/material/core';
-import {environment} from '../../../environment';
+import { AuthService } from '../../services/auth/auth.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatOptionModule } from '@angular/material/core';
+import { environment } from '../../../environment';
 import QRCodeDecoder from 'qrcode-decoder';
-import {CookieService} from 'ngx-cookie-service';
+import { CookieService } from 'ngx-cookie-service';
 
 
 @Component({
   selector: 'app-photo',
-  imports: [CommonModule, FormsModule,  WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, ImageUploadComponent, MatInputModule, MatIconModule, MatButtonModule, MatOptionModule], //MatIconModule, ProductDetailsComponent, RouterLink NgSwitch, NgSwitchCase
+  imports: [CommonModule, FormsModule, WebcamModule, NgxFileDropModule, NgIf, MatButtonModule, MatCardModule, MatGridListModule, MatFormFieldModule, MatSelectModule, ImageUploadComponent, MatInputModule, MatIconModule, MatButtonModule, MatOptionModule, NgSwitch, NgSwitchCase], //MatIconModule, ProductDetailsComponent, RouterLink NgSwitch, NgSwitchCase
   templateUrl: './photo.component.html',
   styleUrl: './photo.component.scss',
   animations: [
@@ -65,66 +65,66 @@ import {CookieService} from 'ngx-cookie-service';
 })
 export class PhotoComponent implements OnInit, OnDestroy {
 
-   private subscriptions: Subscription[] = [];
-    private scannedString: string = '';
-      misclassifiedFile: any = null;
-      userRole: string = '';
-      classification: string = '';
-      filename: string = '';
-      mixed_results: string = '';
-      qrCodeImage: string | null = null;
-      sendQrCodeResult: any = null;
-      @ViewChild('qrImage', {static: false}) qrImage!: ElementRef<HTMLImageElement>;
-      showRejectionOptions: boolean = false;
+  private subscriptions: Subscription[] = [];
+  private scannedString: string = '';
+  misclassifiedFile: any = null;
+  userRole: string = '';
+  classification: string = '';
+  filename: string = '';
+  mixed_results: string = '';
+  qrCodeImage: string | null = null;
+  sendQrCodeResult: any = null;
+  @ViewChild('qrImage', { static: false }) qrImage!: ElementRef<HTMLImageElement>;
+  showRejectionOptions: boolean = false;
 
-      constructor(private authService: AuthService,
-                  private dataService: DataService,
-                  private websocketService: WebsocketService,
-                  private http: HttpClient,
-                  private _snackBar: MatSnackBar,
-                  private cookieService: CookieService) {}
+  constructor(private authService: AuthService,
+    private dataService: DataService,
+    private websocketService: WebsocketService,
+    private http: HttpClient,
+    private _snackBar: MatSnackBar,
+    private cookieService: CookieService) { }
 
-      ngOnInit() {
-        this.authService.getUserRole().subscribe(role => {
-          this.userRole = role;
-          console.log("Benutzerrolle:", role);
-          console.log("Rolle", this.userRole);
-        });
+  ngOnInit() {
+    this.authService.getUserRole().subscribe(role => {
+      this.userRole = role;
+      console.log("Benutzerrolle:", role);
+      console.log("Rolle", this.userRole);
+    });
 
-        this.subscriptions.push(
-          this.websocketService.getQRCode().subscribe((qr: string) => this.qrCodeImage = qr)
-        );
+    this.subscriptions.push(
+      this.websocketService.getQRCode().subscribe((qr: string) => this.qrCodeImage = qr)
+    );
 
-        this.subscriptions.push(
-          this.websocketService.getSendQrCodeResult().subscribe((data: any) => this.sendQrCodeResult = data)
-        );
+    this.subscriptions.push(
+      this.websocketService.getSendQrCodeResult().subscribe((data: any) => this.sendQrCodeResult = data)
+    );
 
-        const subscription = this.websocketService.getClassifiedFiles().subscribe(file => {
-          if (file) {
-            this.misclassifiedFile = file;
+    const subscription = this.websocketService.getClassifiedFiles().subscribe(file => {
+      if (file) {
+        this.misclassifiedFile = file;
 
-            // Assign properties to variables
-            this.classification = file.classification;
-            this.filename = file.filename;
-            this.mixed_results = file.mixed_results;
-          }
-        });
-
-        // Push the subscription properly
-        this.subscriptions.push(subscription);
-
-        WebcamUtil.getAvailableVideoInputs()
-          .then((mediaDevices: MediaDeviceInfo[]) => {
-            this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
-          });
+        // Assign properties to variables
+        this.classification = file.classification;
+        this.filename = file.filename;
+        this.mixed_results = file.mixed_results;
       }
-      ngOnDestroy() {
-        this.subscriptions.forEach(sub => sub.unsubscribe());
-      }
+    });
 
+    // Push the subscription properly
+    this.subscriptions.push(subscription);
+
+    WebcamUtil.getAvailableVideoInputs()
+      .then((mediaDevices: MediaDeviceInfo[]) => {
+        this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
+      });
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
 
   // toggle webcam on/off
-  public showWebcam = false;
+  public showWebcam = true;
   public allowCameraSwitch = true;
   public multipleWebcamsAvailable = false;
   public deviceId!: string;
@@ -144,17 +144,18 @@ export class PhotoComponent implements OnInit, OnDestroy {
   // switch to next / previous / specific webcam; true/false: forward/backwards, string: deviceId
   private nextWebcam: Subject<boolean | string> = new Subject<boolean | string>();
 
-//   public ngOnInit(): void {
-//     WebcamUtil.getAvailableVideoInputs()
-//       .then((mediaDevices: MediaDeviceInfo[]) => {
-//         this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
-//       });
-//   }
+  //   public ngOnInit(): void {
+  //     WebcamUtil.getAvailableVideoInputs()
+  //       .then((mediaDevices: MediaDeviceInfo[]) => {
+  //         this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
+  //       });
+  //   }
 
   public triggerSnapshot(): void {
     this.trigger.next();
     this.showWebcam = !this.showWebcam;
-
+    // this.showWebcam = false;
+    // this.toggleWebcam();
   }
 
   public handleInitError(error: WebcamInitError): void {
@@ -168,14 +169,14 @@ export class PhotoComponent implements OnInit, OnDestroy {
     this.nextWebcam.next(directionOrDeviceId);
   }
 
-  toggleWebcam() {
-    this.showWebcam = !this.showWebcam; // Webcam ein-/ausblenden
-  }
+  // toggleWebcam() {
+  //   this.showWebcam = !this.showWebcam; // Webcam ein-/ausblenden
+  // }
 
   public handleImage(webcamImage: WebcamImage): void {
     console.info('received webcam image', webcamImage);
     this.webcamImage = webcamImage;
-    this.showWebcam = false;
+    // this.showWebcam = false;
   }
 
   public cameraWasSwitched(deviceId: string): void {
@@ -228,7 +229,7 @@ export class PhotoComponent implements OnInit, OnDestroy {
     new HttpHeaders({
       'Cookie': `session=${sessionCookie}`
     });
-    this.http.post( environment.apiUrls.eventingService.imageUploaded, formData, {
+    this.http.post(environment.apiUrls.eventingService.imageUploaded, formData, {
       withCredentials: true
     }).subscribe(
       response => {

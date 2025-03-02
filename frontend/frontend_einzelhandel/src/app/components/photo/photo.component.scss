@@ -1,51 +1,51 @@
-//.container {
-//  // height: 100vh;
-//  display: flex;
-//  flex-direction: column;
-//  justify-content: center;
-//  align-items: center;
-//  // overflow: hidden;
-//}
-//
-//.frame {
-//  position: relative;
-//  // background-color: black;
-//  height: 256px;
-//  width: 256px;
-//  // width: 256px;
-//  border: 2px dashed grey;
-//  // white-space: nowrap;
-//  // text-align: center;
-//  // margin: 1em 0;
-//  border-radius: 10px;
-//  margin-bottom: 10px;
-//}
-//
-//webcam {
-//  position: absolute;
-//  top: 50%;
-//  left: 50%;
-//  transform: translate(-50%, -50%);
-//  // width: 256px;
-//  max-width: 256px;
-//  max-height: 256px;
-//  // object-fit: contain;
-//}
-//
-//img {
-//  position: absolute;
-//  max-width: 256px;
-//  max-height: 256px;
-//  top: 127px;
-//  left: 50%;
-//  transform: translate(-50%, -50%);
-//}
-//
-//button {
-//  width: 40vw;
-//  margin: 10px;
-//}
-//
+.container {
+ // height: 100vh;
+ display: flex;
+ flex-direction: column;
+ justify-content: center;
+ align-items: center;
+ // overflow: hidden;
+}
+
+.frame {
+ position: relative;
+ // background-color: black;
+ height: 256px;
+ width: 256px;
+ // width: 256px;
+ border: 2px dashed grey;
+ // white-space: nowrap;
+ // text-align: center;
+ // margin: 1em 0;
+ border-radius: 10px;
+ margin-bottom: 10px;
+}
+
+webcam {
+ position: absolute;
+ top: 50%;
+ left: 50%;
+ transform: translate(-50%, -50%);
+ // width: 256px;
+ max-width: 256px;
+ max-height: 256px;
+ // object-fit: contain;
+}
+
+img {
+ position: absolute;
+ max-width: 256px;
+ max-height: 256px;
+ top: 127px;
+ left: 50%;
+ transform: translate(-50%, -50%);
+}
+
+button {
+ width: 40vw;
+ margin-bottom: 10px;
+}
+
 //img{
 //  position: absolute;
 //  max-width: 256px;
@@ -190,89 +190,89 @@
 
 
 /* Allgemeine Container-Styling */
-.container {
-  max-width: 800px;
-  margin: auto;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px; /* Abstand zwischen den Elementen */
-}
+// .container {
+//   max-width: 800px;
+//   margin: auto;
+//   padding: 20px;
+//   display: flex;
+//   flex-direction: column;
+//   gap: 20px; /* Abstand zwischen den Elementen */
+// }
 
-/* MatCard Styling für alle Karten */
-mat-card {
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
+// /* MatCard Styling für alle Karten */
+// mat-card {
+//   padding: 20px;
+//   border-radius: 10px;
+//   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+// }
 
-/* Webcam-Card Styling */
-.webcam-card {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+// /* Webcam-Card Styling */
+// .webcam-card {
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+// }
 
-/* Styling für das aufgenommene Bild */
-.image-card {
-  text-align: center;
-}
+// /* Styling für das aufgenommene Bild */
+// .image-card {
+//   text-align: center;
+// }
 
-.captured-image {
-  width: 100%;
-  max-width: 300px;
-  border-radius: 10px;
-  display: block;
-  margin: auto;
-}
+// .captured-image {
+//   width: 100%;
+//   max-width: 300px;
+//   border-radius: 10px;
+//   display: block;
+//   margin: auto;
+// }
 
-/* Button-Gruppe */
-.button-group {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
+// /* Button-Gruppe */
+// .button-group {
+//   display: flex;
+//   justify-content: space-between;
+//   gap: 10px;
+// }
 
-/* Fehlklassifizierte Bilder Styling */
-.misclassified-card img {
-  width: 100%;
-  max-width: 300px;
-  border-radius: 8px;
-  display: block;
-  margin: auto;
-}
+// /* Fehlklassifizierte Bilder Styling */
+// .misclassified-card img {
+//   width: 100%;
+//   max-width: 300px;
+//   border-radius: 8px;
+//   display: block;
+//   margin: auto;
+// }
 
-mat-card-title{
-  font-size: 18px;
-}
+// mat-card-title{
+//   font-size: 18px;
+// }
 
-.misclassified-card p {
-  font-size: 18px;
-  color: #555;
-  margin: 5px 0;
-}
+// .misclassified-card p {
+//   font-size: 18px;
+//   color: #555;
+//   margin: 5px 0;
+// }
 
-/* Styling für Form-Feld */
-mat-form-field {
-  width: 100%;
-}
+// /* Styling für Form-Feld */
+// mat-form-field {
+//   width: 100%;
+// }
 
-/* Styling für Buttons */
-button[mat-raised-button] {
-  text-transform: uppercase;
-  font-weight: bold;
-  border-radius: 8px;
-}
+// /* Styling für Buttons */
+// button[mat-raised-button] {
+//   text-transform: uppercase;
+//   font-weight: bold;
+//   border-radius: 8px;
+// }
 
-/* Icon Styling für eine gute Ausrichtung */
-mat-icon {
-  vertical-align: middle;
-  margin-right: 5px;
-}
+// /* Icon Styling für eine gute Ausrichtung */
+// mat-icon {
+//   vertical-align: middle;
+//   margin-right: 5px;
+// }
 
-/* Responsive Anpassungen */
-@media (max-width: 768px) {
-  .button-group {
-    flex-direction: column;
-  }
-}
+// /* Responsive Anpassungen */
+// @media (max-width: 768px) {
+//   .button-group {
+//     flex-direction: column;
+//   }
+// }
