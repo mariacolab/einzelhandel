@@ -149,6 +149,7 @@ services:
       GITHUB_CREDENTIALS_FILE: /run/secrets/github_credentials
       PYTHONPATH: /workspace
       RABBITMQ_URL: amqp://guest:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      NVIDIA_VISIBLE_DEVICES: all
       COMPOSE_HTTP_TIMEOUT: 1500
     depends_on:
       - rabbitmq
@@ -163,7 +164,12 @@ services:
       - shared_uploads:/shared/uploads
       - training_data_tf:/workspace/shared/TRAININGSSATZ/kleinesModell
       - labeled_tf:/mnt/labeled_tf
-    command: ["python3", "subscriber.py"]
+    command: [ "python3", "subscriber.py" ]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [ gpu ]
 
   eventing-service:
     build:

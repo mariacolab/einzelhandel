@@ -26,7 +26,7 @@ def detect(bild, filename):
     logging.info("Sent to AI for detection.")
 
     # "cpu" for CPU use or "cuda" for GPU
-    device = "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     logging.info(f"device: {device}")
 
     model_path = f"{SharedFolders.KI_MODELLE_GESAMT_BEST_GEWICHT.value}/best.pt"

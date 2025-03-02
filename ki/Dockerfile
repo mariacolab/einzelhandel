@@ -1,30 +1,34 @@
 # von Maria Schuster
-# Basisimage
-FROM python:3.10-slim AS base
+# NVIDIA CUDA 12.3.2 + CuDNN 9.3+ (Runtime-Image für YOLO)
+FROM nvidia/cuda:12.3.2-cudnn9-runtime-ubuntu22.04 AS base
 
-# Setze Umgebungsvariablen
+# Setze Umgebungsvariablen für NVIDIA (nur für YOLO relevant)
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONPATH="/workspace"
 
-# Installation Systempakete
+# Installiere Python 3.10 + Pip + Systempakete
 RUN apt-get update && \
-    apt-get install -y libgl1-mesa-glx libglib2.0-0 && \
+    apt-get install -y python3.10 python3.10-venv python3.10-dev python3-pip \
+    libgl1-mesa-glx libglib2.0-0 && \
+    ln -s /usr/bin/python3.10 /usr/bin/python && \
     rm -rf /var/lib/apt/lists/*
 
 # Arbeitsverzeichnis setzen
 WORKDIR /workspace
 
-# Installation Python-Abhängigkeiten
+# Installiere Python-Abhängigkeiten (einschließlich aio-pika)
 COPY requirements.txt .
-RUN python3 -m pip install --no-cache-dir --upgrade pip && \
-    python3 -m pip install --no-cache-dir -r requirements.txt && \
-    python3 -m pip install watchdog
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 # Installiere TensorFlow **ohne GPU**
-RUN python3 -m pip install tensorflow-cpu==2.18.0
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install tensorflow-cpu==2.18.0
 
 # Installiere PyTorch mit GPU-Unterstützung (nur für YOLO)
 RUN python3 -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+
 
 # ---- Production Stage ----
 FROM base AS production
