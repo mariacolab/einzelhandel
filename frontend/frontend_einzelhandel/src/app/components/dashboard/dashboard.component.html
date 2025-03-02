@@ -1,17 +1,23 @@
 <div class="dashboard-container">
-  <h1>Dashboard</h1>
+  <!-- <h1>Dashboard</h1> -->
 
   <p>Willkommen, {{ userRole }}!</p>
 
   <!-- Foto-Upload für alle Benutzer -->
-  <button mat-button color="primary" (click)="openPhotoComponent()">Foto hochladen</button>
-
-  <!-- QR-Code Scanner für alle Benutzer -->
-  <button mat-button color="accent" (click)="openQrScanner()">QR-Code scannen</button>
-
-  <!-- Klassifikation nur für Employees  -->
-  <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" mat-button color="warn" (click)="openClassification()">Klassifikation</button>
-
-  <!-- Klassifikation nur für Employees "-->
-  <button *ngIf="userRole === 'Admin'" mat-button color="warn" (click)="openTraining()">Nachtraining</button>
+  <div>
+    <button mat-flat-button (click)="openPhotoComponent()">Foto hochladen</button>
+  </div>
+  <div>
+    <!-- QR-Code Scanner für alle Benutzer -->
+    <button mat-flat-button (click)="openQrScanner()">QR-Code scannen</button>
+  </div>
+  <div>
+    <!-- Klassifikation nur für Employees  -->
+    <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" mat-flat-button color="secondary"
+      (click)="openClassification()">Klassifikation</button>
+  </div>
+  <div>
+    <!-- Klassifikation nur für Employees "-->
+    <button *ngIf="userRole === 'Admin'" mat-flat-button color="secondary" (click)="openTraining()">Nachtraining</button>
+  </div>
 </div>

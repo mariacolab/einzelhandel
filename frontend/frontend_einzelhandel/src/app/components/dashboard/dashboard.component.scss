@@ -4,8 +4,18 @@
   text-align: center;
 }
 
+// button {
+//   display: block;
+//   width: 100%;
+//   margin: 10px 0;
+// }
+
 button {
-  display: block;
-  width: 100%;
-  margin: 10px 0;
+  width: 40vw;
+  margin: 10px;
+}
+
+.mat-secondary {
+  background-color: var(--mat-sys-secondary);
+  color: var(--mat-sys-on-secondary);
 }
