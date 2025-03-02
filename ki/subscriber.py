@@ -260,6 +260,20 @@ async def on_message(message: aio_pika.IncomingMessage):
                     response = requests.post(url, headers=headers, files=files)
                     logging.info(f"Response: {response}")
 
+                    url = " http://nginx-proxy/eventing-service/publish/ClassificationCompleted"
+                    headers = {
+                        "Cookie": f"{event_cookie}",
+                    }
+                    files = {
+                        "type": (None, "ClassFiles"),
+                        "result": (None, event_classification),
+                        "protocol": (None, event_protocol),
+                        "host": (None, event_host)
+                    }
+                    logging.info(f"files ClassificationCompleted: {files}")
+                    response = requests.post(url, headers=headers, files=files)
+                    logging.info(f"Response: {response}")
+
                 else:
                     logging.info(f"Event file: {event_classification}")
 

@@ -1,7 +1,7 @@
 [
   {
     "class_name": "Apfel",
-    "info": null,
+    "info": "Artikelnummer 9633352",
     "Regal": 1,
     "preis": {
       "pro_stueck": null,
@@ -10,241 +10,241 @@
   },
   {
     "class_name": "Aubergine",
-    "info": null,
+    "info": "Artikelnummer 1815459",
     "Regal": 2,
     "preis": {
       "pro_stueck": 2.29,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Avocado",
-    "info": null,
+    "info": "Artikelnummer 4293847",
     "Regal": 2,
     "preis": {
       "pro_stueck": 1.39,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Banane",
-    "info": null,
+    "info": "Artikelnummer 7198643",
     "Regal": 1,
     "preis": {
       "pro_stueck": null,
       "pro_kg": 1.79
-    }  
+    }
   },
   {
     "class_name": "Birne",
-    "info": null,
+    "info": "Artikelnummer 2841704",
     "Regal": 1,
     "preis": {
       "pro_stueck": null,
       "pro_kg": 1.99
-    }  
+    }
   },
   {
     "class_name": "Bohnen",
-    "info": null,
+    "info": "Artikelnummer 1779203",
     "Regal": 9,
     "preis": {
       "pro_stueck": 1.79,
       "pro_kg": 7.16
-    }  
+    }
   },
   {
     "class_name": "Cerealien",
-    "info": null,
+    "info": "Artikelnummer 3945689",
     "Regal": 4,
     "preis": {
       "pro_stueck": 5.39,
       "pro_kg": 10.78
-    }  
+    }
   },
   {
     "class_name": "Chips",
-    "info": null,
+    "info": "Artikelnummer 7379067",
     "Regal": 5,
     "preis": {
       "pro_stueck": 1.99,
       "pro_kg": 13.27
-    }  
+    }
   },
   {
     "class_name": "Essig",
-    "info": null,
+    "info": "Artikelnummer 2431555",
     "Regal": 8,
     "preis": {
       "pro_stueck": 0.55,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Fisch",
-    "info": null,
+    "info": "Artikelnummer 2656623",
     "Regal": 9,
     "preis": {
       "pro_stueck": 1.59,
       "pro_kg": 23.39
-    }  
+    }
   },
   {
     "class_name": "Gewuerze",
-    "info": null,
+    "info": "Artikelnummer 4477255",
     "Regal": 8,
     "preis": {
       "pro_stueck": 2.29,
       "pro_kg": 152.67
-    }  
+    }
   },
   {
     "class_name": "Granatapfel",
-    "info": null,
+    "info": "Artikelnummer 7248822",
     "Regal": 1,
     "preis": {
       "pro_stueck": 1.99,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Honig",
-    "info": null,
+    "info": "Artikelnummer 1368713",
     "Regal": 10,
     "preis": {
       "pro_stueck": 5.49,
       "pro_kg": 10.98
-    }  
+    }
   },
   {
     "class_name": "Kaffee",
-    "info": null,
+    "info": "Artikelnummer 8089258",
     "Regal": 4,
     "preis": {
       "pro_stueck": 6.29,
       "pro_kg": 62.9
-    }  
+    }
   },
   {
     "class_name": "Kaki",
-    "info": null,
+    "info": "Artikelnummer 7838941",
     "Regal": 1,
     "preis": {
       "pro_stueck": 1.79,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Karotte",
-    "info": null,
+    "info": "Artikelnummer 1018922",
     "Regal": 2,
     "preis": {
       "pro_stueck": null,
       "pro_kg": 1.19
-    }  
+    }
   },
   {
     "class_name": "Kartoffel",
-    "info": null,
+    "info": "Artikelnummer 6429137",
     "Regal": 2,
     "preis": {
       "pro_stueck": 2.22,
       "pro_kg": 1.11
-    }  
+    }
   },
   {
     "class_name": "Kiwi",
-    "info": null,
+    "info": "Artikelnummer 5205887",
     "Regal": 1,
     "preis": {
       "pro_stueck": 0.39,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Knoblauch",
-    "info": null,
+    "info": "Artikelnummer 2014458",
     "Regal": 2,
     "preis": {
       "pro_stueck": 1.19,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Kuchen",
-    "info": null,
+    "info": "Artikelnummer 7123718",
     "Regal": 6,
     "preis": {
       "pro_stueck": 3.79,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Mais",
-    "info": null,
+    "info": "Artikelnummer 7859178",
     "Regal": 9,
     "preis": {
       "pro_stueck": 1.79,
       "pro_kg": 6.28
-    }  
+    }
   },
   {
     "class_name": "Mandarine",
-    "info": null,
+    "info": "Artikelnummer 1574198",
     "Regal": 1,
     "preis": {
       "pro_stueck": null,
       "pro_kg": 1.69
-    }  
+    }
   },
   {
     "class_name": "Mango",
-    "info": null,
+    "info": "Artikelnummer 8485152",
     "Regal": 1,
     "preis": {
       "pro_stueck": 1.69,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Marmelade",
-    "info": null,
+    "info": "Artikelnummer 1481717",
     "Regal": 10,
     "preis": {
       "pro_stueck": 1.69,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Mehl",
-    "info": null,
+    "info": "Artikelnummer 1841091",
     "Regal": 7,
     "preis": {
       "pro_stueck": 0.99,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Milch",
-    "info": null,
+    "info": "Artikelnummer 2762209",
     "Regal": 11,
     "preis": {
       "pro_stueck": 1.69,
       "pro_kg": null
-    }  
+    }
   },
   {
     "class_name": "Nudeln",
-    "info": null,
+    "info": "Artikelnummer 7486901",
     "Regal": 6,
     "preis": {
       "pro_stueck": 1.89,
       "pro_kg": 3.78
-    }  
+    }
   },
   {
     "class_name": "Nuss",
-    "info": null,
+    "info": "Artikelnummer 5375466",
     "regal": 4,
     "preis": {
       "pro_stueck": 4.99,
@@ -253,7 +253,7 @@
   },
   {
     "class_name": "Oel",
-    "info": null,
+    "info": "Artikelnummer 4665613",
     "regal": 8,
     "preis": {
       "pro_stueck": 2.99,
@@ -262,7 +262,7 @@
   },
   {
     "class_name": "Orange",
-    "info": null,
+    "info": "Artikelnummer 9105135",
     "regal": 1,
     "preis": {
       "pro_stueck": null,
@@ -271,7 +271,7 @@
   },
   {
     "class_name": "Pampelmuse",
-    "info": null,
+    "info": "Artikelnummer 4253272",
     "regal": 1,
     "preis": {
       "pro_stueck": 3.19,
@@ -280,7 +280,7 @@
   },
   {
     "class_name": "Paprika",
-    "info": null,
+    "info": "Artikelnummer 4482298",
     "regal": 1,
     "preis": {
       "pro_stueck": 2.19,
@@ -289,7 +289,7 @@
   },
   {
     "class_name": "Pflaume",
-    "info": null,
+    "info": "Artikelnummer 3710253",
     "regal": 1,
     "preis": {
       "pro_stueck": 0.5,
@@ -298,7 +298,7 @@
   },
   {
     "class_name": "Reis",
-    "info": null,
+    "info": "Artikelnummer 9891124",
     "regal": 6,
     "preis": {
       "pro_stueck": 2.49,
@@ -307,7 +307,7 @@
   },
   {
     "class_name": "Saft",
-    "info": null,
+    "info": "Artikelnummer 8117419",
     "regal": 3,
     "preis": {
       "pro_stueck": 2.19,
@@ -316,7 +316,7 @@
   },
   {
     "class_name": "Schokolade",
-    "info": null,
+    "info": "Artikelnummer 5226808",
     "regal": 5,
     "preis": {
       "pro_stueck": 2.49,
@@ -325,7 +325,7 @@
   },
   {
     "class_name": "Soda",
-    "info": null,
+    "info": "Artikelnummer 5587962",
     "regal": 3,
     "preis": {
       "pro_stueck": 1.59,
@@ -334,7 +334,7 @@
   },
   {
     "class_name": "Suessigkeit",
-    "info": null,
+    "info": "Artikelnummer 2657333",
     "regal": 5,
     "preis": {
       "pro_stueck": 1.19,
@@ -343,7 +343,7 @@
   },
   {
     "class_name": "Tee",
-    "info": null,
+    "info": "Artikelnummer 8185679",
     "regal": 4,
     "preis": {
       "pro_stueck": 2.29,
@@ -352,7 +352,7 @@
   },
   {
     "class_name": "Tomate",
-    "info": null,
+    "info": "Artikelnummer 1673198",
     "regal": 2,
     "preis": {
       "pro_stueck": 1.25,
@@ -361,7 +361,7 @@
   },
   {
     "class_name": "Tomatensauce",
-    "info": null,
+    "info": "Artikelnummer 7051772",
     "regal": 6,
     "preis": {
       "pro_stueck": 1.49,
@@ -370,7 +370,7 @@
   },
   {
     "class_name": "Wasser",
-    "info": null,
+    "info": "Artikelnummer 3192436",
     "regal": 3,
     "preis": {
       "pro_stueck": 0.65,
@@ -379,7 +379,7 @@
   },
   {
     "class_name": "Zitrone",
-    "info": null,
+    "info": "Artikelnummer 6091664",
     "regal": 2,
     "preis": {
       "pro_stueck": 0.79,
@@ -388,7 +388,7 @@
   },
   {
     "class_name": "Zucchini",
-    "info": null,
+    "info": "Artikelnummer 7050096",
     "regal": 2,
     "preis": {
       "pro_stueck": 0.99,
@@ -397,7 +397,7 @@
   },
   {
     "class_name": "Zucker",
-    "info": null,
+    "info": "Artikelnummer 7707106",
     "regal": 7,
     "preis": {
       "pro_stueck": null,
@@ -406,7 +406,7 @@
   },
   {
     "class_name": "Zwiebel",
-    "info": null,
+    "info": "Artikelnummer 5596243",
     "regal": 2,
     "preis": {
       "pro_stueck": null,

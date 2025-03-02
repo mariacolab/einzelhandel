@@ -70,7 +70,7 @@
   </mat-card>
 
   <!-- Ablehnungsoptionen -->
-  <mat-card *ngIf="showRejectionOptions && qrCodeVisible && (userRole === 'Mitarbeiter' || userRole === 'Admin')" class="rejection-card">
+  <mat-card *ngIf="showRejectionOptions && qrCodeVisible && qrCodeImage?.length !== 0 && (userRole === 'Mitarbeiter' || userRole === 'Admin')" class="rejection-card">
     <mat-card-header>
       <mat-card-title>Generierter QR-Code</mat-card-title>
     </mat-card-header>
@@ -78,9 +78,9 @@
       <img #qrImage [src]="qrCodeImage" alt="QR Code" class="qr-code-image">
     </mat-card-content>
     <mat-card-actions class="button-group">
-      <button mat-raised-button color="accent" (click)="decodeQRCode()">
+      <!--button mat-raised-button color="accent" (click)="decodeQRCode()">
         QR-Code scannen
-      </button>
+      </button-->
     </mat-card-actions>
   </mat-card>
 
@@ -104,7 +104,7 @@
       Bestätigen
     </button>
     <button *ngIf="userRole === 'Mitarbeiter' || userRole === 'Admin'" mat-raised-button color="warn" (click)="reject()">
-       Ablehnen
+      Ablehnen
     </button>
   </div>
 

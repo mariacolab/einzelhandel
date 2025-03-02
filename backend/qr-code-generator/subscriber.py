@@ -64,7 +64,7 @@ async def on_message(message: aio_pika.IncomingMessage):
                     dann wird der Datensatz """
 
                 # prüft ob der Datensatz in der Datenbank vorhanden ist
-                url = f"{event_protocol}://{event_host}/database-management/products/{event_result}"
+                url = f"http://nginx-proxy/database-management/products/{event_result}"
                 headers = {
                     'Content-Type': 'application/json',
                     "Cookie": f"{event_cookie}",

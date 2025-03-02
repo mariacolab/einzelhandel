@@ -31,7 +31,7 @@
    ```bash
       ssh-keygen -t rsa -b 4096 -C "email@example.com"
    ```
-   
+
 ## 3. SSH-Schlüssel SSH-Agent hinzufügen:
 
    ```bash
@@ -52,13 +52,13 @@
 
 ## 5. klonen in Terminal den Befehl ausführen:
 
-  ### SSH
+### SSH
 
    ````bash
    git@github.com:USERNAME/einzelhandel.git
    ````
 
-  Verbindung testen:
+Verbindung testen:
 
     - ssh -T git@github.com
 
@@ -66,34 +66,34 @@
 
 # Docker starten und bauen der Container
 
-Voraussetzung: Docker muss installiert sein, entweder [Docker Desktop](https://www.docker.com/products/docker-desktop/) 
-oder per Terminal (ehr für Linux Nutzer, unter Windows recht umständlich umzusätzen) 
+Voraussetzung: Docker muss installiert sein, entweder [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+oder per Terminal (für Linux Nutzer)
 
-   1. im Projektverzeichnis einen Ordner secrets anlegen und in diesem eine Datei github_credentials.txt
-   2. in die Datei die folgenden Werte kopieren
-       ````bash
-       PEPPER_KEY=my-secret-pepper
-        POSTGRES_PASSWORD=a2GtDwGcCYpPMfzb9T
-        RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
-        ENCRYPTION_KEY=y34iezZ6HNempLRypUYriwYewur72YhQslzuGGXymwA=
-        mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=rd
-        REDIS_PASSWORD=your_redis_password
-        SECRET_KEY=supersecretkey
-        JWT_SECRET_KEY=jwtsecretkey
-        ````
-   3. ebenfalls in dem Projektverzeichnis einzelhandel/ muss eine .env angelegt werden
-      ````bash
-      PEPPER_KEY=my-secret-pepper
-      POSTGRES_PASSWORD=a2GtDwGcCYpPMfzb9T
-      RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
-      ENCRYPTION_KEY=y34iezZ6HNempLRypUYriwYewur72YhQslzuGGXymwA=
-      mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=rd
-      REDIS_PASSWORD=your_redis_password
-      SECRET_KEY=supersecretkey
-      JWT_SECRET_KEY=jwtsecretkey
-      ````
+1. im Projektverzeichnis einen Ordner secrets anlegen und in diesem eine Datei github_credentials.txt
+2. in die Datei die folgenden Werte kopieren
+    ````bash
+    PEPPER_KEY=my-secret-pepper
+     POSTGRES_PASSWORD=a2GtDwGcCYpPMfzb9T
+     RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
+     ENCRYPTION_KEY=y34iezZ6HNempLRypUYriwYewur72YhQslzuGGXymwA=
+     mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=rd
+     REDIS_PASSWORD=your_redis_password
+     SECRET_KEY=supersecretkey
+     JWT_SECRET_KEY=jwtsecretkey
+     ````
+3. ebenfalls in dem Projektverzeichnis einzelhandel/ muss eine .env angelegt werden
+   ````bash
+   PEPPER_KEY=my-secret-pepper
+   POSTGRES_PASSWORD=a2GtDwGcCYpPMfzb9T
+   RABBITMQ_PASSWORD=5UtFfSysADFUre8r1fU576
+   ENCRYPTION_KEY=y34iezZ6HNempLRypUYriwYewur72YhQslzuGGXymwA=
+   mcqQVi84zBN7iyrfmwFUT26ljn94Sw9V5EydCUrrds=rd
+   REDIS_PASSWORD=your_redis_password
+   SECRET_KEY=supersecretkey
+   JWT_SECRET_KEY=jwtsecretkey
+   ````
 
-1. Docker Daemon starten, in dem Docker Desktop gestartet wird oder per Terminal. 
+1. Docker Daemon starten, in dem Docker Desktop gestartet wird oder per Terminal.
 2. Bauen der Docker Images mit dem Befehl:
     ````bash
     #Powershell
@@ -104,12 +104,8 @@ oder per Terminal (ehr für Linux Nutzer, unter Windows recht umständlich umzus
     docker-compose -f docker-compose.yml build --parallel
     docker-compose -f docker-compose.yml up
     ````
-3. Erstellen und Starten der Docker-Container mit dem Befehl:
-    ````bash
-    docker-compose -f docker-compose.yml up
-    ````
-4. der Postgres Container muss manchmal noch mal gestartet werden, in dem Fall in Docker Desktop den Startbutton klicken
-oder in der Konsole
+3. der Postgres Container muss manchmal noch mal gestartet werden, in dem Fall in Docker Desktop den Startbutton klicken
+   oder in der Konsole
     ````bash
     docker-compose up postgres_container
     ````
@@ -123,17 +119,17 @@ oder in der Konsole
 # Starten der Anwendung ohne Frontend
 
 Vorausetzung: wenn Requests nicht per CURL sondern über eine Collection genutzt werden sollen, dann muss ein API Client   
-heruntergeladen werden wie [Postman](https://www.postman.com/downloads/) oder 
-[Bruno](https://docs.usebruno.com/get-started/bruno-basics/download) 
+heruntergeladen werden wie [Postman](https://www.postman.com/downloads/) oder
+[Bruno](https://docs.usebruno.com/get-started/bruno-basics/download)
 
-1. nachdem der Client installiert wurde kann die Collection 
-[Einzelhandel.postman_collection.json](https://drive.google.com/file/d/1r-va-SVz5_67Owtehy-zt-iI5mkOvfPa/view?usp=sharing) 
-importiert werden
+1. nachdem der Client installiert wurde kann die Collection
+   [Einzelhandel.postman_collection.json](https://drive.google.com/file/d/1r-va-SVz5_67Owtehy-zt-iI5mkOvfPa/view?usp=sharing)
+   importiert werden
 2. existiert noch kein User muss zuerst der Endpunkt registrieren ausgeführt werden
 3. wurde der Body im Endpunkt registrieren angepasst, dann müssen die Daten im Body vom login ebenfalls angepasst werden
 4. jetzt login ausführen und den Inhalt des Response Body vom token ohne " " kopieren
-5. den kopierten Token in das Event ImageUploaded im Header Authorization hinter Bearer mit einem Leerzeichen getrennt 
-einfügen und senden
+5. den kopierten Token in das Event ImageUploaded im Header Authorization hinter Bearer mit einem Leerzeichen getrennt
+   einfügen und senden
 
 #### Per Curl:
 - Endpunkt registrieren:
@@ -152,7 +148,7 @@ einfügen und senden
      ````bash
     curl -b cookies.txt --location "http://localhost/eventing-service/publish/ImageUploaded" ^
     --form "type=ProcessFiles" ^
-    --form "filename=@Pfad\desBildes.jpg" ^
+    --form "filename=@Pfad\desBildes.jpg"
      ````
 
 # Docker aufräumen
